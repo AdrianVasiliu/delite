@@ -1,0 +1,68 @@
+.mblListContainer{
+	position: relative;
+	background-color: white;
+	border: 1px solid grey;
+	overflow-y: hidden;
+	width: 100%;
+}
+
+.mblList{
+	position: absolute;
+	width: 100%;
+	list-style-type: none;
+	margin: 0px 0px 0px 0px;
+	padding: 0px 0px 0px 0px;
+	-webkit-transform: translate3d(0,0,0);
+	transform: translate3d(0,0,0);
+}
+
+.mblListCell{
+	border-bottom: 1px solid lightGrey;
+	color: black;
+}
+
+.mblListFocusedCell{
+	/* The cell that has the focus */
+	/* TODO: ADD STYLING FOR IE */
+}
+
+.mblListSelectedCell{
+	background-color: blue;
+	color: white;
+}
+
+.mblListCell:nth-child(1){
+	border-top: 1px solid lightGrey;
+}
+
+.mblListCategoryHeader{
+	background-color: black;
+	color: white;
+	height: 40px;
+	width: 100%;
+	text-transform: uppercase;
+}
+
+.mblListLoaderCell{
+	padding: 5px 5px;
+	color: blue;
+	cursor: pointer;
+}
+
+.mblListLoaderCellLoading{
+	color: gray;
+	cursor: wait;
+}
+
+/* The following two are only temporary */
+.mblListLoading{
+	padding-top: 50px;
+	text-align: center;
+}
+.mblListLoading:after{
+	content: 'Loading...';
+	font-size: large;
+	font-style: italic;
+	color: gray;
+}
+
