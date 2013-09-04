@@ -8,14 +8,16 @@ define(["dojo/_base/declare",
         "dojo/dom-construct",
         "dojo/dom-geometry",
         "dojo/dom-class",
+        "dojo/query",
         "dojo/touch",
         "dojo/on",
         "dojo/keys",
         "../_css3",
-        "dui/_WidgetBase"
-], function(declare, lang, array, when, win, has, dom, domConstruct, domGeometry, domClass, touch, on, keys, css3, WidgetBase){
+        "dui/_WidgetBase",
+        "dui/mixins/Selection"
+], function(declare, lang, array, when, win, has, dom, domConstruct, domGeometry, domClass, query, touch, on, keys, css3, _WidgetBase, Selection){
 	
-	return declare(WidgetBase, {
+	return declare([_WidgetBase, Selection], {
 
 		/////////////////////////////////
 		// Public attributes
@@ -27,8 +29,6 @@ define(["dojo/_base/declare",
 
 		pageLength: 0, // if > 0 define paging with the number of entries to display per page.
 
-		selectable: null, // valid values are 'single' and 'multiple'
-
 		height: 0, // the height of the list widget, in pixel
 
 		// TODO: FIND A BETTER NAME ? (SEEMS RELATED TO PAGELENGTH WHILE IT'S NOT !!!!)
@@ -37,6 +37,8 @@ define(["dojo/_base/declare",
 		animateScrollFps: 25,
 
 		baseClass: 'mblList',
+
+		selectionMode: 'none',
 
 		/////////////////////////////////
 		// Private attributes
@@ -73,9 +75,6 @@ define(["dojo/_base/declare",
 		postMixInProperties: function(){
 			this.inherited(arguments);
 			this._touchHandlersRefs = [];
-			if(this.selectable){
-				this._selectedEntries = [];
-			}
 		},
 
 		buildRendering: function(){
@@ -154,6 +153,31 @@ define(["dojo/_base/declare",
 				});
 			}else{
 				return null;
+			}
+		},
+
+		/////////////////////////////////
+		// Selection implementation
+		/////////////////////////////////
+
+		getIdentity: function(item){
+			return item;
+		},
+
+		updateRenderers: function(entryIndexes){
+			var entryIndex, cell;
+			if(this.selectionMode !== 'none'){
+				for(var i=0; i < entryIndexes.length; i++){
+					entryIndex = entryIndexes[i];
+					cell = this._getCellByEntryIndex(entryIndex);
+					if(cell){
+						if(this.isItemSelected(entryIndex)){
+							domClass.add(cell, this.baseClass + 'SelectedCell');
+						}else{
+							domClass.remove(cell, this.baseClass + 'SelectedCell');
+						}
+					}
+				}
 			}
 		},
 
@@ -296,7 +320,7 @@ define(["dojo/_base/declare",
 					this._cellsHeight += this._getCellHeight(currentCell);
 				}
 				currentCell = domConstruct.create('li', {id: this.domNode.id + '_' + this._nextCellIndex++, className: this.baseClass + 'Cell', tabindex: '-1'}, listNode);
-				if(this.selectable && array.indexOf(this._selectedEntries, entryIndex) != -1){
+				if(this.selectionMode !== 'none' && this.isItemSelected(entryIndex)){
 					domClass.add(currentCell, this.baseClass + 'SelectedCell');
 				}
 				this._setCellContent(currentCell, this._renderEntry(currentEntry, entryIndex));
@@ -419,8 +443,8 @@ define(["dojo/_base/declare",
 			var newCellHeight = null;
 			var cellInitialEntryIndex = this._getCellEntryIndex(cell);
 			var cellInitialCategoryHeader = this._getCellCategoryHeader(cell);
-			if(this.selectable){
-				if(array.indexOf(this._selectedEntries, newEntryIndex) != -1){
+			if(this.selectionMode !== 'none'){
+				if(this.isItemSelected(newEntryIndex)){
 					domClass.add(cell, this.baseClass + 'SelectedCell');
 				}else{
 					domClass.remove(cell, this.baseClass + 'SelectedCell');
@@ -519,6 +543,14 @@ define(["dojo/_base/declare",
 
 		_getLoaderCell: function(){
 			return this._loaderCell;
+		},
+
+		_getCellByEntryIndex: function(entryIndex){
+			var cell = null;
+			if(entryIndex >= this._firstEntryIndex && entryIndex < this._lastEntryIndex){
+				cell = query('li[data-index^="' + entryIndex + '"]', this.domNode)[0];
+			}
+			return cell;
 		},
 
 		_getCellEntryIndex: function(cell){
@@ -710,48 +742,14 @@ define(["dojo/_base/declare",
 		},
 
 		_handleSelection: function(event){
-			var entry;
-			var entryIndexInSelectionArray;
-			var selectedCell;
+			var entryIndex, entrySelected;
 			var eventCell = this._getParentCell(event.target);
-			if(this.selectable && !this._dy){
-				entry = this._getCellEntryIndex(eventCell);
-				if(entry != null){
-					// handle selection
-					if(this.selectable == 'single'){
-						// toggle selection
-						if(this._selectedEntries[0] == entry){
-							// deselect the entry
-							domClass.remove(eventCell, this.baseClass + 'SelectedCell');
-							this._selectedEntries.splice(0, 1);
-							this.emit('entryDeselected', {entryIndex: entry});
-						}else{
-							// deselect the previously selected entry if any and select the new entry
-							if(this._selectedEntries[0] != undefined){
-								selectedCell = this.domNode.getElementsByClassName(this.baseClass + 'SelectedCell'); // TODO: performances on long lists ?
-								if(selectedCell && selectedCell.length){
-									domClass.remove(selectedCell[0], this.baseClass + 'SelectedCell');
-								}
-								this.emit('entryDeselected', {entryIndex: this._selectedEntries[0]});
-							}
-							domClass.add(eventCell, this.baseClass + 'SelectedCell');
-							this._selectedEntries[0] = entry;
-							this.emit('entrySelected', {entryIndex: entry});
-						}
-					}else if(this.selectable == 'multiple'){
-						entryIndexInSelectionArray = array.indexOf(this._selectedEntries, entry);
-						if(entryIndexInSelectionArray != -1){
-							// deselect the entry
-							domClass.remove(eventCell, this.baseClass + 'SelectedCell');
-							this._selectedEntries.splice(entryIndexInSelectionArray, 1);
-							this.emit('entryDeselected', {entryIndex: entry});
-						}else{
-							// add a new selected entry
-							this._selectedEntries.push(entry);
-							domClass.add(eventCell, this.baseClass + 'SelectedCell');
-							this.emit('entrySelected', {entryIndex: entry});
-						}
-					}
+			if(this.selectable !== 'none' && !this._dy){
+				entryIndex = this._getCellEntryIndex(eventCell);
+				if(entryIndex != null){
+					entrySelected = !this.isItemSelected(entryIndex);
+					this.setSelected(entryIndex, entrySelected);
+					this.emit(entrySelected ? 'entrySelected' : 'entryDeselected', {entryIndex: entryIndex});
 				}
 			}
 		},

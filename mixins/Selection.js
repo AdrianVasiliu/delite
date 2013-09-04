@@ -68,7 +68,7 @@ define(["dojo/_base/declare", "dojo/_base/array", "dojo/_base/lang"],
 			return this.selectedItems == null ? [] : this.selectedItems.concat();
 		},
 		
-		isSelected: function(item){
+		isItemSelected: function(item){
 			// summary:
 			//		Returns whether an item is selected or not.
 			// item: Object
@@ -122,9 +122,9 @@ define(["dojo/_base/declare", "dojo/_base/array", "dojo/_base/lang"],
 					}
 					this.set("selectedItems", sel);
 				}else{
-					var res = arr.filter(sel, function(sitem){
-						return sitem.id != item.id; 
-					});
+					var res = arr.filter(sel, lang.hitch(this, function(sitem){
+						return this.getIdentity(sitem) != this.getIdentity(item); 
+					}));
 					if(res == null || res.length == sel.length){
 						return; // already not selected
 					}

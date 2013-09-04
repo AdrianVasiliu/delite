@@ -277,10 +277,10 @@
 			// Demo 9: list that supports single selection
 			////////////////////////////////////////////////////
 
-			var list9 = new List({height: 200, entries: list2Model, selectable: 'single'}, 'list9');
+			var list9 = new List({height: 200, entries: list2Model, selectionMode: 'single'}, 'list9');
 			list9.startup();
 			var updateList9Console = function(){
-				var selectedEntries = list9.getSelectedEntries();
+				var selectedEntries = list9.get('selectedItems');
 				var i = 0;
 				for(i; i < selectedEntries.length; i++){
 					selectedEntries[i] = list2Model[selectedEntries[i]].label;
@@ -291,17 +291,17 @@
 	 				dom.byId('list9Console').innerHTML = 'Selected entry: none';
 				}
 			};
- 			list9.on('entryDeselected', updateList9Console);
+  			list9.on('entryDeselected', updateList9Console);
  			list9.on('entrySelected', updateList9Console);
- 
+
 			////////////////////////////////////////////////////
 			// Demo 10: list that supports multiple selection
 			////////////////////////////////////////////////////
 
-			var list10 = new List({height: 200, entries: list2Model, selectable: 'multiple'}, 'list10');
+			var list10 = new List({height: 200, entries: list2Model, selectionMode: 'multiple'}, 'list10');
 			list10.startup();
 			var updateList10Console = function(){
-				var selectedEntries = list10.getSelectedEntries();
+				var selectedEntries = list10.get('selectedItems');
 				var i = 0;
 				for(i; i < selectedEntries.length; i++){
 					selectedEntries[i] = ' ' + list2Model[selectedEntries[i]].label;
@@ -319,10 +319,10 @@
 			// Demo 11: categorized list that supports single selection
 			////////////////////////////////////////////////////
 
-			var list11 = new List({id: 'list11', height: 200, entries: {store: categorizedEntriesStore, query: ''}, categoryAttribute: 'category', selectable: 'single'}, 'list11');
+			var list11 = new List({id: 'list11', height: 200, entries: {store: categorizedEntriesStore, query: ''}, categoryAttribute: 'category', selectionMode: 'single'}, 'list11');
 			list11.startup();
 			var updateList11Console = function(){
-				var selectedEntries = list11.getSelectedEntries();
+				var selectedEntries = list11.get('selectedItems');
 				if(selectedEntries.length){
 	 				dom.byId('list11Console').innerHTML = 'Selected entry: ' + selectedEntries[0];
 				}else{
