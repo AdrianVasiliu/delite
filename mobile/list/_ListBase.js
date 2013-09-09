@@ -196,8 +196,7 @@ define(["dojo/_base/declare",
 			if(this._hasNextPage){
 				this._queryOptions.start += this.pageLength;
 			}
-			queryResult = this.entries.store.query(this.entries.query, this._queryOptions);
-			when(queryResult, lang.hitch(this, function(result){
+			when(this.entries.store.query(this.entries.query, this._queryOptions), lang.hitch(this, function(result){
 				this._hasNextPage = (result.length == this._queryOptions.count);
 				if(this._entries){
 					this._entries = this._entries.concat(result);
