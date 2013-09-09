@@ -146,15 +146,15 @@ define(["dojo/_base/declare",
 			this._cellsHeight = this._getNodeHeight(this._getListNode()) - this._spacerHeight;
 		},
 
-		getSelectedEntries: function(){
-			if(this._selectedEntries){
-				return lang.clone(this._selectedEntries).sort(function(first, second){
-					return first - second;
-				});
-			}else{
-				return null;
-			}
-		},
+//		getSelectedEntries: function(){
+//			if(this._selectedEntries){
+//				return lang.clone(this._selectedEntries).sort(function(first, second){
+//					return first - second;
+//				});
+//			}else{
+//				return null;
+//			}
+//		},
 
 		/////////////////////////////////
 		// Selection implementation
@@ -799,7 +799,7 @@ define(["dojo/_base/declare",
 					if(this._hasNextPage && domClass.contains(event.target, this.baseClass + 'LoaderCell')){
 						event.preventDefault();
 						this._onLoaderCellClick(event);
-					}else if(this.selectable){
+					}else if(this.selectable !== 'none'){
 						event.preventDefault();
 						this._handleSelection(event);
 					}
