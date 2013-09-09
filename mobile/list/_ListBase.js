@@ -744,7 +744,7 @@ define(["dojo/_base/declare",
 		_handleSelection: function(event){
 			var entryIndex, entrySelected;
 			var eventCell = this._getParentCell(event.target);
-			if(this.selectable !== 'none' && !this._dy){
+			if(this.selectionMode !== 'none' && !this._dy){
 				entryIndex = this._getCellEntryIndex(eventCell);
 				if(entryIndex != null){
 					entrySelected = !this.isItemSelected(entryIndex);
@@ -799,7 +799,7 @@ define(["dojo/_base/declare",
 					if(this._hasNextPage && domClass.contains(event.target, this.baseClass + 'LoaderCell')){
 						event.preventDefault();
 						this._onLoaderCellClick(event);
-					}else if(this.selectable !== 'none'){
+					}else if(this.selectionMode !== 'none'){
 						event.preventDefault();
 						this._handleSelection(event);
 					}
