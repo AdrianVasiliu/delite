@@ -547,7 +547,7 @@ define(["dojo/_base/declare",
 
 		_getCellByEntryIndex: function(entryIndex){
 			var cell = null;
-			if(entryIndex >= this._firstEntryIndex && entryIndex < this._lastEntryIndex){
+			if(entryIndex >= this._firstEntryIndex && entryIndex <= this._lastEntryIndex){
 				cell = query('li[data-index^="' + entryIndex + '"]', this.domNode)[0];
 			}
 			return cell;
