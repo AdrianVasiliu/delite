@@ -1,9 +1,8 @@
 define(["dojo/_base/declare",
         "dojo/string",
-        "dojo/dom-construct",
         "dui/_WidgetBase",
         "dui/_TemplatedMixin"
-], function(declare, string, domConstruct, _WidgetBase, _TemplatedMixin){
+], function(declare, string, _WidgetBase, _TemplatedMixin){
 	
 	return declare([_WidgetBase, _TemplatedMixin], {
 
