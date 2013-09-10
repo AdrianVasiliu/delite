@@ -117,7 +117,7 @@ define(["dojo/_base/declare",
 		},
 		
 		destroy: function(){
-			if(this._pageLoader){
+			if(this._loaderCell){
 				this._destroyPageLoader();
 			}
 		},
