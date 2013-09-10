@@ -146,16 +146,6 @@ define(["dojo/_base/declare",
 			this._cellsHeight = this._getNodeHeight(this._getListNode()) - this._spacerHeight;
 		},
 
-//		getSelectedEntries: function(){
-//			if(this._selectedEntries){
-//				return lang.clone(this._selectedEntries).sort(function(first, second){
-//					return first - second;
-//				});
-//			}else{
-//				return null;
-//			}
-//		},
-
 		/////////////////////////////////
 		// Selection implementation
 		/////////////////////////////////
