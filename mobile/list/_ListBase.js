@@ -55,7 +55,7 @@ define(["dojo/_base/declare",
 		_selectedEntries: null,
 		_browserScroll: 0, // the browser modify the scrollTop of the domNode when navigating the list using a keyboard. The current browser scroll on the y axis is stored there.
 		_touchHandlersRefs: null,
-		_loaderCellNode: null,
+		_loaderCell: null,
 		_loaderCellClickHandlerRef: null,
 		_lastPressStopedAnimation: false,
 		_lastYTouch: null,
