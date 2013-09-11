@@ -52,7 +52,6 @@ define(["dojo/_base/declare",
 		_nextCellIndex: 0, // the _createCells method use this to retrieve the index of the next cell to create
 		_firstEntryIndex: 0, // index of the entry in the first cell
 		_lastEntryIndex: null, // index of the entry in the last cell
-		_selectedEntries: null,
 		_browserScroll: 0, // the browser modify the scrollTop of the domNode when navigating the list using a keyboard. The current browser scroll on the y axis is stored there.
 		_touchHandlersRefs: null,
 		_loaderCell: null,
