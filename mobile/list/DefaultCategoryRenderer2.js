@@ -1,21 +1,19 @@
 define(["dojo/_base/declare",
         "dojo/dom-construct",
-        "dui/_WidgetBase",
+        "./_CategoryRendererBase",
         "dui/_TemplatedMixin"
-], function(declare, domConstruct, _WidgetBase, _TemplatedMixin){
+], function(declare, domConstruct, _CategoryRendererBase, _TemplatedMixin){
 	
-	return declare([_WidgetBase, _TemplatedMixin], {
+	return declare([_CategoryRendererBase, _TemplatedMixin], {
 
-		templateString: '<li class="${listBaseClass}CategoryHeader" data-dojo-attach-point="labelNode" data-section="${category}"></li>',
+		templateString: '<li></li>',
 
 		// The category to render
 		category: null,
-		_setCategoryAttr: {node: 'labelNode', type: 'innerHTML'},
-		
-		// The base class of the list
-		listBaseClass: null,
-		_setListBaseClass: function(value){
-			this._set('listBaseClass', value);
+		_setCategoryAttr: function(value){
+			this.inherited(arguments);
+			this.domNode.innerHTML = value;
 		}
+
 	});
 });

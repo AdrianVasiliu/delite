@@ -1,32 +1,19 @@
 define(["dojo/_base/declare",
         "dojo/dom-construct",
-        "dui/_WidgetBase",
+        "./_EntryRendererBase",
         "dui/_TemplatedMixin"
-], function(declare, domConstruct, _WidgetBase, _TemplatedMixin){
+], function(declare, domConstruct, _EntryRendererBase, _TemplatedMixin){
 	
-	return declare([_WidgetBase, _TemplatedMixin], {
+	return declare([_EntryRendererBase, _TemplatedMixin], {
 
-		templateString: '<li class="${listBaseClass}Cell" data-dojo-attach-point="labelNode""></li>',
-
-		// The index of the entry to render
-		entryIndex: null,
-		_setEntryIndexAttr: function(value){
-			this._set('entryIndex', value);
-			this.domNode.setAttribute('data-index', this.entryIndex);
-		},
+		templateString: '<li></li>',
 
 		// The entry to render
 		entry: null,
 		_setEntryAttr: function(value){
+			this.inherited(arguments);
 			var label = value ? (value.label ? value.label : '') : '';
-			this._set('item', value);
-			this.labelNode.innerHTML = label;
-		},
-
-		// The base class of the list
-		listBaseClass: null,
-		_setListBaseClass: function(value){
-			this._set('listBaseClass', value);
+			this.domNode.innerHTML = label;
 		}
 
 	});

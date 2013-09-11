@@ -13,13 +13,14 @@ define(["dojo/_base/declare",
         "dojo/on",
         "dojo/keys",
         "../_css3",
+        "dui/registry",
         "dui/_WidgetBase",
         "dui/_Container",
         "dui/mixins/Selection",
         "./DefaultEntryRenderer2",
         "./DefaultCategoryRenderer2",
         "./DefaultPageLoaderRenderer2"
-], function(declare, lang, array, when, win, has, dom, domConstruct, domGeometry, domClass, query, touch, on, keys, css3, _WidgetBase, _Container, Selection, DefaultEntryRenderer2, DefaultCategoryRenderer2, DefaultPageLoaderRenderer2){
+], function(declare, lang, array, when, win, has, dom, domConstruct, domGeometry, domClass, query, touch, on, keys, css3, registry, _WidgetBase, _Container, Selection, DefaultEntryRenderer2, DefaultCategoryRenderer2, DefaultPageLoaderRenderer2){
 	
 	return declare([_WidgetBase, _Container, Selection], {
 
@@ -62,7 +63,6 @@ define(["dojo/_base/declare",
 		_nextCellIndex: 0, // the _createCells method use this to retrieve the index of the next cell to create
 		_firstEntryIndex: 0, // index of the entry in the first cell
 		_lastEntryIndex: null, // index of the entry in the last cell
-		_selectedEntries: null,
 		_browserScroll: 0, // the browser modify the scrollTop of the domNode when navigating the list using a keyboard. The current browser scroll on the y axis is stored there.
 		_touchHandlersRefs: null,
 		_loaderCellClickHandlerRef: null,
@@ -182,17 +182,13 @@ define(["dojo/_base/declare",
 		},
 
 		updateRenderers: function(entryIndexes){
-			var entryIndex, cell;
+			var entryIndex, node;
 			if(this.selectionMode !== 'none'){
 				for(var i=0; i < entryIndexes.length; i++){
 					entryIndex = entryIndexes[i];
-					cell = this._getCellByEntryIndex(entryIndex);
-					if(cell){
-						if(this.isItemSelected(entryIndex)){
-							domClass.add(cell, this.baseClass + 'SelectedCell');
-						}else{
-							domClass.remove(cell, this.baseClass + 'SelectedCell');
-						}
+					node = this._getCellNodeByEntryIndex(entryIndex);
+					if(node){
+						this._setSelectionStyle(node, entryIndex);
 					}
 				}
 			}
@@ -334,24 +330,11 @@ define(["dojo/_base/declare",
 					lastCategory = currentEntry[this.categoryAttribute];
 					currentCell = this._renderCategory(currentEntry[this.categoryAttribute]);
 					this.addChild(currentCell);
-					//////////////////////////////////
-					// TODO: UPDATE OR REMOVE THIS ?
-					//////////////////////////////////
-// DONE IN THE WIDGET (BAD FOR CUSTOM WIDGETS !!! => SHOULD BE REMOVED COMPLETELY
-//					this._setCellCategoryHeader(currentCell, currentEntry[this.categoryAttribute]);
 					// FIXME: cells height calculation is not correct in some cases here (example: list3 in test page !!!)
 					this._cellsHeight += this._getCellHeight(currentCell);
 				}
 				currentCell = this._renderEntry(currentEntry, entryIndex);
 				this.addChild(currentCell);
-				if(this.selectionMode !== 'none' && this.isItemSelected(entryIndex)){
-					//////////////////////////////////
-					// TODO: UPDATE OR REMOVE THIS ? (NOTIFY RENDERER OF ITS SELECTION STATUS)
-					//////////////////////////////////
-					domClass.add(currentCell.domNode, this.baseClass + 'SelectedCell');
-				}
-// DONE IN THE WIDGET (BAD FOR CUSTOM WIDGETS !!! => SHOULD BE REMOVED COMPLETELY
-//				this._setCellEntryIndex(currentCell, entryIndex);
 				// FIXME: cells height calculation is not correct in some cases here (example: list3 in test page !!!)
 				this._cellsHeight += this._getCellHeight(currentCell);
 				this._lastEntryIndex = entryIndex;
@@ -361,9 +344,6 @@ define(["dojo/_base/declare",
 				domConstruct.place(loaderCell.domNode, listNode);
 			}else{
 				if(this._hasNextPage){
-					//////////////////////////////////
-					// TODO: USE CELL RENDERER TO RENDER THE LI ELEMENT HERE
-					//////////////////////////////////
 					loaderCell = this._renderPageLoader(false);
 					this.addChild(loaderCell);
 					this._isLoaderCellDisplayed = true;
@@ -379,11 +359,12 @@ define(["dojo/_base/declare",
 
 		_recycleCells: function(fromBottomToTop){
 			// TODO: the height calculations may cause bad performances on slower devices ?
-			var cell, removedHeight = 0, addedHeight = 0;
+			var cell, removedHeight, addedHeight;
 			// FIXME: THE FOLLOWING IS A HACK: IT APPEARS THAT THE VALUE CALCULATED FOR this._cellsHeight when creating the cells is not always ok (see example List3 in the test page)
 			this._cellsHeight = this._getNodeHeight(this.containerNode) - this._spacerHeight;
 			if(fromBottomToTop){
 				while(!this._centerOfListAboveCenterOfViewport()){
+					removedHeight = addedHeight = 0;
 					if(this._firstEntryIndex > 0){
 						// move the bottom cell to a pool
 						removedHeight += this._moveBottomCellToPool();
@@ -425,6 +406,7 @@ define(["dojo/_base/declare",
 				}
 			}else if(!fromBottomToTop){
 				while(this._centerOfListAboveCenterOfViewport()){
+					removedHeight = addedHeight = 0;
 					if(this._lastEntryIndex < this._getEntriesCount() - 1){
 						// move the top cell to a pool
 						removedHeight += this._moveTopCellToPool();
@@ -496,7 +478,21 @@ define(["dojo/_base/declare",
 			}else{
 				renderedEntry = new this.entriesRenderer({entry: entry, entryIndex: entryIndex, listBaseClass: this.baseClass, tabindex: "-1"});
 			}
+			//////////////////////////////////
+			// TODO: UPDATE OR REMOVE THIS ? (NOTIFY RENDERER OF ITS SELECTION STATUS)
+			//////////////////////////////////
+			this._setSelectionStyle(renderedEntry.domNode, entryIndex);
 			return renderedEntry;
+		},
+
+		_setSelectionStyle: function(cellNode, entryIndex){
+			if(this.selectionMode !== 'none'){
+				if (this.isItemSelected(entryIndex)){
+					domClass.add(cellNode, this.baseClass + 'SelectedCell');
+				}else{
+					domClass.remove(cellNode, this.baseClass + 'SelectedCell');
+				}
+			}
 		},
 
 		_renderCategory: function(category){
@@ -504,7 +500,7 @@ define(["dojo/_base/declare",
 			if(renderedCategory){
 				renderedCategory.set('category', category);
 			}else{
-				renderedCategory = new this.categoriesRenderer({category: category, listBaseClass: this.baseClass});
+				renderedCategory = new this.categoriesRenderer({category: category, listBaseClass: this.baseClass, tabindex: "-1"});
 			}
 			return renderedCategory;
 		},
@@ -557,12 +553,12 @@ define(["dojo/_base/declare",
 			}
 		},
 
-		_getCellByEntryIndex: function(entryIndex){
-			var cell = null;
+		_getCellNodeByEntryIndex: function(entryIndex){
+			var node = null;
 			if(entryIndex >= this._firstEntryIndex && entryIndex <= this._lastEntryIndex){
-				cell = query('li[data-index^="' + entryIndex + '"]', this.domNode)[0];
+				node = query('li[data-index^="' + entryIndex + '"]', this.domNode)[0];
 			}
-			return cell;
+			return node;
 		},
 
 		_getCellEntryIndex: function(cell){
@@ -591,7 +587,7 @@ define(["dojo/_base/declare",
 			while(currentNode && !domClass.contains(currentNode, this.baseClass + 'Cell')){
 				currentNode = currentNode.parentNode;
 			}
-			return currentNode;
+			return registry.byNode(currentNode);
 		},
 
 		_topOfNodeIsBelowTopOfViewport: function(node){
@@ -754,9 +750,9 @@ define(["dojo/_base/declare",
 		},
 
 		_handleSelection: function(event){
-			var entryIndex, entrySelected;
-			var eventCell = this._getParentCell(event.target);
+			var entryIndex, entrySelected, eventCell;
 			if(this.selectionMode !== 'none' && !this._dy){
+				eventCell = this._getParentCell(event.target);
 				entryIndex = this._getCellEntryIndex(eventCell);
 				if(entryIndex != null){
 					entrySelected = !this.isItemSelected(entryIndex);

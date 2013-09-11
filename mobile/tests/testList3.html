@@ -26,10 +26,10 @@
 			"dojo/request",
 			"dojo/when",
 			"dojo/store/util/QueryResults",
-	        "dui/_WidgetBase",
+	        "dui/mobile/list/_EntryRendererBase",
 	        "dui/_TemplatedMixin",
 			"dojox/mobile/common"
-		], function(declare, lang, array, parser, registry, on, List, dom, domConstruct, domClass, request, when, QueryResults, _WidgetBase, _TemplateMixin){
+		], function(declare, lang, array, parser, registry, on, List, dom, domConstruct, domClass, request, when, QueryResults, _EntryRendererBase, _TemplateMixin){
 			
 			/////////////////////////////////////////
 			// Demo 2: 4999 entries
@@ -60,21 +60,21 @@
 				cart: {}, // the cart in which user push catalog entries to buy
 				detailed: {} // store information about catalog entries that are selected to display details
 			};
-			var CatalogEntryRenderer = declare([_WidgetBase, _TemplateMixin], {
+			var CatalogEntryRenderer = declare([_EntryRendererBase, _TemplateMixin], {
 				catalogController: catalogController,
 				templateString: '<li class="entryContainer" data-dojo-attach-event="onclick: toggleDetail"><div class="entryHeader"><img class="entryIcon" data-dojo-attach-point="image"><span class="entryTitle" data-dojo-attach-point="title"></span></div><div data-dojo-attach-point="entryDetail" class="entryDetails hidden"><span class="entryDescription" data-dojo-attach-point="description"></span><a class="" href="javascript:;" data-dojo-attach-point="addToCartLink" data-dojo-attach-event="onclick: addToCart">Add to Cart</a></div></li>',
-				entryIndex: null,
+				// redefine setter for entryIndex
 				_setEntryIndexAttr: function(value){
-					this._set('entryIndex', value);
+					this.inherited(arguments);
 					this._updateDetailRendering();
 					this._updateAddToCartLinkRendering();
 				},
-				entry: null,
+				// redefine setter for entry
 				_setEntryAttr: function(value){
+					this.inherited(arguments);
 					var img = value ? (value.img ? value.img : '') : '';
 					var title = value ? (value.title ? value.title : '') : '';
 					var description = value ? (value.description ? value.description : '') : '';
-					this._set('entry', value);
 					this.image.setAttribute('src', img);
 					this.title.innerHTML = title;
 					this.description.innerHTML = description;
@@ -128,21 +128,21 @@
 				cart: {}, // the cart in which user push catalog entries to buy
 				detailed: {} // store information about catalog entries that are selected to display details
 			};
-			var CatalogEntryRenderer2 = declare([_WidgetBase, _TemplateMixin], {
+			var CatalogEntryRenderer2 = declare([_EntryRendererBase, _TemplateMixin], {
 				catalogController: catalogController2,
 				templateString: '<li class="entryContainer" data-dojo-attach-event="onclick: toggleDetail"><div class="entryHeader"><img class="entryIcon" data-dojo-attach-point="image"><span class="entryTitle" data-dojo-attach-point="title"></span></div><div data-dojo-attach-point="entryDetail" class="entryDetails hidden"><span class="entryDescription" data-dojo-attach-point="description"></span><a class="" href="javascript:;" data-dojo-attach-point="addToCartLink" data-dojo-attach-event="onclick: addToCart">Add to Cart</a></div></li>',
-				entryIndex: null,
+				// redefine setter for entryIndex
 				_setEntryIndexAttr: function(value){
-					this._set('entryIndex', value);
+					this.inherited(arguments);
 					this._updateDetailRendering();
 					this._updateAddToCartLinkRendering();
 				},
-				entry: null,
+				// redefine setter for entry
 				_setEntryAttr: function(value){
+					this.inherited(arguments);
 					var img = value ? (value.img ? value.img : '') : '';
 					var title = value ? (value.title ? value.title : '') : '';
 					var description = value ? (value.description ? value.description : '') : '';
-					this._set('entry', value);
 					this.image.setAttribute('src', img);
 					this.title.innerHTML = title;
 					this.description.innerHTML = description;
@@ -222,18 +222,16 @@
 			                        {type: 'vegetable', name: 'Spinach'},
 			                        {type: 'vegetable', name: 'Watercress'},
 			                        ];
-			var FruitAndVegRenderer = declare([_WidgetBase, _TemplateMixin], {
+			var FruitAndVegRenderer = declare([_EntryRendererBase, _TemplateMixin], {
 				templateString: '<li data-dojo-attach-point="name"></li>',
-				entryIndex: null,
-				_setEntryIndexAttr: function(value){
-					this._set('entryIndex', value);
-				},
-				entry: null,
+				_type: null,
+				// redefine setter for entry
 				_setEntryAttr: function(value){
-					var type = value ? (value.type ? value.type : '') : '';
+					domClass.remove(this.name, this._type + 'Entry');
+					this.inherited(arguments);
+					this._type = value ? (value.type ? value.type : '') : '';
 					var name = value ? (value.name ? value.name : '') : '';
-					this._set('entry', value);
-					this.name.className = type + 'Entry';
+					domClass.add(this.name, this._type + 'Entry');
 					this.name.innerHTML = name;
 				},
 			});
