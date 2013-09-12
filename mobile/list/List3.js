@@ -360,7 +360,7 @@ define(["dojo/_base/declare",
 						// move the bottom cell to a pool
 						removedHeight += this._moveBottomCellToPool();
 						// move the bottom cell to the top while updating its content
-						if(this.categoryAttribute && (this._getEntry(this._firstEntryIndex - 1)[this.categoryAttribute] != this._getEntry(this._firstEntryIndex)[this.categoryAttribute]) && !this._cellRendersCategoryHeader(this._getFirstCell())){
+						if(this.categoryAttribute && (this._getEntry(this._firstEntryIndex - 1)[this.categoryAttribute] != this._getEntry(this._firstEntryIndex)[this.categoryAttribute]) && !this._nodeRendersCategoryHeader(this._getFirstCellNode())){
 							// render a category header at the top
 							addedHeight += this._getCellHeight(this._renderCategory(this._getEntry(this._firstEntryIndex)[this.categoryAttribute], this.containerNode, this._getTopOfListPos()));
 							// move the new bottom cell to the pool
@@ -375,7 +375,7 @@ define(["dojo/_base/declare",
 						this._updateSpacerHeight();
 						this._cellsHeight += (addedHeight - removedHeight);
 					}else{
-						if(this.categoryAttribute && this._firstEntryIndex == 0 && !this._cellRendersCategoryHeader(this._getFirstCell())){
+						if(this.categoryAttribute && this._firstEntryIndex == 0 && !this._nodeRendersCategoryHeader(this._getFirstCellNode())){
 							// move the bottom cell to a pool
 							removedHeight += this._moveBottomCellToPool();
 							// render a category header at the top
@@ -395,7 +395,7 @@ define(["dojo/_base/declare",
 					if(this._lastEntryIndex < this._getEntriesCount() - 1){
 						// move the top cell to a pool
 						removedHeight += this._moveTopCellToPool();
-						if(this.categoryAttribute && (this._getEntry(this._lastEntryIndex + 1)[this.categoryAttribute] != this._getEntry(this._lastEntryIndex)[this.categoryAttribute]) && !this._cellRendersCategoryHeader(this._getLastCell())){
+						if(this.categoryAttribute && (this._getEntry(this._lastEntryIndex + 1)[this.categoryAttribute] != this._getEntry(this._lastEntryIndex)[this.categoryAttribute]) && !this._nodeRendersCategoryHeader(this._getLastCellNode())){
 							// render a category header at the bottom
 							addedHeight += this._getCellHeight(this._renderCategory(this._getEntry(this._lastEntryIndex + 1)[this.categoryAttribute], this.containerNode, this._getBottomOfListPos()));
 							// move the new top cell to the pool
@@ -417,9 +417,10 @@ define(["dojo/_base/declare",
 		},
 
 		_moveTopCellToPool: function(){
-			var topCell = this._getFirstCell();
+			var topCellNode = this._getFirstCellNode();
+			var topCell = registry.byNode(topCellNode);
 			var removedHeight = this._getCellHeight(topCell);
-			var topCellIsCategoryHeader = this._cellRendersCategoryHeader(topCell);
+			var topCellIsCategoryHeader = this._nodeRendersCategoryHeader(topCell.domNode);
 			domStyle.set(topCell.domNode, 'display', 'none');
 			this._hiddenCellsOnTop += 1;
 			if(topCellIsCategoryHeader){
@@ -432,9 +433,10 @@ define(["dojo/_base/declare",
 		},
 
 		_moveBottomCellToPool: function(){
-			var bottomCell = this._getLastCell();
+			var bottomCellNode = this._getLastCellNode();
+			var bottomCell = registry.byNode(bottomCellNode);
 			var removedHeight = this._getCellHeight(bottomCell);
-			var bottomCellIsCategoryHeader = this._cellRendersCategoryHeader(bottomCell);
+			var bottomCellIsCategoryHeader = this._nodeRendersCategoryHeader(bottomCell.domNode);
 			domStyle.set(bottomCell.domNode, 'display', 'none');
 			domConstruct.place(bottomCell.domNode, this.containerNode, 1);
 			this._hiddenCellsOnTop += 1;
@@ -468,8 +470,10 @@ define(["dojo/_base/declare",
 			if(renderedEntry){
 				this._hiddenCellsOnTop -= 1;
 				domStyle.set(renderedEntry.domNode, 'display', '');
-				renderedEntry.set('entryIndex', entryIndex);
-				renderedEntry.set('entry', entry);
+				renderedEntry._setEntryIndexAttr(entryIndex);
+				renderedEntry._setEntryAttr(entry);
+//				renderedEntry.set('entryIndex', entryIndex);
+//				renderedEntry.set('entry', entry);
 			}else{
 				renderedEntry = new this.entriesRenderer({entry: entry, entryIndex: entryIndex, listBaseClass: this.baseClass, tabindex: "-1"});
 			}
@@ -496,7 +500,8 @@ define(["dojo/_base/declare",
 			if(renderedCategory){
 				this._hiddenCellsOnTop -= 1;
 				domStyle.set(renderedCategory.domNode, 'display', '');
-				renderedCategory.set('category', category);
+				renderedCategory._setCategoryAttr(category);
+//				renderedCategory.set('category', category);
 			}else{
 				renderedCategory = new this.categoriesRenderer({category: category, listBaseClass: this.baseClass, tabindex: "-1"});
 			}
@@ -530,12 +535,12 @@ define(["dojo/_base/declare",
 			return this.containerNode.children[0];
 		},
 
-		_getFirstCell: function(){
-			return this.getChildren()[this._hiddenCellsOnTop];
+		_getFirstCellNode: function(){
+			return this.containerNode.children[1 + this._hiddenCellsOnTop];
 		},
-		
-		_getLastCell: function(){
-			var children = this.getChildren();
+
+		_getLastCellNode: function(){
+			var children = this.containerNode.children;
 			if(this._hasNextPage){
 				return children[children.length - 2];
 			}else{
@@ -573,8 +578,8 @@ define(["dojo/_base/declare",
 			this._setNodeData(cell.domNode, 'index', entryIndex);
 		},
 
-		_getCellCategoryHeader: function(cell){
-			return this._getNodeData(cell.domNode, 'section');
+		_getNodeCategoryHeader: function(node){
+			return this._getNodeData(node, 'section');
 		},
 
 		_setCellCategoryHeader: function(cell, categoryName){
@@ -605,8 +610,8 @@ define(["dojo/_base/declare",
 			return (this._visibleHeight / 2) - this._getApparentScroll() > (this._cellsHeight / 2);
 		},
 
-		_cellRendersCategoryHeader: function(cell){
-			return (this._getCellCategoryHeader(cell) != null);
+		_nodeRendersCategoryHeader: function(node){
+			return (this._getNodeCategoryHeader(node) != null);
 		},
 
 		/////////////////////////////////
@@ -829,7 +834,7 @@ define(["dojo/_base/declare",
 				}
 			}else{
 				// Focus the first visible cell node
-				node = this._getFirstCell().domNode;
+				node = this._getFirstCellNode();
 				while(node){
 					if(this._topOfNodeIsBelowTopOfViewport(node)){
 						this._focusedNode = node;

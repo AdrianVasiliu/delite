@@ -8,11 +8,8 @@ define(["dojo/_base/declare",
 
 		templateString: '<li></li>',
 
-		// The category to render
-		category: null,
-		_setCategoryAttr: function(value){
-			this.inherited(arguments);
-			this.domNode.innerHTML = value;
+		renderCategory: function(category){
+			this.domNode.innerHTML = category;
 		}
 
 	});

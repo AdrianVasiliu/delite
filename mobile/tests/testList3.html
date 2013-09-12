@@ -372,6 +372,9 @@
 			};
  			list11.on('entryDeselected', updateList11Console);
  			list11.on('entrySelected', updateList11Console);
+			on(dom.byId('autoscroll11'), 'click', function(){
+				list11._animateScroll(dom.byId('fps11').valueAsNumber, dom.byId('duration11').valueAsNumber, dom.byId('length11').valueAsNumber);
+			});
 
  });
 	</script>
@@ -461,7 +464,7 @@
 	<!-- a really basic list with a lot of entries -->
 	<a id="l2"></a>
 	<h2>Demo 2: 4999 entries</h2>
-	<div>fps: <input id='fps' type='number' value='25'/> duration (s): <input id='duration' type='number' value='3'/> length (px): <input id='length' type='number' value='-5000'/><button id='autoscroll'>auto scroll</button></div>
+	<div>fps: <input id='fps' type='number' value='25'/> duration (s): <input id='duration' type='number' value='3'/> length (px): <input id='length' type='number' value='-50000'/><button id='autoscroll'>auto scroll</button></div>
 	<br>
 	<div id="list2"></div>
 
@@ -515,6 +518,7 @@
 	<!-- categorized list that supports single selection -->
 	<a id="l11"></a>
 	<h2>Demo 11: categorized list that supports single selection</h2>
+	<div>fps: <input id='fps11' type='number' value='25'/> duration (s): <input id='duration11' type='number' value='3'/> length (px): <input id='length11' type='number' value='-45000'/><button id='autoscroll11'>auto scroll</button></div>
 	<span id="list11Console">Selected entry: none</span>
 	<div id="list11"></div>
 	

@@ -8,13 +8,9 @@ define(["dojo/_base/declare",
 
 		templateString: '<li></li>',
 
-		// The entry to render
-		entry: null,
-		_setEntryAttr: function(value){
-			this.inherited(arguments);
-			var label = value ? (value.label ? value.label : '') : '';
+		renderEntry: function(entry){
+			var label = entry ? (entry.label ? entry.label : '') : '';
 			this.domNode.innerHTML = label;
 		}
-
 	});
 });
