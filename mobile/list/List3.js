@@ -9,7 +9,6 @@ define(["dojo/_base/declare",
         "dojo/dom-geometry",
         "dojo/dom-class",
         "dojo/dom-style",
-        "dojo/query",
         "dojo/touch",
         "dojo/on",
         "dojo/keys",
@@ -21,7 +20,7 @@ define(["dojo/_base/declare",
         "./DefaultEntryRenderer2",
         "./DefaultCategoryRenderer2",
         "./DefaultPageLoaderRenderer2"
-], function(declare, lang, array, when, win, has, dom, domConstruct, domGeometry, domClass, domStyle, query, touch, on, keys, css3, registry, _WidgetBase, _Container, Selection, DefaultEntryRenderer2, DefaultCategoryRenderer2, DefaultPageLoaderRenderer2){
+], function(declare, lang, array, when, win, has, dom, domConstruct, domGeometry, domClass, domStyle, touch, on, keys, css3, registry, _WidgetBase, _Container, Selection, DefaultEntryRenderer2, DefaultCategoryRenderer2, DefaultPageLoaderRenderer2){
 	
 	return declare([_WidgetBase, _Container, Selection], {
 
@@ -81,6 +80,8 @@ define(["dojo/_base/declare",
 		_renderedCategoriesPool: null,
 		_isLoaderCellDisplayed: false,
 		_hiddenCellsOnTop: 0,
+		_cellEntryIndexes: null,
+		_cellCategoryHeaders: null,
 
 		/////////////////////////////////
 		// Widget lifecycle
@@ -91,6 +92,8 @@ define(["dojo/_base/declare",
 			this._touchHandlersRefs = [];
 			this._renderedEntriesPool = [];
 			this._renderedCategoriesPool = [];
+			this._cellEntryIndexes = {};
+			this._cellCategoryHeaders = {};
 		},
 
 		buildRendering: function(){
@@ -295,8 +298,7 @@ define(["dojo/_base/declare",
 		},
 
 		_getCellHeight: function(cell){
-			// TODO: STORE THE CELL HEIGHT IN THE WIDGET TO REDUCE BY 2 THE NUMBER OF HEIGHT CALCULATIONS ????
-			//		-> In this case, remove the height when the widget is calculated
+			// TODO: CACHE CELL HEIGHT
 			return this._getNodeHeight(cell.domNode);
 		},
 
@@ -481,6 +483,8 @@ define(["dojo/_base/declare",
 			// TODO: UPDATE OR REMOVE THIS ? (NOTIFY RENDERER OF ITS SELECTION STATUS)
 			//////////////////////////////////
 			this._setSelectionStyle(renderedEntry.domNode, entryIndex);
+			this._setCellEntryIndex(renderedEntry, entryIndex);
+			this._setCellCategoryHeader(renderedEntry, null);
 			domConstruct.place(renderedEntry.domNode, refNode, pos);
 			return renderedEntry;
 		},
@@ -505,6 +509,8 @@ define(["dojo/_base/declare",
 			}else{
 				renderedCategory = new this.categoriesRenderer({category: category, listBaseClass: this.baseClass, tabindex: "-1"});
 			}
+			this._setCellEntryIndex(renderedCategory, null);
+			this._setCellCategoryHeader(renderedCategory, category);
 			domConstruct.place(renderedCategory.domNode, refNode, pos);
 			return renderedCategory;
 		},
@@ -560,30 +566,38 @@ define(["dojo/_base/declare",
 		_getCellNodeByEntryIndex: function(entryIndex){
 			var node = null;
 			if(entryIndex >= this._firstEntryIndex && entryIndex <= this._lastEntryIndex){
-				node = query('li[data-index^="' + entryIndex + '"]', this.domNode)[0];
+				for(var id in this._cellEntryIndexes){
+					if(this._cellEntryIndexes[id] == entryIndex){
+						node = dom.byId(id);
+						break;
+					}
+				}
 			}
 			return node;
 		},
 
 		_getCellEntryIndex: function(cell){
-			var rawIndex =  this._getNodeData(cell.domNode, 'index');
-			if(rawIndex){
-				return parseInt(this._getNodeData(cell.domNode, 'index'), 10);
-			}else{
-				return null;
-			}
+			return this._cellEntryIndexes[cell.id];
 		},
 
 		_setCellEntryIndex: function(cell, entryIndex){
-			this._setNodeData(cell.domNode, 'index', entryIndex);
+			if(entryIndex == null){
+				delete this._cellEntryIndexes[cell.id];
+			}else{
+				this._cellEntryIndexes[cell.id] = entryIndex;
+			}
 		},
 
 		_getNodeCategoryHeader: function(node){
-			return this._getNodeData(node, 'section');
+			return this._cellCategoryHeaders[node.id];
 		},
 
 		_setCellCategoryHeader: function(cell, categoryName){
-			this._setNodeData(cell.domNode, 'section', categoryName);
+			if(categoryName == null){
+				delete this._cellCategoryHeaders[cell.id];
+			}else{
+				this._cellCategoryHeaders[cell.id] = categoryName;
+			}
 		},
 
 		_getParentCell: function(node){

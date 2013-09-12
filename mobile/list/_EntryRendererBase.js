@@ -9,7 +9,6 @@ define(["dojo/_base/declare",
 		entryIndex: null,
 		_setEntryIndexAttr: function(value){
 			this._set('entryIndex', value);
-			this.domNode.setAttribute('data-index', this.entryIndex);
 		},
 
 		// The entry to render

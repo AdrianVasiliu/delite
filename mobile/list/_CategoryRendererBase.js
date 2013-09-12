@@ -9,7 +9,6 @@ define(["dojo/_base/declare",
 		category: null,
 		_setCategoryAttr: function(value){
 			this._set('category', value);
-			this.domNode.setAttribute('data-section', value);
 			this.renderCategory(value);
 		},
 

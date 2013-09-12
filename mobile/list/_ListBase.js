@@ -8,14 +8,13 @@ define(["dojo/_base/declare",
         "dojo/dom-construct",
         "dojo/dom-geometry",
         "dojo/dom-class",
-        "dojo/query",
         "dojo/touch",
         "dojo/on",
         "dojo/keys",
         "../_css3",
         "dui/_WidgetBase",
         "dui/mixins/Selection"
-], function(declare, lang, array, when, win, has, dom, domConstruct, domGeometry, domClass, query, touch, on, keys, css3, _WidgetBase, Selection){
+], function(declare, lang, array, when, win, has, dom, domConstruct, domGeometry, domClass, touch, on, keys, css3, _WidgetBase, Selection){
 	
 	return declare([_WidgetBase, Selection], {
 
@@ -66,6 +65,8 @@ define(["dojo/_base/declare",
 		_hasNextPage: false,
 		_queryOptions: null,
 		_loadingPage: false,
+		_cellEntryIndexes: null,
+		_cellCategoryHeaders: null,
 
 		/////////////////////////////////
 		// Widget lifecycle
@@ -74,6 +75,8 @@ define(["dojo/_base/declare",
 		postMixInProperties: function(){
 			this.inherited(arguments);
 			this._touchHandlersRefs = [];
+			this._cellEntryIndexes = {};
+			this._cellCategoryHeaders = {};
 		},
 
 		buildRendering: function(){
@@ -241,35 +244,9 @@ define(["dojo/_base/declare",
 			return this._entries[index];
 		},
 
-		_setNodeData: function(node, key, value){
-			var dataset = node.dataset;
-			if(dataset){
-				if(value == null){
-					delete dataset[key];
-				}else{
-					dataset[key] = value;
-				}
-			}else{
-				if(value == null){
-					node.removeAttribute('data-' + key);
-				}else{
-					node.setAttribute('data-' + key, value);
-				}
-			}
-		},
-
-		_getNodeData: function(node, key){
-			var dataset = node.dataset;
-			if(dataset){
-				return dataset[key];
-			}else{
-				return node.getAttribute('data-' + key);
-			}
-		},
-
 		_getCellHeight: function(cell){
-			return 21;
-//			return this._getNodeHeight(cell);
+			// TODO: CACHE CELL HEIGHT
+			return this._getNodeHeight(cell);
 		},
 
 		_getNodeHeight: function(node){
@@ -529,30 +506,38 @@ define(["dojo/_base/declare",
 		_getCellByEntryIndex: function(entryIndex){
 			var cell = null;
 			if(entryIndex >= this._firstEntryIndex && entryIndex <= this._lastEntryIndex){
-				cell = query('li[data-index^="' + entryIndex + '"]', this.domNode)[0];
+				for(var id in this._cellEntryIndexes){
+					if(this._cellEntryIndexes[id] == entryIndex){
+						cell = dom.byId(id);
+						break;
+					}
+				}
 			}
 			return cell;
 		},
 
 		_getCellEntryIndex: function(cell){
-			var rawIndex =  this._getNodeData(cell, 'index');
-			if(rawIndex){
-				return parseInt(this._getNodeData(cell, 'index'), 10);
-			}else{
-				return null;
-			}
+			return this._cellEntryIndexes[cell.id];
 		},
 
 		_setCellEntryIndex: function(cell, entryIndex){
-			this._setNodeData(cell, 'index', entryIndex);
+			if(entryIndex == null){
+				delete this._cellEntryIndexes[cell.id];
+			}else{
+				this._cellEntryIndexes[cell.id] = entryIndex;
+			}
 		},
 
 		_getCellCategoryHeader: function(cell){
-			return this._getNodeData(cell, 'section');
+			return this._cellCategoryHeaders[cell.id];
 		},
 
 		_setCellCategoryHeader: function(cell, categoryName){
-			this._setNodeData(cell, 'section', categoryName);
+			if(categoryName == null){
+				delete this._cellCategoryHeaders[cell.id];
+			}else{
+				this._cellCategoryHeaders[cell.id] = categoryName;
+			}
 		},
 
 		_getParentCell: function(node){
