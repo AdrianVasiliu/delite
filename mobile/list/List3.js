@@ -8,6 +8,7 @@ define(["dojo/_base/declare",
         "dojo/dom-construct",
         "dojo/dom-geometry",
         "dojo/dom-class",
+        "dojo/dom-style",
         "dojo/query",
         "dojo/touch",
         "dojo/on",
@@ -20,7 +21,7 @@ define(["dojo/_base/declare",
         "./DefaultEntryRenderer2",
         "./DefaultCategoryRenderer2",
         "./DefaultPageLoaderRenderer2"
-], function(declare, lang, array, when, win, has, dom, domConstruct, domGeometry, domClass, query, touch, on, keys, css3, registry, _WidgetBase, _Container, Selection, DefaultEntryRenderer2, DefaultCategoryRenderer2, DefaultPageLoaderRenderer2){
+], function(declare, lang, array, when, win, has, dom, domConstruct, domGeometry, domClass, domStyle, query, touch, on, keys, css3, registry, _WidgetBase, _Container, Selection, DefaultEntryRenderer2, DefaultCategoryRenderer2, DefaultPageLoaderRenderer2){
 	
 	return declare([_WidgetBase, _Container, Selection], {
 
@@ -79,6 +80,7 @@ define(["dojo/_base/declare",
 		_renderedEntriesPool: null,
 		_renderedCategoriesPool: null,
 		_isLoaderCellDisplayed: false,
+		_hiddenCellsOnTop: 0,
 
 		/////////////////////////////////
 		// Widget lifecycle
@@ -170,7 +172,7 @@ define(["dojo/_base/declare",
 		},
 
 		renderingUpdated: function(){ // Notify the list widget that cells rendering has been updated.
-			this._cellsHeight = this._getNodeHeight(this._getListNode()) - this._spacerHeight;
+			this._cellsHeight = this._getNodeHeight(this.containerNode) - this._spacerHeight;
 		},
 
 		/////////////////////////////////
@@ -266,13 +268,6 @@ define(["dojo/_base/declare",
 			return this._entries[index];
 		},
 
-		/////////////////////////////
-		// TODO: REPLACE CALLS TO THIS METHOD BY this.containerNode
-		//////////////////////////////
-		_getListNode: function(){
-			return this.containerNode;
-		},
-
 		_setNodeData: function(node, key, value){
 			var dataset = node.dataset;
 			if(dataset){
@@ -300,6 +295,8 @@ define(["dojo/_base/declare",
 		},
 
 		_getCellHeight: function(cell){
+			// TODO: STORE THE CELL HEIGHT IN THE WIDGET TO REDUCE BY 2 THE NUMBER OF HEIGHT CALCULATIONS ????
+			//		-> In this case, remove the height when the widget is calculated
 			return this._getNodeHeight(cell.domNode);
 		},
 
@@ -315,8 +312,6 @@ define(["dojo/_base/declare",
 		_createCells: function(){
 			var entryIndex = this._lastEntryIndex != null ? this._lastEntryIndex + 1 : 0;
 			var currentEntry;
-			var currentCell;
-			var listNode = this._getListNode();
 			var lastCategory = null;
 			var loaderCell = this._getLoaderCell();
 			// Create cells using renderers
@@ -328,20 +323,16 @@ define(["dojo/_base/declare",
 				if(this.categoryAttribute && currentEntry[this.categoryAttribute] != lastCategory){
 					// create a category header
 					lastCategory = currentEntry[this.categoryAttribute];
-					currentCell = this._renderCategory(currentEntry[this.categoryAttribute]);
-					this.addChild(currentCell);
 					// FIXME: cells height calculation is not correct in some cases here (example: list3 in test page !!!)
-					this._cellsHeight += this._getCellHeight(currentCell);
+					this._cellsHeight += this._getCellHeight(this._renderCategory(currentEntry[this.categoryAttribute], this.containerNode));
 				}
-				currentCell = this._renderEntry(currentEntry, entryIndex);
-				this.addChild(currentCell);
 				// FIXME: cells height calculation is not correct in some cases here (example: list3 in test page !!!)
-				this._cellsHeight += this._getCellHeight(currentCell);
+				this._cellsHeight += this._getCellHeight(this._renderEntry(currentEntry, entryIndex, this.containerNode));
 				this._lastEntryIndex = entryIndex;
 			}
 			if(loaderCell){
 				// move it to the end of the list
-				domConstruct.place(loaderCell.domNode, listNode);
+				domConstruct.place(loaderCell.domNode, this.containerNode);
 			}else{
 				if(this._hasNextPage){
 					loaderCell = this._renderPageLoader(false);
@@ -359,7 +350,7 @@ define(["dojo/_base/declare",
 
 		_recycleCells: function(fromBottomToTop){
 			// TODO: the height calculations may cause bad performances on slower devices ?
-			var cell, removedHeight, addedHeight;
+			var removedHeight, addedHeight;
 			// FIXME: THE FOLLOWING IS A HACK: IT APPEARS THAT THE VALUE CALCULATED FOR this._cellsHeight when creating the cells is not always ok (see example List3 in the test page)
 			this._cellsHeight = this._getNodeHeight(this.containerNode) - this._spacerHeight;
 			if(fromBottomToTop){
@@ -371,17 +362,13 @@ define(["dojo/_base/declare",
 						// move the bottom cell to the top while updating its content
 						if(this.categoryAttribute && (this._getEntry(this._firstEntryIndex - 1)[this.categoryAttribute] != this._getEntry(this._firstEntryIndex)[this.categoryAttribute]) && !this._cellRendersCategoryHeader(this._getFirstCell())){
 							// render a category header at the top
-							cell = this._renderCategory(this._getEntry(this._firstEntryIndex)[this.categoryAttribute]);
-							this.addChild(cell, 1);
-							addedHeight += this._getCellHeight(cell);
+							addedHeight += this._getCellHeight(this._renderCategory(this._getEntry(this._firstEntryIndex)[this.categoryAttribute], this.containerNode, this._getTopOfListPos()));
 							// move the new bottom cell to the pool
 							removedHeight += this._moveBottomCellToPool();
 						}
 						// render the new entry at the top
 						--this._firstEntryIndex;
-						cell = this._renderEntry(this._getEntry(this._firstEntryIndex), this._firstEntryIndex);
-						this.addChild(cell, 1);
-						addedHeight += this._getCellHeight(cell);
+						addedHeight += this._getCellHeight(this._renderEntry(this._getEntry(this._firstEntryIndex), this._firstEntryIndex, this.containerNode, this._getTopOfListPos()));
 						// we cannot use _scrollBy here to compensate for the node move, as it cause
 						// flickering on iOS. Instead, we resize the spacer element.
 						this._spacerHeight -= addedHeight;
@@ -392,9 +379,7 @@ define(["dojo/_base/declare",
 							// move the bottom cell to a pool
 							removedHeight += this._moveBottomCellToPool();
 							// render a category header at the top
-							cell = this._renderCategory(this._getEntry(this._firstEntryIndex)[this.categoryAttribute]);
-							this.addChild(cell, 1);
-							addedHeight += this._getCellHeight(cell);
+							addedHeight += this._getCellHeight(this._renderCategory(this._getEntry(this._firstEntryIndex)[this.categoryAttribute], this.containerNode, this._getTopOfListPos()));
 							// we cannot use _scrollBy here to compensate for the node move, as it cause
 							// flickering on iOS. Instead, we resize the spacer element.
 							this._spacerHeight -= addedHeight;
@@ -404,7 +389,7 @@ define(["dojo/_base/declare",
 						break;
 					}
 				}
-			}else if(!fromBottomToTop){
+			}else{ // from top to bottom
 				while(this._centerOfListAboveCenterOfViewport()){
 					removedHeight = addedHeight = 0;
 					if(this._lastEntryIndex < this._getEntriesCount() - 1){
@@ -412,17 +397,13 @@ define(["dojo/_base/declare",
 						removedHeight += this._moveTopCellToPool();
 						if(this.categoryAttribute && (this._getEntry(this._lastEntryIndex + 1)[this.categoryAttribute] != this._getEntry(this._lastEntryIndex)[this.categoryAttribute]) && !this._cellRendersCategoryHeader(this._getLastCell())){
 							// render a category header at the bottom
-							cell = this._renderCategory(this._getEntry(this._lastEntryIndex + 1)[this.categoryAttribute]);
-							this.addChild(cell, this.getIndexOfChild(this._getLastCell()) + 2);
-							addedHeight += this._getCellHeight(cell);
+							addedHeight += this._getCellHeight(this._renderCategory(this._getEntry(this._lastEntryIndex + 1)[this.categoryAttribute], this.containerNode, this._getBottomOfListPos()));
 							// move the new top cell to the pool
 							removedHeight += this._moveTopCellToPool();
 						}
 						// render the new entry at the bottom
 						++this._lastEntryIndex;
-						cell = this._renderEntry(this._getEntry(this._lastEntryIndex), this._lastEntryIndex);
-						this.addChild(cell, this.getIndexOfChild(this._getLastCell()) + 2);
-						addedHeight += this._getCellHeight(cell);
+						addedHeight += this._getCellHeight(this._renderEntry(this._getEntry(this._lastEntryIndex), this._lastEntryIndex, this.containerNode, this._getBottomOfListPos()));
 						// we cannot use _scrollBy here to compensate for the node move, as it cause
 						// flickering on iOS. Instead, we resize the spacer element.
 						this._spacerHeight += removedHeight;
@@ -439,7 +420,8 @@ define(["dojo/_base/declare",
 			var topCell = this._getFirstCell();
 			var removedHeight = this._getCellHeight(topCell);
 			var topCellIsCategoryHeader = this._cellRendersCategoryHeader(topCell);
-			this.removeChild(topCell);
+			domStyle.set(topCell.domNode, 'display', 'none');
+			this._hiddenCellsOnTop += 1;
 			if(topCellIsCategoryHeader){
 				this._renderedCategoriesPool.push(topCell);
 			}else{
@@ -453,7 +435,9 @@ define(["dojo/_base/declare",
 			var bottomCell = this._getLastCell();
 			var removedHeight = this._getCellHeight(bottomCell);
 			var bottomCellIsCategoryHeader = this._cellRendersCategoryHeader(bottomCell);
-			this.removeChild(bottomCell);
+			domStyle.set(bottomCell.domNode, 'display', 'none');
+			domConstruct.place(bottomCell.domNode, this.containerNode, 1);
+			this._hiddenCellsOnTop += 1;
 			if(bottomCellIsCategoryHeader){
 				this._renderedCategoriesPool.push(bottomCell);
 			}else{
@@ -463,6 +447,15 @@ define(["dojo/_base/declare",
 			return removedHeight;
 		},
 
+		_getTopOfListPos: function(){
+			return 1 + this._hiddenCellsOnTop;
+		},
+
+		_getBottomOfListPos: function(){
+			var pos = this.containerNode.children.length;
+			return this._isLoaderCellDisplayed ? pos - 1 : pos;
+		},
+
 		_updateSpacerHeight: function(){
 			if(this._spacerHeight < 0){ // make sure the height is not negative otherwise it may be ignored
 				this._spacerHeight = 0;
@@ -470,9 +463,11 @@ define(["dojo/_base/declare",
 			this._getSpacerNode().style.height = this._spacerHeight + 'px';
 		},
 
-		_renderEntry: function(entry, entryIndex){
+		_renderEntry: function(entry, entryIndex, refNode, pos){
 			var renderedEntry = this._renderedEntriesPool.shift();
 			if(renderedEntry){
+				this._hiddenCellsOnTop -= 1;
+				domStyle.set(renderedEntry.domNode, 'display', '');
 				renderedEntry.set('entryIndex', entryIndex);
 				renderedEntry.set('entry', entry);
 			}else{
@@ -482,6 +477,7 @@ define(["dojo/_base/declare",
 			// TODO: UPDATE OR REMOVE THIS ? (NOTIFY RENDERER OF ITS SELECTION STATUS)
 			//////////////////////////////////
 			this._setSelectionStyle(renderedEntry.domNode, entryIndex);
+			domConstruct.place(renderedEntry.domNode, refNode, pos);
 			return renderedEntry;
 		},
 
@@ -495,13 +491,16 @@ define(["dojo/_base/declare",
 			}
 		},
 
-		_renderCategory: function(category){
+		_renderCategory: function(category, refNode, pos){
 			var renderedCategory = this._renderedCategoriesPool.shift();
 			if(renderedCategory){
+				this._hiddenCellsOnTop -= 1;
+				domStyle.set(renderedCategory.domNode, 'display', '');
 				renderedCategory.set('category', category);
 			}else{
 				renderedCategory = new this.categoriesRenderer({category: category, listBaseClass: this.baseClass, tabindex: "-1"});
 			}
+			domConstruct.place(renderedCategory.domNode, refNode, pos);
 			return renderedCategory;
 		},
 
@@ -528,11 +527,11 @@ define(["dojo/_base/declare",
 		},
 
 		_getSpacerNode: function(){
-			return this._getListNode().children[0];
+			return this.containerNode.children[0];
 		},
 
 		_getFirstCell: function(){
-			return this.getChildren()[0];
+			return this.getChildren()[this._hiddenCellsOnTop];
 		},
 		
 		_getLastCell: function(){
@@ -615,7 +614,6 @@ define(["dojo/_base/declare",
 		/////////////////////////////////
 
 		_scrollBy: function(y, animate, animOptions){
-			var listNode = this._getListNode();
 			if(animate){
 				var animDuration = '0.3s';
 				var animTimingFunc = 'ease-out';
@@ -624,15 +622,15 @@ define(["dojo/_base/declare",
 					animTimingFunc=animOptions.timingFunc?animOptions.timingFunc:animTimingFunc;
 				}
 				// TODO: OPTIMIZE BY GETTING THE NAMES OF THE CSS PROPERTIES ONLY ONCE WHEN WE CREATE THE WIDGET ?
-				listNode.style[css3.name('transition', false)] = css3.name('transform', true) + ' ' + animDuration + ' ' + animTimingFunc;
+				this.containerNode.style[css3.name('transition', false)] = css3.name('transform', true) + ' ' + animDuration + ' ' + animTimingFunc;
 			}
 			this._translation += y;
-			listNode.style[css3.name('transform', false)] = 'translate3d(0,' + this._translation + 'px,0)';
+			this.containerNode.style[css3.name('transform', false)] = 'translate3d(0,' + this._translation + 'px,0)';
 			if(animate){
 				this.defer(function(){
 					// defer setting back the transition property to no value, or the temporary change of the property
 					// is ignored and a transition is performed
-					listNode.style[css3.name('transition', false)] = '';
+					this.containerNode.style[css3.name('transition', false)] = '';
 				}, 300); // TODO: depends on the animation duration ?
 			}
 		},
