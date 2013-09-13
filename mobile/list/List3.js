@@ -97,6 +97,7 @@ define(["dojo/_base/declare",
 		},
 
 		buildRendering: function(){
+			var node;
 			this.inherited(arguments);
 			// Create a scrollable container for the list node
 			this.domNode = domConstruct.create('div', {className: this.baseClass + 'Container', tabindex: '0'}, this.domNode, 'replace');
@@ -111,6 +112,16 @@ define(["dojo/_base/declare",
 			// in the _recycleCells method, so that we do not have a flickering on iOS (if scrolling on iOS to
 			// compensate the fact that nodes are moved in the list, there is flickering).
 			domConstruct.create('li', {style: 'height: 0px'}, this.containerNode);
+			if(this.srcNodeRef){
+				// reparent
+				for(var i = 0, len = this.srcNodeRef.childNodes.length; i < len; i++){
+					node = this.srcNodeRef.firstChild;
+					// make sure tabIndex is -1 for keyboard navigation
+					node.tabIndex = -1;
+					this.containerNode.appendChild(node);
+					// TODO: IGNORE this.entries attribute in startup if entries are added using markup
+				}
+			}
 			// listen to click events to cancel clicks at the end of a scroll on desktop
 			if(!has('touch')){
 				this.on('click', lang.hitch(this, '_onClick'));
@@ -269,32 +280,6 @@ define(["dojo/_base/declare",
 
 		_getEntry: function(index){
 			return this._entries[index];
-		},
-
-		_setNodeData: function(node, key, value){
-			var dataset = node.dataset;
-			if(dataset){
-				if(value == null){
-					delete dataset[key];
-				}else{
-					dataset[key] = value;
-				}
-			}else{
-				if(value == null){
-					node.removeAttribute('data-' + key);
-				}else{
-					node.setAttribute('data-' + key, value);
-				}
-			}
-		},
-
-		_getNodeData: function(node, key){
-			var dataset = node.dataset;
-			if(dataset){
-				return dataset[key];
-			}else{
-				return node.getAttribute('data-' + key);
-			}
 		},
 
 		_getCellHeight: function(cell){
@@ -477,7 +462,7 @@ define(["dojo/_base/declare",
 //				renderedEntry.set('entryIndex', entryIndex);
 //				renderedEntry.set('entry', entry);
 			}else{
-				renderedEntry = new this.entriesRenderer({entry: entry, entryIndex: entryIndex, listBaseClass: this.baseClass, tabindex: "-1"});
+				renderedEntry = new this.entriesRenderer({entry: entry, entryIndex: entryIndex, tabindex: "-1"});
 			}
 			//////////////////////////////////
 			// TODO: UPDATE OR REMOVE THIS ? (NOTIFY RENDERER OF ITS SELECTION STATUS)
@@ -507,7 +492,7 @@ define(["dojo/_base/declare",
 				renderedCategory._setCategoryAttr(category);
 //				renderedCategory.set('category', category);
 			}else{
-				renderedCategory = new this.categoriesRenderer({category: category, listBaseClass: this.baseClass, tabindex: "-1"});
+				renderedCategory = new this.categoriesRenderer({category: category, tabindex: "-1"});
 			}
 			this._setCellEntryIndex(renderedCategory, null);
 			this._setCellCategoryHeader(renderedCategory, category);
@@ -520,7 +505,7 @@ define(["dojo/_base/declare",
 			if(loaderCell){
 				loaderCell.set('loading', loading);
 			}else{
-				loaderCell = new this.pageLoaderRenderer({loading: loading, pageLength: this.pageLength, listBaseClass: this.baseClass, tabindex: "-1"});
+				loaderCell = new this.pageLoaderRenderer({loading: loading, pageLength: this.pageLength, tabindex: "-1"});
 			}
 			return loaderCell;
 		},
@@ -836,8 +821,8 @@ define(["dojo/_base/declare",
 			var node;
 			var distanceToEdgeOfViewport;
 			if(this._focusedNode){
-				node = down?this._focusedNode.nextSibling:this._focusedNode.previousSibling;
-				if(node != null && (down || node.previousSibling != null)){ // do not set focus on the spacer cell
+				node = down?this._focusedNode.nextElementSibling:this._focusedNode.previousElementSibling;
+				if(node != null && (down || node.previousElementSibling != null)){ // do not set focus on the spacer cell
 					///////////////////////////////////////////////
 					// TODO: THIS SHOULD BE DONE IN THE RENDERED WIDGET
 					///////////////////////////////////////////////
@@ -854,7 +839,7 @@ define(["dojo/_base/declare",
 						this._focusedNode = node;
 						break;
 					}
-					node = node.nextSibling;
+					node = node.nextElementSibling;
 				}
 			}
 			this._focusedNode.focus();

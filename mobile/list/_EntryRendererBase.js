@@ -18,12 +18,11 @@ define(["dojo/_base/declare",
 			this.renderEntry(value);
 		},
 
-		// The base class of the list that contains the cell
-		listBaseClass: null,
-		_setListBaseClassAttr: function(value){
-			domClass.remove(this.domNode, this.listBaseClass + 'Cell');
-			this._set('listBaseClass', value);
-			domClass.add(this.domNode, this.listBaseClass + 'Cell');
+		baseClass: "mblListCell",
+		_setBaseClassAttr: function(value){
+			domClass.remove(this.domNode, this.baseClass);
+			this._set('baseClass', value);
+			domClass.add(this.domNode, this.baseClass);
 		},
 
 		// Method that render the entry in the widget GUI

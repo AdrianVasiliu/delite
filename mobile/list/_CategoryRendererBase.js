@@ -12,18 +12,17 @@ define(["dojo/_base/declare",
 			this.renderCategory(value);
 		},
 
-		// The base class of the list that contains the cell
-		_setListBaseClassAttr: function(value){
-			domClass.remove(this.domNode, this.listBaseClass + 'CategoryHeader');
-			domClass.remove(this.domNode, this.listBaseClass + 'Cell');
-			this._set('listBaseClass', value);
-			domClass.add(this.domNode, this.listBaseClass + 'Cell');
-			domClass.add(this.domNode, this.listBaseClass + 'CategoryHeader');
+		baseClass: "mblListCategoryHeader",
+		_setBaseClassAttr: function(value){
+			domClass.remove(this.domNode, this.baseClass);
+			this._set('baseClass', value);
+			domClass.add(this.domNode, this.baseClass);
 		},
 
 		// Method that render the category in the widget GUI
 		renderCategory: function(category){
 			// abstract method
 		}
+
 	});
 });

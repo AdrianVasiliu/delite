@@ -36,6 +36,7 @@
 }
 
 .mblListCategoryHeader{
+	border-bottom: 1px solid lightGrey;
 	background-color: black;
 	color: white;
 	height: 40px;
