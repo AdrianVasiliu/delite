@@ -6,11 +6,11 @@ define(["dojo/_base/declare",
 	
 	return declare([_EntryRendererBase, _TemplatedMixin], {
 
-		templateString: '<li></li>',
+		templateString: '<li><div class="duiListEntryLabel" data-dojo-attach-point="labelNode"></div></li>',
 
 		renderEntry: function(entry){
 			var label = entry ? (entry.label ? entry.label : '') : '';
-			this.domNode.innerHTML = label;
+			this.labelNode.innerHTML = label;
 		}
 	});
 });

@@ -10,8 +10,10 @@ define(["dojo/_base/declare",
 		/////////////////////////////////
 
 		entriesRenderer: {
+			template: '<div class="duiListEntryLabel"></div>',
 			render: function(entry){
-				return entry.label?entry.label:'No label';
+				var label = entry.label?entry.label:'???';
+				return '<div class="duiListEntryLabel">' + label + '</div>';
 			}
 		},
 

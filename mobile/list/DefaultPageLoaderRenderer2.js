@@ -7,7 +7,7 @@ define(["dojo/_base/declare",
 	
 	return declare([_WidgetBase, _TemplatedMixin], {
 
-		templateString: '<li class="mblListLoaderCell"></li>',
+		templateString: '<li class="duiListLoaderCell"></li>',
 
 		// Is the page currently loading ?
 		loading: false,
@@ -28,11 +28,11 @@ define(["dojo/_base/declare",
 			label = string.substitute(label, this);
 			this.domNode.innerHTML = label;
 			if(this.loading){
-				domClass.add(this.domNode, 'mblListLoaderCellLoading');
-				domClass.remove(this.domNode, 'mblListLoaderCell');
+				domClass.add(this.domNode, 'duiListLoaderCellLoading');
+				domClass.remove(this.domNode, 'duiListLoaderCell');
 			}else{
-				domClass.add(this.domNode, 'mblListLoaderCell');
-				domClass.remove(this.domNode, 'mblListLoaderCellLoading');
+				domClass.add(this.domNode, 'duiListLoaderCell');
+				domClass.remove(this.domNode, 'duiListLoaderCellLoading');
 			}
 		}
 	});

@@ -18,7 +18,8 @@ define(["dojo/_base/declare",
 			this.renderEntry(value);
 		},
 
-		baseClass: "mblListCell",
+		// TODO: CAN'T BE CHANGED BY THE USER
+		baseClass: "duiListCell",
 		_setBaseClassAttr: function(value){
 			domClass.remove(this.domNode, this.baseClass);
 			this._set('baseClass', value);

@@ -35,7 +35,7 @@ define(["dojo/_base/declare",
 
 		animateScrollFps: 25,
 
-		baseClass: 'mblList',
+		baseClass: 'duiRoundRectList2',
 
 		selectionMode: 'none',
 
@@ -163,9 +163,9 @@ define(["dojo/_base/declare",
 					cell = this._getCellByEntryIndex(entryIndex);
 					if(cell){
 						if(this.isItemSelected(entryIndex)){
-							domClass.add(cell, this.baseClass + 'SelectedCell');
+							domClass.add(cell, 'duiListSelectedCell');
 						}else{
-							domClass.remove(cell, this.baseClass + 'SelectedCell');
+							domClass.remove(cell, 'duiListSelectedCell');
 						}
 					}
 				}
@@ -273,15 +273,15 @@ define(["dojo/_base/declare",
 				if(this.categoryAttribute && currentEntry[this.categoryAttribute] != lastCategory){
 					// create a category header
 					lastCategory = currentEntry[this.categoryAttribute];
-					currentCell = domConstruct.create('li', {id: this.domNode.id + '_' + this._nextCellIndex++, className: this.baseClass + 'Cell', tabindex: '-1'}, this.containerNode);
+					currentCell = domConstruct.create('li', {id: this.domNode.id + '_' + this._nextCellIndex++, className: 'duiListCategoryHeader', tabindex: '-1'}, this.containerNode);
 					this._setCellContent(currentCell, this._renderCategory(currentEntry[this.categoryAttribute]));
 					this._setCellCategoryHeader(currentCell, currentEntry[this.categoryAttribute]);
 					// FIXME: cells height calculation is not correct in some cases here (example: list3 in test page !!!)
 					this._cellsHeight += this._getCellHeight(currentCell);
 				}
-				currentCell = domConstruct.create('li', {id: this.domNode.id + '_' + this._nextCellIndex++, className: this.baseClass + 'Cell', tabindex: '-1'}, this.containerNode);
+				currentCell = domConstruct.create('li', {id: this.domNode.id + '_' + this._nextCellIndex++, className: 'duiListCell', tabindex: '-1'}, this.containerNode);
 				if(this.selectionMode !== 'none' && this.isItemSelected(entryIndex)){
-					domClass.add(currentCell, this.baseClass + 'SelectedCell');
+					domClass.add(currentCell, 'duiListSelectedCell');
 				}
 				this._setCellContent(currentCell, this._renderEntry(currentEntry, entryIndex));
 				this._setCellEntryIndex(currentCell, entryIndex);
@@ -295,7 +295,7 @@ define(["dojo/_base/declare",
 			}else{
 				if(this._hasNextPage){
 					// create the loader cell
-					this._loaderCell = domConstruct.create('li', {className: this.baseClass + 'Cell' + ' ' + this.baseClass + 'LoaderCell', tabindex: '-1'}, this.containerNode);
+					this._loaderCell = domConstruct.create('li', {className: 'duiListLoaderCell', tabindex: '-1'}, this.containerNode);
 					// TODO: should we issue an event to notify that we're changing the content of the cell ?
 					this._setCellContent(this._loaderCell, this._renderPageLoader(false));
 					// FIXME: cells height calculation is not correct in some cases here (example: list3 in test page !!!)
@@ -402,25 +402,29 @@ define(["dojo/_base/declare",
 			var newCellHeight = null;
 			var cellInitialEntryIndex = this._getCellEntryIndex(cell);
 			var cellInitialCategoryHeader = this._getCellCategoryHeader(cell);
-			if(this.selectionMode !== 'none'){
-				if(this.isItemSelected(newEntryIndex)){
-					domClass.add(cell, this.baseClass + 'SelectedCell');
+			var renderedContent = renderCategory ? this._renderCategory(newEntry[this.categoryAttribute]) : this._renderEntry(newEntry, newEntryIndex);
+			if(this.categoryAttribute){
+				if(renderCategory){
+					domClass.replace(cell, 'duiListCategoryHeader', 'duiListCell');
+					this._setCellCategoryHeader(cell, newEntry[this.categoryAttribute]);
 				}else{
-					domClass.remove(cell, this.baseClass + 'SelectedCell');
+					domClass.replace(cell, 'duiListCell', 'duiListCategoryHeader');
+					this._setCellCategoryHeader(cell, null);
 				}
 			}
-			var renderedContent = renderCategory ? this._renderCategory(newEntry[this.categoryAttribute]) : this._renderEntry(newEntry, newEntryIndex);
+			if(this.selectionMode !== 'none'){
+				if(this.isItemSelected(newEntryIndex)){
+					domClass.add(cell, 'duiListSelectedCell');
+				}else{
+					domClass.remove(cell, 'duiListSelectedCell');
+				}
+			}
 			if(cellInitialEntryIndex != null){
 				this._recycleEntryRenderer(cellInitialEntryIndex);
 			}else{
 				this._recycleCategoryRenderer(cellInitialCategoryHeader);
 			}
 			this._setCellContent(cell, renderedContent);
-			if(renderCategory){
-				this._setCellCategoryHeader(cell, newEntry[this.categoryAttribute]);
-			}else{
-				this._setCellCategoryHeader(cell, null);
-			}
 			this._setCellEntryIndex(cell, newEntryIndex);
 			newCellHeight = this._getCellHeight(cell);
 			this._cellsHeight += (newCellHeight - oldCellHeight);
@@ -466,9 +470,9 @@ define(["dojo/_base/declare",
 			var loaderCell = this._getLoaderCell();
 			if(loaderCell){
 				if(loading){
-					domClass.add(loaderCell, this.baseClass + 'LoaderCellLoading');
+					domClass.add(loaderCell, 'duiListLoaderCellLoading');
 				}else{
-					domClass.remove(loaderCell, this.baseClass + 'LoaderCellLoading');
+					domClass.remove(loaderCell, 'duiListLoaderCellLoading');
 				}
 				this._setCellContent(loaderCell, this._renderPageLoader(loading));
 			}
@@ -542,7 +546,7 @@ define(["dojo/_base/declare",
 
 		_getParentCell: function(node){
 			var currentNode = dom.byId(node);
-			while(currentNode && !domClass.contains(currentNode, this.baseClass + 'Cell')){
+			while(currentNode && !domClass.contains(currentNode, 'duiListCell')){
 				currentNode = currentNode.parentNode;
 			}
 			return currentNode;
@@ -761,7 +765,7 @@ define(["dojo/_base/declare",
 					break;
 				case keys.ENTER:
 				case keys.SPACE:
-					if(this._hasNextPage && domClass.contains(event.target, this.baseClass + 'LoaderCell')){
+					if(this._hasNextPage && domClass.contains(event.target, 'duiListLoaderCell')){
 						event.preventDefault();
 						this._onLoaderCellClick(event);
 					}else if(this.selectionMode !== 'none'){

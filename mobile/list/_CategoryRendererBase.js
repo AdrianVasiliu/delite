@@ -12,7 +12,8 @@ define(["dojo/_base/declare",
 			this.renderCategory(value);
 		},
 
-		baseClass: "mblListCategoryHeader",
+		// TODO: CAN'T BE CHANGED BY THE USER
+		baseClass: "duiListCategoryHeader",
 		_setBaseClassAttr: function(value){
 			domClass.remove(this.domNode, this.baseClass);
 			this._set('baseClass', value);

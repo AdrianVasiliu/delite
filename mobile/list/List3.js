@@ -47,7 +47,7 @@ define(["dojo/_base/declare",
 
 		animateScrollFps: 25,
 
-		baseClass: 'mblList',
+		baseClass: 'duiRoundRectList2',
 
 		selectionMode: 'none',
 
@@ -470,9 +470,9 @@ define(["dojo/_base/declare",
 		_setSelectionStyle: function(cellNode, entryIndex){
 			if(this.selectionMode !== 'none'){
 				if (this.isItemSelected(entryIndex)){
-					domClass.add(cellNode, this.baseClass + 'SelectedCell');
+					domClass.add(cellNode, 'duiListSelectedCell');
 				}else{
-					domClass.remove(cellNode, this.baseClass + 'SelectedCell');
+					domClass.remove(cellNode, 'duiListSelectedCell');
 				}
 			}
 		},
@@ -606,7 +606,7 @@ define(["dojo/_base/declare",
 
 		_getParentCell: function(node){
 			var currentNode = dom.byId(node);
-			while(currentNode && !domClass.contains(currentNode, this.baseClass + 'Cell')){
+			while(currentNode && !domClass.contains(currentNode, 'duiListCell')){
 				currentNode = currentNode.parentNode;
 			}
 			return registry.byNode(currentNode);
@@ -661,6 +661,7 @@ define(["dojo/_base/declare",
 		_endScroll: function(velocity){
 			if(this._getApparentScroll() > 0 && this._firstEntryIndex == 0){
 				this._scrollBy(-(this._getApparentScroll()), true);
+				console.log(this._spacerHeight);
 			}else if(this._visibleHeight - this._cellsHeight > this._getApparentScroll()){
 				this._scrollBy((this._visibleHeight - this._cellsHeight - this._getApparentScroll()), true);
 			}else if(velocity){

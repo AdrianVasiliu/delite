@@ -63,7 +63,7 @@
 			};
 			var CatalogEntryRenderer = declare([_EntryRendererBase, _TemplateMixin], {
 				catalogController: catalogController,
-				templateString: '<li class="entryContainer" data-dojo-attach-event="onclick: toggleDetail"><div class="entryHeader"><img class="entryIcon" data-dojo-attach-point="image"><span class="entryTitle" data-dojo-attach-point="title"></span></div><div data-dojo-attach-point="entryDetail" class="entryDetails hidden"><span class="entryDescription" data-dojo-attach-point="description"></span><a class="" href="javascript:;" data-dojo-attach-point="addToCartLink" data-dojo-attach-event="onclick: addToCart">Add to Cart</a></div></li>',
+				templateString: '<li><div class="entryContainer" data-dojo-attach-event="onclick: toggleDetail"><div class="entryHeader"><img class="entryIcon" data-dojo-attach-point="image"><span class="entryTitle" data-dojo-attach-point="title"></span></div><div data-dojo-attach-point="entryDetail" class="entryDetails hidden"><span class="entryDescription" data-dojo-attach-point="description"></span><a class="" href="javascript:;" data-dojo-attach-point="addToCartLink" data-dojo-attach-event="onclick: addToCart">Add to Cart</a></div></div></li>',
 				// redefine setter for entryIndex
 				_setEntryIndexAttr: function(value){
 					this.inherited(arguments);
@@ -131,7 +131,7 @@
 			};
 			var CatalogEntryRenderer2 = declare([_EntryRendererBase, _TemplateMixin], {
 				catalogController: catalogController2,
-				templateString: '<li class="entryContainer" data-dojo-attach-event="onclick: toggleDetail"><div class="entryHeader"><img class="entryIcon" data-dojo-attach-point="image"><span class="entryTitle" data-dojo-attach-point="title"></span></div><div data-dojo-attach-point="entryDetail" class="entryDetails hidden"><span class="entryDescription" data-dojo-attach-point="description"></span><a class="" href="javascript:;" data-dojo-attach-point="addToCartLink" data-dojo-attach-event="onclick: addToCart">Add to Cart</a></div></li>',
+				templateString: '<li><div  class="entryContainer" data-dojo-attach-event="onclick: toggleDetail"><div class="entryHeader"><img class="entryIcon" data-dojo-attach-point="image"><span class="entryTitle" data-dojo-attach-point="title"></span></div><div data-dojo-attach-point="entryDetail" class="entryDetails hidden"><span class="entryDescription" data-dojo-attach-point="description"></span><a class="" href="javascript:;" data-dojo-attach-point="addToCartLink" data-dojo-attach-event="onclick: addToCart">Add to Cart</a></div></div></li>',
 				// redefine setter for entryIndex
 				_setEntryIndexAttr: function(value){
 					this.inherited(arguments);
