@@ -170,3 +170,13 @@ li[style="display: none;"] + li {
   line-height: 43px;
 /*  height: 100%;*/
 }
+
+.duiListEntryIcon {
+  position: relative;
+  float: left;
+  line-height: normal;
+  margin-top: 7px;
+  margin-bottom: -7px;
+  margin-right: 11px;
+  vertical-align: top;
+}

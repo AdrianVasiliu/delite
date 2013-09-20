@@ -40,7 +40,7 @@
 										break;
 									} else {
 										category = 'category ' + Math.floor(i / 10);
-										entries[i - start] = {category: category, label: 'this is list entry ' + i}; 
+										entries[i - start] = {category: category, label: 'this is list entry ' + i, icon: '../tests/images/i-icon-' + (i % 10 + 1) + '.png'}; 
 									}
 								}
 								return entries;

@@ -282,7 +282,8 @@ define(["dojo/_base/declare",
 
 		_getCellHeight: function(cell){
 			// TODO: CACHE CELL HEIGHT
-			return this._getNodeHeight(cell);
+			return 44;
+//			return this._getNodeHeight(cell);
 		},
 
 		_getNodeHeight: function(node){

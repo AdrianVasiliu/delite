@@ -13,7 +13,11 @@ define(["dojo/_base/declare",
 			template: '<div class="duiListEntryLabel"></div>',
 			render: function(entry){
 				var label = entry.label?entry.label:'???';
-				return '<div class="duiListEntryLabel">' + label + '</div>';
+				if(entry.icon){
+					return '<img class="duiListEntryIcon" src="' + entry.icon + '"/><div class="duiListEntryLabel">' + label + '</div>';
+				}else{
+					return '<div class="duiListEntryLabel">' + label + '</div>';
+				}
 			}
 		},
 
