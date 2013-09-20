@@ -100,7 +100,11 @@ define(["dojo/_base/declare",
 			var node;
 			this.inherited(arguments);
 			// Create a scrollable container for the list node
-			this.domNode = domConstruct.create('div', {className: this.baseClass + 'Container', tabindex: '0'}, this.domNode, 'replace');
+			if(this.domNode.parentNode){
+				this.domNode = domConstruct.create('div', {className: this.baseClass + 'Container', tabindex: '0'}, this.domNode, 'replace');
+			}else{
+				this.domNode = domConstruct.create('div', {className: this.baseClass + 'Container', tabindex: '0'});
+			}
 			if(this.height){
 				this.domNode.style.height = this.height + 'px';
 			}else{
@@ -147,6 +151,7 @@ define(["dojo/_base/declare",
 		
 		destroy: function(){
 			var widget;
+			this.inherited(arguments);
 			this._destroyPageLoader();
 			while(this._renderedEntriesPool.length){
 				widget = this._renderedEntriesPool.pop();
@@ -299,7 +304,7 @@ define(["dojo/_base/declare",
 		_createCells: function(){
 			var entryIndex = this._lastEntryIndex != null ? this._lastEntryIndex + 1 : 0;
 			var currentEntry;
-			var lastCategory = null;
+			var lastCategory = this.categoryAttribute && this._lastEntryIndex ? this._getEntry(this._lastEntryIndex - 1)[this.categoryAttribute] : null;
 			var loaderCell = this._getLoaderCell();
 			// Create cells using renderers
 			for (entryIndex; entryIndex < this._getEntriesCount(); entryIndex++){
@@ -661,7 +666,6 @@ define(["dojo/_base/declare",
 		_endScroll: function(velocity){
 			if(this._getApparentScroll() > 0 && this._firstEntryIndex == 0){
 				this._scrollBy(-(this._getApparentScroll()), true);
-				console.log(this._spacerHeight);
 			}else if(this._visibleHeight - this._cellsHeight > this._getApparentScroll()){
 				this._scrollBy((this._visibleHeight - this._cellsHeight - this._getApparentScroll()), true);
 			}else if(velocity){

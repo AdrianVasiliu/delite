@@ -80,9 +80,14 @@ define(["dojo/_base/declare",
 		},
 
 		buildRendering: function(){
+			var node;
 			this.inherited(arguments);
 			// Create a scrollable container for the list node
-			this.domNode = domConstruct.create('div', {className: this.baseClass + 'Container', tabindex: '0'}, this.domNode, 'replace');
+			if(this.domNode.parentNode){
+				this.domNode = domConstruct.create('div', {className: this.baseClass + 'Container', tabindex: '0'}, this.domNode, 'replace');
+			}else{
+				this.domNode = domConstruct.create('div', {className: this.baseClass + 'Container', tabindex: '0'});
+			}
 			if(this.height){
 				this.domNode.style.height = this.height + 'px';
 			}else{
@@ -94,6 +99,16 @@ define(["dojo/_base/declare",
 			// in the _recycleCells method, so that we do not have a flickering on iOS (if scrolling on iOS to
 			// compensate the fact that nodes are moved in the list, there is flickering).
 			domConstruct.create('li', {style: 'height: 0px'}, this.containerNode);
+			if(this.srcNodeRef){
+				// reparent
+				for(var i = 0, len = this.srcNodeRef.childNodes.length; i < len; i++){
+					node = this.srcNodeRef.firstChild;
+					// make sure tabIndex is -1 for keyboard navigation
+					node.tabIndex = -1;
+					this.containerNode.appendChild(node);
+					// TODO: IGNORE this.entries attribute in startup if entries are added using markup
+				}
+			}
 			// listen to click events to cancel clicks at the end of a scroll on desktop
 			if(!has('touch')){
 				this.on('click', lang.hitch(this, '_onClick'));
@@ -116,10 +131,22 @@ define(["dojo/_base/declare",
 			// calculate the dimensions of the container
 			this._visibleHeight = this._getNodeHeight(this.domNode);
 		},
-		
+
 		destroy: function(){
+			this.inherited(arguments);
 			if(this._loaderCell){
 				this._destroyPageLoader();
+			}
+		},
+
+		addChild: function(/*Widget*/ child){
+			if(child && child._type == 'ListItem'){
+				if(this.entries instanceof Array){
+					this.entries.push({label: child.label});
+				}
+				child.destroyRecursive();
+			}else{
+				this.inherited(arguments);
 			}
 		},
 
@@ -262,7 +289,7 @@ define(["dojo/_base/declare",
 			var entryIndex = this._lastEntryIndex != null ? this._lastEntryIndex + 1 : 0;
 			var currentEntry;
 			var currentCell;
-			var lastCategory = null;
+			var lastCategory = this.categoryAttribute && this._lastEntryIndex ? this._getEntry(this._lastEntryIndex - 1)[this.categoryAttribute] : null;
 			var loaderCell = this._getLoaderCell();
 			// Create cells, calling renderers to generate content for the cells
 			for (entryIndex; entryIndex < this._getEntriesCount(); entryIndex++){

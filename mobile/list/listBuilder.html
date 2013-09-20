@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Lists for dojo 2</title>
+
+	<link rel="stylesheet" type="text/css" href="../../../dui/mobile/list/List.css">
+	<script type="text/javascript" src="../deviceTheme.js"></script>
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		data-dojo-config="packages: [{name: 'dojox', location:'../dui'}, {name: 'dijit', location:'../dui'}], async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+		    "dojo/_base/lang",
+		    "dojo/_base/window",
+			"dui/registry",
+			"dojo/on",
+			"dui/mobile/list/List",
+			"dui/mobile/list/List3",
+			"dojo/dom",
+			"dojo/request",
+			"dojo/store/util/QueryResults",
+			"dui/mobile/common"
+		], function(lang, win, registry, on, List, List3, dom, request, QueryResults){
+			// List model
+			var entriesStore = {
+					entriesCount: 2000,
+					query: function(query, options){
+						var promise = request.get('./List2.js').then(lang.hitch(this,
+							function(response){
+								var i;
+								var category;
+								var start = options ? (options.start ? options.start : 0) : 0;;
+								var count = options && options.count;
+								var entries = [];
+								for(i=start; i < this.entriesCount; i++){
+									if (count && ((i - start) >= count)) {
+										break;
+									} else {
+										category = 'category ' + Math.floor(i / 10);
+										entries[i - start] = {category: category, label: 'this is list entry ' + i}; 
+									}
+								}
+								return entries;
+							}
+						));
+						return new QueryResults(promise);
+					}	
+			};
+			// List
+			var list = null;
+			var autoScrollHandler = null;
+			// Builder
+			var buildList = function(){
+//				handler.remove();
+				dom.byId("autoScroller").style.display = '';
+				if(list){
+					console.log('DEBUG');
+					list.destroyRecursive();
+				}
+				var listParams = {
+					domNode: dom.byId("listNode"),
+					selectionMode: 	dom.byId("selectionMode").value,
+					pageLength: parseInt(dom.byId("pageLength").value),
+					cellPages: parseInt(dom.byId("cellPages").value),
+					height: parseInt(dom.byId("height").value)
+//					entries: {store: entriesStore, query: ''}
+				}
+				if(dom.byId("useCategory").value){
+					listParams.categoryAttribute = "category";
+				};
+				entriesStore.entriesCount = parseInt(dom.byId("entriesCount").value);
+				var listType = dom.byId("listType").value;
+				list = (listType == "1") ? new List(listParams): new List3(listParams);
+				list.entries = {store: entriesStore, query: ''};
+				list.placeAt(win.body());
+				list.startup();
+				if(!autoScrollHandler){
+					autoScrollHandler = on(dom.byId('autoscroll'), 'click', function(){
+						list._animateScroll(dom.byId('fps').valueAsNumber, dom.byId('duration').valueAsNumber, dom.byId('length').valueAsNumber);
+					});
+				}
+				// TODO: remove the builder node
+			}
+			var handler = on(dom.byId("buildButton"), 'click', lang.hitch(this, buildList));
+		});
+	</script>
+</head>
+<body style="visibility:hidden;">
+	<div id="listBuilder">
+		<h1>List builder</h1>
+		<p>Select the attributes of the list and then click the Build button to create it.</p>
+		<label for="listType">Rendering option:</label>
+		<select id="listType">
+			<option value="1">Decorator</option>
+			<option value="3">Renderer</option>
+		</select>
+		<br>
+		<label for="entriesCount">Nb of entries:</label>
+		<input id="entriesCount" type="number" value="20"></input>
+		<br>
+		<label for="useCategory">Categorized entries:</label>
+		<select id="useCategory">
+			<option value="">No</option>
+			<option value="true">Yes</option>
+		</select>
+		<br>
+		<label for="selectionMode">Selection mode:</label>
+		<select id="selectionMode">
+			<option value="none">none</option>
+			<option value="single">single</option>
+			<option value="multiple">multiple</option>
+		</select>
+		<br>
+		<label for="pageLength">Page length:</label>
+		<input id="pageLength" type="number" value="0"></input>
+		<br>
+		<label for="cellPages">Cell pages:</label>
+		<input id="cellPages" type="number" value="0"></input>
+		<br>
+		<label for="height">Height in px:</label>
+		<input id="height" type="number" value="200"></input>
+		<br>
+		<button id="buildButton">Build</button>
+	</div>
+	<p>
+	<div id='autoScroller' style='display: none'>fps: <input id='fps' type='number' value='25'/> duration (s): <input id='duration' type='number' value='3'/> length (px): <input id='length' type='number' value='-50000'/><button id='autoscroll'>auto scroll</button></div>
+	<br>
+</body>
+</html>
