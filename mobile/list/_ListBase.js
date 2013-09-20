@@ -16,6 +16,16 @@ define(["dojo/_base/declare",
         "dui/mixins/Selection"
 ], function(declare, lang, array, when, win, has, dom, domConstruct, domGeometry, domClass, touch, on, keys, css3, _WidgetBase, Selection){
 	
+	// TODO: ADD THIS TO DOJO
+	window.requestAnimFrame = (function(){
+		  return  window.requestAnimationFrame       ||
+		          window.webkitRequestAnimationFrame ||
+		          window.mozRequestAnimationFrame    ||
+		          function( callback ){
+		            window.setTimeout(callback, 1000 / 60);
+		          };
+		})();
+
 	return declare([_WidgetBase, Selection], {
 
 		/////////////////////////////////
@@ -32,8 +42,6 @@ define(["dojo/_base/declare",
 
 		// TODO: FIND A BETTER NAME ? (SEEMS RELATED TO PAGELENGTH WHILE IT'S NOT !!!!)
 		cellPages: 2, // The number of pages of cells to use (one page fills the viewport of the widget). If <= 0, all the list entries are rendered as once.
-
-		animateScrollFps: 25,
 
 		baseClass: 'duiRoundRectList2',
 
@@ -67,6 +75,7 @@ define(["dojo/_base/declare",
 		_loadingPage: false,
 		_cellEntryIndexes: null,
 		_cellCategoryHeaders: null,
+		_scrollAnimationSpec: null,
 
 		/////////////////////////////////
 		// Widget lifecycle
@@ -632,7 +641,7 @@ define(["dojo/_base/declare",
 				this._scrollBy((this._visibleHeight - this._cellsHeight - this._getApparentScroll()), true);
 			}else if(velocity){
 //				if(this.cellPages > 0){
-					this._animateScroll(this.animateScrollFps, 0.9, velocity*200);
+					this._animateScroll(0.9, velocity*200);
 //				}else{
 					// TODO: find the correct animation for end of scroll... (see scrollable.js)
 //					this._scrollBy(velocity*110, true, {duration: '1s'});
@@ -641,27 +650,34 @@ define(["dojo/_base/declare",
 			}
 		},
 
-		_animateScroll: function(fps, duration, length){
-			var nbOfFrames = fps * duration;
-			var lengthPerFrame = Math.round(length / nbOfFrames);
-			var frameDuration = 1 / fps;
-			var that = this;
-			this._stopAnimatedScroll();
-			this._currentAnimatedScroll = setInterval(function(){
-				if(nbOfFrames-- <= 0){
-					that._stopAnimatedScroll();
-					that._endScroll();
-				}else{
-					that.scrollBy(lengthPerFrame, false);
-				}
-			}, frameDuration * 1000);
+		_animateScroll: function(duration, length){
+			this._scrollAnimationSpec = {
+				duration: duration * 1000,
+				length: length,
+				lengthPerMillisec: length / (duration * 1000),
+				start: null,
+				lastTS: null,
+				cancel: false
+			};
+			requestAnimationFrame(lang.hitch(this, this._renderScrollAnimation));
+		},
+
+		_renderScrollAnimation: function(timestamp){
+			if(!this._scrollAnimationSpec.start){this._scrollAnimationSpec.start = timestamp;}
+			if(this._scrollAnimationSpec.lastTS){
+				var l = Math.round(this._scrollAnimationSpec.lengthPerMillisec * (timestamp - this._scrollAnimationSpec.lastTS));
+				this.scrollBy(l, false);
+			}
+			this._scrollAnimationSpec.lastTS = timestamp;
+			if(timestamp - this._scrollAnimationSpec.start < this._scrollAnimationSpec.duration && !this._scrollAnimationSpec.cancel){
+				requestAnimationFrame(lang.hitch(this, this._renderScrollAnimation));
+			}
 		},
 
 		_stopAnimatedScroll: function(){
 			// TODO: WHAT IF ANIMATION USING _scrollBy ?
-			if(this._currentAnimatedScroll){
-				clearInterval(this._currentAnimatedScroll);
-				this._currentAnimatedScroll = null;
+			if(this._scrollAnimationSpec){
+				this._scrollAnimationSpec.cancel = true;
 				return true;
 			}else{
 				return false;

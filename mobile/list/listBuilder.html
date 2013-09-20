@@ -78,7 +78,7 @@
 				list.startup();
 				if(!autoScrollHandler){
 					autoScrollHandler = on(dom.byId('autoscroll'), 'click', function(){
-						list._animateScroll(dom.byId('fps').valueAsNumber, dom.byId('duration').valueAsNumber, dom.byId('length').valueAsNumber);
+						list._animateScroll(dom.byId('duration').valueAsNumber, dom.byId('length').valueAsNumber);
 					});
 				}
 				// TODO: remove the builder node
@@ -125,7 +125,7 @@
 		<button id="buildButton">Build</button>
 	</div>
 	<p>
-	<div id='autoScroller' style='display: none'>fps: <input id='fps' type='number' value='25'/> duration (s): <input id='duration' type='number' value='3'/> length (px): <input id='length' type='number' value='-50000'/><button id='autoscroll'>auto scroll</button></div>
+	<div id='autoScroller' style='display: none'>duration (s): <input id='duration' type='number' value='3'/> length (px): <input id='length' type='number' value='-50000'/><button id='autoscroll'>auto scroll</button></div>
 	<br>
 </body>
 </html>
