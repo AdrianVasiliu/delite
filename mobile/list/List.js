@@ -10,14 +10,22 @@ define(["dojo/_base/declare",
 		/////////////////////////////////
 
 		entriesRenderer: {
-			template: '<div class="duiListEntryLabel"></div>',
 			render: function(entry){
 				var label = entry.label?entry.label:'???';
+				var returnedHTML = '<div class="duiListEntryLabel">' + label + '</div>';
 				if(entry.icon){
-					return '<img class="duiListEntryIcon" src="' + entry.icon + '"/><div class="duiListEntryLabel">' + label + '</div>';
-				}else{
-					return '<div class="duiListEntryLabel">' + label + '</div>';
+					returnedHTML = '<img class="duiListEntryIcon" src="' + entry.icon + '"/>' + returnedHTML;
 				}
+				if(entry.rightText){
+					returnedHTML = '<div class="duiListEntryRightText">' + entry.rightText + '</div>' + returnedHTML;
+				}
+				if(entry.rightIcon2){
+					returnedHTML = '<img class="duiListEntryRightIcon2" src="' + entry.rightIcon2 + '"/>' + returnedHTML;
+				}
+				if(entry.rightIcon){
+					returnedHTML = '<img class="duiListEntryRightIcon" src="' + entry.rightIcon + '"/>' + returnedHTML;
+				}
+				return returnedHTML;
 			}
 		},
 

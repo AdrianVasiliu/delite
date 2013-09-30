@@ -165,10 +165,18 @@ li[style="display: none;"] + li {
   white-space: nowrap;
   text-overflow: ellipsis;
   font-weight: bold;
-/* color: black;*/
   height: 43px;
   line-height: 43px;
-/*  height: 100%;*/
+}
+
+.duiListEntryRightText {
+  position: relative;
+  float: right;
+  line-height: normal;
+  margin-right: 4px;
+  font-weight: bold;
+  color: #324f85;
+  margin-top: 12px;
 }
 
 .duiListEntryIcon {
@@ -179,4 +187,13 @@ li[style="display: none;"] + li {
   margin-bottom: -7px;
   margin-right: 11px;
   vertical-align: top;
+}
+
+.duiListEntryRightIcon,
+.duiListEntryRightIcon2 {
+  position: relative;
+  float: right;
+  line-height: normal;
+  margin-top: 7px;
+  margin-bottom: -7px;
 }

@@ -25,6 +25,7 @@
 			"dui/mobile/common"
 		], function(lang, win, registry, on, List, List3, dom, request, QueryResults){
 			// List model
+			var useIcon, useRightText, useRightIcon, useRightIcon2;
 			var entriesStore = {
 					entriesCount: 2000,
 					query: function(query, options){
@@ -40,7 +41,12 @@
 										break;
 									} else {
 										category = 'category ' + Math.floor(i / 10);
-										entries[i - start] = {category: category, label: 'this is list entry ' + i, icon: '../tests/images/i-icon-' + (i % 10 + 1) + '.png'}; 
+										entries[i - start] = {category: category,
+															  label: 'this is list entry ' + i,
+															  icon: useIcon ? '../tests/images/i-icon-' + (i % 10 + 1) + '.png' : null,
+															  rightText: useRightText ? 'right text ' + i : null,
+															  rightIcon: useRightIcon ? '../tests/images/a-icon-1.png' : null,
+															  rightIcon2: useRightIcon2 ? '../tests/images/b-icon-' + (i % 8 + 1) + '.png' : null}; 
 									}
 								}
 								return entries;
@@ -54,7 +60,6 @@
 			var autoScrollHandler = null;
 			// Builder
 			var buildList = function(){
-//				handler.remove();
 				dom.byId("autoScroller").style.display = '';
 				if(list){
 					list.destroyRecursive();
@@ -65,10 +70,29 @@
 					pageLength: parseInt(dom.byId("pageLength").value),
 					cellPages: parseInt(dom.byId("cellPages").value),
 					height: parseInt(dom.byId("height").value)
-//					entries: {store: entriesStore, query: ''}
 				}
 				if(dom.byId("useCategory").value){
 					listParams.categoryAttribute = "category";
+				};
+				if(dom.byId("renderIcon").value){
+					useIcon = true;
+				}else{
+					useIcon = false;
+				};
+				if(dom.byId("renderRightText").value){
+					useRightText = true;
+				}else{
+					useRightText = false;
+				};
+				if(dom.byId("renderRightIcon").value){
+					useRightIcon = true;
+				}else{
+					useRightIcon = false;
+				};
+				if(dom.byId("renderRightIcon2").value){
+					useRightIcon2 = true;
+				}else{
+					useRightIcon2 = false;
 				};
 				entriesStore.entriesCount = parseInt(dom.byId("entriesCount").value);
 				var listType = dom.byId("listType").value;
@@ -81,7 +105,6 @@
 						list._animateScroll(dom.byId('duration').valueAsNumber, dom.byId('length').valueAsNumber);
 					});
 				}
-				// TODO: remove the builder node
 			}
 			var handler = on(dom.byId("buildButton"), 'click', lang.hitch(this, buildList));
 		});
@@ -91,10 +114,31 @@
 	<div id="listBuilder">
 		<h1>List builder</h1>
 		<p>Select the attributes of the list and then click the Build button to create it.</p>
-		<label for="listType">Rendering option:</label>
+		<label for="listType">Rendering type:</label>
 		<select id="listType">
 			<option value="1">Decorator</option>
 			<option value="3">Renderer</option>
+		</select>
+		<br>
+		<label for="renderIcon">Render icon:</label>
+		<select id="renderIcon">
+			<option value="true">Yes</option>
+			<option value="">No</option>
+		</select>
+		<label for="renderRightText">, right text:</label>
+		<select id="renderRightText">
+			<option value="true">Yes</option>
+			<option value="">No</option>
+		</select>
+		<label for="renderRightIcon">, right icon:</label>
+		<select id="renderRightIcon">
+			<option value="true">Yes</option>
+			<option value="">No</option>
+		</select>
+		<label for="renderRightIcon2">, right icon 2:</label>
+		<select id="renderRightIcon2">
+			<option value="true">Yes</option>
+			<option value="">No</option>
 		</select>
 		<br>
 		<label for="entriesCount">Nb of entries:</label>
