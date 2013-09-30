@@ -282,8 +282,7 @@ define(["dojo/_base/declare",
 
 		_getCellHeight: function(cell){
 			// TODO: CACHE CELL HEIGHT
-			return 44;
-//			return this._getNodeHeight(cell);
+			return this._getNodeHeight(cell);
 		},
 
 		_getNodeHeight: function(node){
@@ -652,15 +651,18 @@ define(["dojo/_base/declare",
 		},
 
 		_animateScroll: function(duration, length){
-			this._scrollAnimationSpec = {
-				duration: duration * 1000,
-				length: length,
-				lengthPerMillisec: length / (duration * 1000),
-				start: null,
-				lastTS: null,
-				cancel: false
-			};
-			requestAnimationFrame(lang.hitch(this, this._renderScrollAnimation));
+			var lengthPerMillisec = length / (duration * 1000);
+			if(Math.abs(lengthPerMillisec) > 0.1){
+				this._scrollAnimationSpec = {
+						duration: duration * 1000,
+						length: length,
+						lengthPerMillisec: lengthPerMillisec,
+						start: null,
+						lastTS: null,
+						cancel: false
+					};
+					requestAnimationFrame(lang.hitch(this, this._renderScrollAnimation));
+			}
 		},
 
 		_renderScrollAnimation: function(timestamp){
@@ -672,12 +674,14 @@ define(["dojo/_base/declare",
 			this._scrollAnimationSpec.lastTS = timestamp;
 			if(timestamp - this._scrollAnimationSpec.start < this._scrollAnimationSpec.duration && !this._scrollAnimationSpec.cancel){
 				requestAnimationFrame(lang.hitch(this, this._renderScrollAnimation));
+			}else{
+				this._scrollAnimationSpec = null;
 			}
 		},
 
 		_stopAnimatedScroll: function(){
 			// TODO: WHAT IF ANIMATION USING _scrollBy ?
-			if(this._scrollAnimationSpec){
+			if(this._scrollAnimationSpec && !this._scrollAnimationSpec.cancel){
 				this._scrollAnimationSpec.cancel = true;
 				return true;
 			}else{
