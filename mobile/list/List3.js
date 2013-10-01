@@ -698,8 +698,8 @@ define(["dojo/_base/declare",
 						start: null,
 						lastTS: null,
 						cancel: false
-					};
-					requestAnimationFrame(lang.hitch(this, this._renderScrollAnimation));
+				};
+				requestAnimFrame(lang.hitch(this, this._renderScrollAnimation));
 			}
 		},
 
@@ -711,7 +711,7 @@ define(["dojo/_base/declare",
 			}
 			this._scrollAnimationSpec.lastTS = timestamp;
 			if(timestamp - this._scrollAnimationSpec.start < this._scrollAnimationSpec.duration && !this._scrollAnimationSpec.cancel){
-				requestAnimationFrame(lang.hitch(this, this._renderScrollAnimation));
+				requestAnimFrame(lang.hitch(this, this._renderScrollAnimation));
 			}else{
 				this._scrollAnimationSpec = null;
 			}
