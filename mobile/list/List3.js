@@ -689,6 +689,34 @@ define(["dojo/_base/declare",
 			}
 		},
 
+//		_animateScroll: function(duration, length){
+//			var fps = 25;
+//			var nbOfFrames = fps * duration;
+//			var lengthPerFrame = Math.round(length / nbOfFrames);
+//			var frameDuration = 1 / fps;
+//			var that = this;
+//			this._stopAnimatedScroll();
+//			this._currentAnimatedScroll = setInterval(function(){
+//				if(nbOfFrames-- <= 0){
+//					that._stopAnimatedScroll();
+//					that._endScroll();
+//				}else{
+//					that.scrollBy(lengthPerFrame, false);
+//				}
+//			}, frameDuration * 1000);
+//		},
+//
+//		_stopAnimatedScroll: function(){
+//			// TODO: WHAT IF ANIMATION USING _scrollBy ?
+//			if(this._currentAnimatedScroll){
+//				clearInterval(this._currentAnimatedScroll);
+//				this._currentAnimatedScroll = null;
+//				return true;
+//			}else{
+//				return false;
+//			}
+//		},
+
 		_animateScroll: function(duration, length){
 			var lengthPerMillisec = length / (duration * 1000);
 			if(Math.abs(lengthPerMillisec) > 0.1){
