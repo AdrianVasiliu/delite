@@ -91,6 +91,7 @@ define(["dojo/_base/declare",
 		_cellEntryIndexes: null,
 		_cellCategoryHeaders: null,
 		_scrollAnimationSpec: null,
+		_cellManagedFocus: false,
 
 		/////////////////////////////////
 		// Widget lifecycle
@@ -285,7 +286,7 @@ define(["dojo/_base/declare",
 		},
 
 		_toggleListLoadingStyle: function(){
-			domClass.toggle(this.domNode, this.baseClass + 'Loading');
+			domClass.toggle(this.domNode, 'duiListLoading');
 		},
 
 		_getEntriesCount: function(){
@@ -834,12 +835,13 @@ define(["dojo/_base/declare",
 
 		_onFocus: function(event){
 			if(this._focusedNode){
-				domClass.remove(this._focusedNode, this.baseClass + 'FocusedCell');
+				domClass.remove(this._focusedNode, 'duiListFocusedCell');
 				this._focusedNode = null;
 			}
 		},
 
 		_onKeyDown: function(event){
+			var cell;
 			switch (event.keyCode) {
 				case keys.UP_ARROW:
 					event.preventDefault();
@@ -849,32 +851,59 @@ define(["dojo/_base/declare",
 					event.preventDefault();
 					this._focusNextNode(true);
 					break;
-				case keys.ENTER:
-				case keys.SPACE:
-					if(this._hasNextPage && domClass.contains(event.target, this.baseClass + 'LoaderCell')){
+				case keys.RIGHT_ARROW:
+					if(this._focusedNode){
 						event.preventDefault();
-						this._onLoaderCellClick(event);
-					}else if(this.selectionMode !== 'none'){
-						event.preventDefault();
-						this._handleSelection(event);
+						this._focusCellContent(true);
 					}
 					break;
+				case keys.LEFT_ARROW:
+					if(this._focusedNode){
+						event.preventDefault();
+						this._focusCellContent(false);
+					}
+					break;
+				case keys.ENTER:
+				case keys.SPACE:
+					if(!this._cellManagedFocus){
+						if(this._hasNextPage && domClass.contains(event.target, 'duiListLoaderCell')){
+							event.preventDefault();
+							this._onLoaderCellClick(event);
+						}else if(this.selectionMode !== 'none'){
+							event.preventDefault();
+							this._handleSelection(event);
+						}
+						break;
+					}
+				default:
+					if(this._cellManagedFocus){
+						cell = registry.byNode(this._focusedNode);
+						if(cell.onKeyDown){
+							cell.onKeyDown(event);
+						}
+					}
 			};
 		},
 
 		_focusNextNode: function(down){
-			var node;
+			var node, cell;
 			var distanceToEdgeOfViewport;
 			if(this._focusedNode){
-				node = down?this._focusedNode.nextElementSibling:this._focusedNode.previousElementSibling;
-				if(node != null && (down || node.previousElementSibling != null)){ // do not set focus on the spacer cell
-					///////////////////////////////////////////////
-					// TODO: THIS SHOULD BE DONE IN THE RENDERED WIDGET
-					///////////////////////////////////////////////
-					domClass.remove(this._focusedNode, this.baseClass + 'FocusedCell');
-					this._focusedNode = node;
-				}else{
-					return;
+				if(!this._cellManagedFocus){
+					node = down?this._focusedNode.nextElementSibling:this._focusedNode.previousElementSibling;
+					if(node != null && (down || node.previousElementSibling != null)){ // do not set focus on the spacer cell
+						///////////////////////////////////////////////
+						// TODO: THIS SHOULD BE DONE IN THE RENDERED WIDGET
+						///////////////////////////////////////////////
+						cell = registry.byNode(this._focusedNode);
+						if(cell.doBlur){
+							cell.doBlur();
+						}
+						domClass.remove(this._focusedNode, 'duiListFocusedCell');
+						this._focusedNode = node;
+					}else{
+						return;
+					}
 				}
 			}else{
 				// Focus the first visible cell node
@@ -887,25 +916,40 @@ define(["dojo/_base/declare",
 					node = node.nextElementSibling;
 				}
 			}
+			this._cellManagedFocus = false;
 			this._focusedNode.focus();
-			domClass.add(this._focusedNode, this.baseClass + 'FocusedCell');
+			domClass.add(this._focusedNode, 'duiListFocusedCell');
 			this.domNode.setAttribute('aria-activedescendant', this._focusedNode.id);
 			this.defer(function(){
 				// scroll has been updated: verify that the focused cell is visible, if not scroll to make it appear
 				if(this._browserScroll == 0){
 					// the browser won't scroll with negative values: if the focused cell is not entirely visible,
 					// scroll it to make it visible.
-					distanceToEdgeOfViewport = this._topOfNodeDistanceToTopOfViewport(node);
+					distanceToEdgeOfViewport = this._topOfNodeDistanceToTopOfViewport(this._focusedNode);
 					if(distanceToEdgeOfViewport < 0){
 						this.scrollBy(-distanceToEdgeOfViewport);
 					}
 				}else{
-					distanceToEdgeOfViewport = this._bottomOfNodeDistanceToBottomOfViewport(node);
+					distanceToEdgeOfViewport = this._bottomOfNodeDistanceToBottomOfViewport(this._focusedNode);
 					if(distanceToEdgeOfViewport > 0){
 						this.scrollBy(-distanceToEdgeOfViewport);
 					}
 				}
 			}, 10);
+		},
+
+		_focusCellContent: function(next){
+			var cell, cellFocusedNodeId;
+			if(!this._nodeRendersCategoryHeader(this._focusedNode)){				
+				cell = registry.byNode(this._focusedNode);
+				if(cell.doFocus){
+					cellFocusedNodeId = cell.doFocus(next);
+					if(cellFocusedNodeId){
+						this.domNode.setAttribute('aria-activedescendant', cellFocusedNodeId);
+					}
+					this._cellManagedFocus = true;
+				}
+			}
 		},
 
 		_captureEvent: function(event){
