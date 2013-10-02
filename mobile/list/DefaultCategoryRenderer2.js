@@ -1,12 +1,9 @@
 define(["dojo/_base/declare",
         "dojo/dom-construct",
-        "./_CategoryRendererBase",
-        "dui/_TemplatedMixin"
-], function(declare, domConstruct, _CategoryRendererBase, _TemplatedMixin){
+        "./_CategoryRendererBase"
+], function(declare, domConstruct, _CategoryRendererBase){
 	
-	return declare([_CategoryRendererBase, _TemplatedMixin], {
-
-		templateString: '<li></li>',
+	return declare([_CategoryRendererBase], {
 
 		renderCategory: function(category){
 			this.domNode.innerHTML = category;

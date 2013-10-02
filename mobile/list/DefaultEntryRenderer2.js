@@ -2,16 +2,10 @@ define(["dojo/_base/declare",
         "dojo/dom-construct",
         "dojo/dom-class",
         "../iconUtils",
-        "./_EntryRendererBase",
-        "dui/_TemplatedMixin"
-], function(declare, domConstruct, domClass, iconUtils, _EntryRendererBase, _TemplatedMixin){
+        "./_EntryRendererBase"
+], function(declare, domConstruct, domClass, iconUtils, _EntryRendererBase){
 	
-	return declare([_EntryRendererBase, _TemplatedMixin], {
-
-		templateString: '<li></li>',
-
-		_focusableNodes: null,
-		_focusedNodeIndex: null,
+	return declare([_EntryRendererBase], {
 
 		renderEntry: function(entry){
 			this._renderTextNode("labelNode", entry ? entry.label : null, "duiListEntryLabel");
@@ -20,51 +14,6 @@ define(["dojo/_base/declare",
 			this._renderImageNode("rightIcon2", entry ? entry.rightIcon2 : null, "duiListEntryRightIcon2");
 			this._renderImageNode("rightIcon", entry ? entry.rightIcon : null, "duiListEntryRightIcon");
 			this._setFocusableNodes(["iconNode", "labelNode", "rightText", "rightIcon2", "rightIcon"]);
-		},
-
-		// Focus the next or previous element, and return the id of the element that has the focus
-		doFocus: function(next){
-			if(this._focusableNodes){
-				var maxIndex = this._focusableNodes.length - 1;
-				if(this._focusedNodeIndex == null){
-					this._focusedNodeIndex = next ? 0 : maxIndex;
-				}else{
-					if(next){
-						this._focusedNodeIndex++;
-						if(this._focusedNodeIndex > maxIndex){
-							this._focusedNodeIndex = 0;
-						}
-					}else{
-						this._focusedNodeIndex--;
-						if(this._focusedNodeIndex < 0){
-							this._focusedNodeIndex = maxIndex;
-						}
-					}
-				}
-				this._focusableNodes[this._focusedNodeIndex].focus();
-				return this._focusableNodes[this._focusedNodeIndex].id;
-			}
-		},
-
-		doBlur: function(){
-			this._focusedNodeIndex = null;
-		},
-
-		onKeyDown: function(evt){
-			console.log("Key down event received:");
-			console.log(evt);
-		},
-
-		_setFocusableNodes: function(nodeNames) {
-			var i=0, node;
-			this._focusableNodes = [];
-			this._focusedNodeIndex = null;
-			for(i=0; i < nodeNames.length; i++){
-				node = this[nodeNames[i]];
-				if(node){
-					this._focusableNodes.push(node);
-				}
-			}
 		},
 
 		_renderTextNode: function(nodeName, text, nodeClass){

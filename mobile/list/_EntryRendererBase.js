@@ -1,7 +1,8 @@
 define(["dojo/_base/declare",
         "dojo/dom-class",
+        "dojo/dom-construct",
         "dui/_WidgetBase"
-], function(declare, domClass, _WidgetBase){
+], function(declare, domClass, domConstruct, _WidgetBase){
 
 	return declare([_WidgetBase], {
 
@@ -26,9 +27,65 @@ define(["dojo/_base/declare",
 			domClass.add(this.domNode, this.baseClass);
 		},
 
+		_focusableNodes: null,
+		_focusedNodeIndex: null,
+
+		buildRendering: function(){
+			if(!this.domNode){
+				this.domNode = domConstruct.create('li');
+			}
+			this.inherited(arguments);
+		},
+
 		// Method that render the entry in the widget GUI
 		renderEntry: function(entry){
 			// abstract method
+		},
+
+		// Focus the next or previous element, and return the id of the element that has the focus
+		doFocus: function(next){
+			if(this._focusableNodes){
+				var maxIndex = this._focusableNodes.length - 1;
+				if(this._focusedNodeIndex == null){
+					this._focusedNodeIndex = next ? 0 : maxIndex;
+				}else{
+					if(next){
+						this._focusedNodeIndex++;
+						if(this._focusedNodeIndex > maxIndex){
+							this._focusedNodeIndex = 0;
+						}
+					}else{
+						this._focusedNodeIndex--;
+						if(this._focusedNodeIndex < 0){
+							this._focusedNodeIndex = maxIndex;
+						}
+					}
+				}
+				this._focusableNodes[this._focusedNodeIndex].focus();
+				return this._focusableNodes[this._focusedNodeIndex].id;
+			}
+		},
+
+		doBlur: function(){
+			this._focusedNodeIndex = null;
+		},
+
+		onKeyDown: function(evt){
+			// TO BE IMPLEMENTED BY CONCRETE CLASS
+			console.log("Key down event received:");
+			console.log(evt);
+		},
+
+		_setFocusableNodes: function(nodeNames) {
+			var i=0, node;
+			this._focusableNodes = [];
+			this._focusedNodeIndex = null;
+			for(i=0; i < nodeNames.length; i++){
+				node = this[nodeNames[i]];
+				if(node){
+					this._focusableNodes.push(node);
+				}
+			}
 		}
 
 	});

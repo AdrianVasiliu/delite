@@ -138,7 +138,7 @@ define(["dojo/_base/declare",
 			}
 			// listen to click events to cancel clicks at the end of a scroll on desktop
 			if(!has('touch')){
-				this.on('click', lang.hitch(this, '_onClick'));
+				this.domNode.addEventListener('click', lang.hitch(this, '_onClick'), true);
 			};
 		},
 
@@ -178,6 +178,9 @@ define(["dojo/_base/declare",
 			if(this._renderedPageLoader){
 				this._renderedPageLoader.destroyRecursive();
 			}
+			if(this.domNode && !has('touch')){
+				this.domNode.removeEventListener('click', lang.hitch(this, '_onClick'), true);
+			};
 		},
 
 		/////////////////////////////////
@@ -458,6 +461,7 @@ define(["dojo/_base/declare",
 //				renderedEntry.set('entry', entry);
 			}else{
 				renderedEntry = new this.entriesRenderer({entry: entry, entryIndex: entryIndex, tabindex: "-1"});
+				renderedEntry.startup();
 			}
 			//////////////////////////////////
 			// TODO: UPDATE OR REMOVE THIS ? (NOTIFY RENDERER OF ITS SELECTION STATUS ?)
@@ -501,6 +505,7 @@ define(["dojo/_base/declare",
 //				renderedCategory.set('category', category);
 			}else{
 				renderedCategory = new this.categoriesRenderer({category: category, tabindex: "-1"});
+				renderedCategory.startup();
 			}
 			this._setCellEntryIndex(renderedCategory, null);
 			this._setCellCategoryHeader(renderedCategory, category);
@@ -924,13 +929,15 @@ define(["dojo/_base/declare",
 						// TODO: THIS SHOULD BE DONE IN THE RENDERED WIDGET
 						///////////////////////////////////////////////
 						cell = registry.byNode(this._focusedNode);
-						if(cell.doBlur){
-							cell.doBlur();
-						}
 						domClass.remove(this._focusedNode, 'duiListFocusedCell');
 						this._focusedNode = node;
 					}else{
 						return;
+					}
+				}else{
+					cell = registry.byNode(this._focusedNode);
+					if(cell.doBlur){
+						cell.doBlur();
 					}
 				}
 			}else{

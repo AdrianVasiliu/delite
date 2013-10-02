@@ -1,7 +1,8 @@
 define(["dojo/_base/declare",
         "dojo/dom-class",
+        "dojo/dom-construct",
         "dui/_WidgetBase"
-], function(declare, domClass, _WidgetBase){
+], function(declare, domClass, domConstruct, _WidgetBase){
 
 	return declare([_WidgetBase], {
 
@@ -18,6 +19,13 @@ define(["dojo/_base/declare",
 			domClass.remove(this.domNode, this.baseClass);
 			this._set('baseClass', value);
 			domClass.add(this.domNode, this.baseClass);
+		},
+
+		buildRendering: function(){
+			if(!this.domNode){
+				this.domNode = domConstruct.create('li');
+			}
+			this.inherited(arguments);
 		},
 
 		// Method that render the category in the widget GUI
