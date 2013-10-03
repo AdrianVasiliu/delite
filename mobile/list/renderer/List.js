@@ -868,7 +868,11 @@ define(["dojo/_base/declare",
 
 		_onFocus: function(event){
 			if(this._focusedNode){
+				var cell = registry.byNode(this._focusedNode);
 				domClass.remove(this._focusedNode, 'duiListFocusedCell');
+				if(cell.onBlur){
+					cell.onBlur();
+				}
 				this._focusedNode = null;
 			}
 		},
@@ -930,14 +934,17 @@ define(["dojo/_base/declare",
 						///////////////////////////////////////////////
 						cell = registry.byNode(this._focusedNode);
 						domClass.remove(this._focusedNode, 'duiListFocusedCell');
+						if(cell.onBlur){
+							cell.onBlur();
+						}
 						this._focusedNode = node;
 					}else{
 						return;
 					}
 				}else{
 					cell = registry.byNode(this._focusedNode);
-					if(cell.doBlur){
-						cell.doBlur();
+					if(cell.blurCurrentElement){
+						cell.blurCurrentElement();
 					}
 				}
 			}else{
@@ -951,10 +958,14 @@ define(["dojo/_base/declare",
 					node = node.nextElementSibling;
 				}
 			}
-			this._cellManagedFocus = false;
 			this._focusedNode.focus();
 			domClass.add(this._focusedNode, 'duiListFocusedCell');
 			this.domNode.setAttribute('aria-activedescendant', this._focusedNode.id);
+			cell = registry.byNode(this._focusedNode);
+			if(!this._cellManagedFocus && cell.onFocus){
+				cell.onFocus();
+			}
+			this._cellManagedFocus = false;
 			this.defer(function(){
 				// scroll has been updated: verify that the focused cell is visible, if not scroll to make it appear
 				if(this._browserScroll == 0){
@@ -977,8 +988,8 @@ define(["dojo/_base/declare",
 			var cell, cellFocusedNodeId;
 			if(!this._nodeRendersCategoryHeader(this._focusedNode)){				
 				cell = registry.byNode(this._focusedNode);
-				if(cell.doFocus){
-					cellFocusedNodeId = cell.doFocus(next);
+				if(cell.focusNextElement){
+					cellFocusedNodeId = cell.focusNextElement(next);
 					if(cellFocusedNodeId){
 						this.domNode.setAttribute('aria-activedescendant', cellFocusedNodeId);
 					}

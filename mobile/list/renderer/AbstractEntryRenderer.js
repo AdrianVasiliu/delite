@@ -42,14 +42,19 @@ define(["dojo/_base/declare",
 			// abstract method
 		},
 
-		// Focus the next or previous element, and return the id of the element that has the focus
-		doFocus: function(next){
+		onFocus: function(){
+			// abstract method
+			console.log("onFocus " + this.id);
+		},
+
+		// Focus the next (forth == true) or previous element (forth == false), and return the id of the element that has the focus
+		focusNextElement: function(forth){
 			if(this._focusableNodes){
 				var maxIndex = this._focusableNodes.length - 1;
 				if(this._focusedNodeIndex == null){
-					this._focusedNodeIndex = next ? 0 : maxIndex;
+					this._focusedNodeIndex = forth ? 0 : maxIndex;
 				}else{
-					if(next){
+					if(forth){
 						this._focusedNodeIndex++;
 						if(this._focusedNodeIndex > maxIndex){
 							this._focusedNodeIndex = 0;
@@ -66,8 +71,13 @@ define(["dojo/_base/declare",
 			}
 		},
 
-		doBlur: function(){
+		blurCurrentElement: function(){
 			this._focusedNodeIndex = null;
+		},
+
+		onBlur: function(){
+			// abstract method
+			console.log("onBlur " + this.id);
 		},
 
 		onKeyDown: function(evt){

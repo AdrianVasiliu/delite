@@ -48,7 +48,7 @@
 					this._setFocusableNodes(["title", "description", "addToCartLink"]);
 				},
 
-				doFocus: function(next){
+				focusNextElement: function(next){
 					var returnedId = this.inherited(arguments);
 					if(!this.catalogController.detailed[this.entryIndex]){
 						this.toggleDetail();
@@ -56,8 +56,7 @@
 					return returnedId;
 				},
 
-				doBlur: function(){
-					this.inherited(arguments);
+				onBlur: function(){
 					if(this.catalogController.detailed[this.entryIndex]){
 						this.toggleDetail();
 					}
