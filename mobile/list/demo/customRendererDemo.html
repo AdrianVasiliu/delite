@@ -69,10 +69,10 @@
 					this.addToCartLink.id = this.id + 'addToCartLink';
 				},
 
-				renderEntry: function(value){
-					var img = value ? (value.img ? value.img : '') : '';
-					var title = value ? (value.title ? value.title : '') : '';
-					var description = value ? (value.description ? value.description : '') : '';
+				renderEntry: function(entry, entryIndex){
+					var img = entry ? (entry.img ? entry.img : '') : '';
+					var title = entry ? (entry.title ? entry.title : '') : '';
+					var description = entry ? (entry.description ? entry.description : '') : '';
 					this.image.setAttribute('src', img);
 					this.title.innerHTML = title;
 					this.description.innerHTML = description;
@@ -122,8 +122,8 @@
 			
 			// Custom renderer for the categories
 			var CatalogCategoryRenderer = declare([AbstractCategoryRenderer], {
-				renderCategory: function(value){
-					this.domNode.innerHTML = 'SEASON ' + value;
+				renderCategory: function(category){
+					this.domNode.innerHTML = 'SEASON ' + category;
 				}
 			});
 			 // create a list widget for the catalog, using the custom entries renderer

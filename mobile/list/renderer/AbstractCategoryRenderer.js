@@ -13,24 +13,18 @@ define(["dojo/_base/declare",
 			this.renderCategory(value);
 		},
 
-		// TODO: CAN'T BE CHANGED BY THE USER
-		baseClass: "duiListCategoryHeader",
-		_setBaseClassAttr: function(value){
-			domClass.remove(this.domNode, this.baseClass);
-			this._set('baseClass', value);
-			domClass.add(this.domNode, this.baseClass);
-		},
-
 		buildRendering: function(){
 			if(!this.domNode){
 				this.domNode = domConstruct.create('li');
 			}
+			domClass.add(this.domNode, 'duiListCategoryHeader');
 			this.inherited(arguments);
 		},
 
 		// Method that render the category in the widget GUI
 		renderCategory: function(category){
 			// abstract method
+			// this.category = category;
 		}
 
 	});
