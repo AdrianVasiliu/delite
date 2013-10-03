@@ -6,9 +6,9 @@
 	<meta name="apple-mobile-web-app-capable" content="yes"/>
 	<title>Lists for dojo 2</title>
 
-	<link rel="stylesheet" type="text/css" href="../../../dui/mobile/list/List.css">
-	<script type="text/javascript" src="../deviceTheme.js"></script>
-	<script type="text/javascript" src="../../../dojo/dojo.js"
+	<link rel="stylesheet" type="text/css" href="../../../../dui/mobile/list/css/List.css">
+	<script type="text/javascript" src="../../deviceTheme.js"></script>
+	<script type="text/javascript" src="../../../../dojo/dojo.js"
 		data-dojo-config="packages: [{name: 'dojox', location:'../dui'}, {name: 'dijit', location:'../dui'}], async: true, parseOnLoad: true"></script>
 
 	<script type="text/javascript">
@@ -17,19 +17,19 @@
 		    "dojo/_base/window",
 			"dui/registry",
 			"dojo/on",
-			"dui/mobile/list/List",
-			"dui/mobile/list/List3",
+			"dui/mobile/list/decorator/List",
+			"dui/mobile/list/renderer/List",
 			"dojo/dom",
 			"dojo/request",
 			"dojo/store/util/QueryResults",
 			"dui/mobile/common"
-		], function(lang, win, registry, on, List, List3, dom, request, QueryResults){
+		], function(lang, win, registry, on, DecoratorList, RendererList, dom, request, QueryResults){
 			// List model
 			var useIcon, useRightText, useRightIcon, useRightIcon2;
 			var entriesStore = {
 					entriesCount: 2000,
 					query: function(query, options){
-						var promise = request.get('./List2.js').then(lang.hitch(this,
+						var promise = request.get('./data.txt').then(lang.hitch(this,
 							function(response){
 								var i;
 								var category;
@@ -43,10 +43,10 @@
 										category = 'category ' + Math.floor(i / 10);
 										entries[i - start] = {category: category,
 															  label: 'this is list entry ' + i,
-															  icon: useIcon ? '../tests/images/i-icon-' + (i % 10 + 1) + '.png' : null,
+															  icon: useIcon ? '../../tests/images/i-icon-' + (i % 10 + 1) + '.png' : null,
 															  rightText: useRightText ? 'right text ' + i : null,
-															  rightIcon: useRightIcon ? '../tests/images/a-icon-1.png' : null,
-															  rightIcon2: useRightIcon2 ? '../tests/images/b-icon-' + (i % 8 + 1) + '.png' : null}; 
+															  rightIcon: useRightIcon ? '../../tests/images/a-icon-1.png' : null,
+															  rightIcon2: useRightIcon2 ? '../../tests/images/b-icon-' + (i % 8 + 1) + '.png' : null}; 
 									}
 								}
 								return entries;
@@ -96,7 +96,7 @@
 				};
 				entriesStore.entriesCount = parseInt(dom.byId("entriesCount").value);
 				var listType = dom.byId("listType").value;
-				list = (listType == "1") ? new List(listParams): new List3(listParams);
+				list = (listType == "1") ? new DecoratorList(listParams): new RendererList(listParams);
 				list.entries = {store: entriesStore, query: ''};
 				list.placeAt(win.body());
 				list.startup();

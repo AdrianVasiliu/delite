@@ -1,11 +1,10 @@
 define(["dojo/_base/declare",
         "dojo/dom-construct",
         "dojo/dom-class",
-        "../iconUtils",
-        "./_EntryRendererBase"
-], function(declare, domConstruct, domClass, iconUtils, _EntryRendererBase){
+        "./AbstractEntryRenderer"
+], function(declare, domConstruct, domClass, AbstractEntryRenderer){
 	
-	return declare([_EntryRendererBase], {
+	return declare([AbstractEntryRenderer], {
 
 		renderEntry: function(entry){
 			this._renderTextNode("labelNode", entry ? entry.label : null, "duiListEntryLabel");

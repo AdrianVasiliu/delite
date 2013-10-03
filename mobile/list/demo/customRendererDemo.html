@@ -6,9 +6,9 @@
 	<meta name="apple-mobile-web-app-capable" content="yes"/>
 	<title>Custom renderer for list items</title>
 
-	<link rel="stylesheet" type="text/css" href="../../../dui/mobile/list/List.css">
-	<script type="text/javascript" src="../deviceTheme.js"></script>
-	<script type="text/javascript" src="../../../dojo/dojo.js"
+	<link rel="stylesheet" type="text/css" href="../../../../dui/mobile/list/css/List.css">
+	<script type="text/javascript" src="../../deviceTheme.js"></script>
+	<script type="text/javascript" src="../../../../dojo/dojo.js"
 		data-dojo-config="packages: [{name: 'dojox', location:'../dui'}, {name: 'dijit', location:'../dui'}], async: true, parseOnLoad: true"></script>
 
 	<script type="text/javascript">
@@ -18,14 +18,13 @@
 			"dui/registry",
 			"dojo/store/Memory",
 		    "dui/_TemplatedMixin",
-		    "dui/mobile/list/_EntryRendererBase",
-		    "dui/mobile/list/_CategoryRendererBase",
-			"dui/mobile/list/List3",
+		    "dui/mobile/list/renderer/AbstractEntryRenderer",
+		    "dui/mobile/list/renderer/AbstractCategoryRenderer",
+			"dui/mobile/list/renderer/List",
 			"dojo/parser"
-		], function(declare, domClass, registry, MemoryStore, _TemplatedMixin, _EntryRendererBase, _CategoryRendererBase, List){
+		], function(declare, domClass, registry, MemoryStore, _TemplatedMixin, AbstractEntryRenderer, AbstractCategoryRenderer, List){
 
  			// the model that contains the list entries from the catalog
- 			// TODO: USE A STORE INSTEAD (FOR 'LOAD ON DEMAND');
 			var catalogStoreModel = [];
 			for (var i = 1; i < 208; i++){
 				catalogStoreModel.push({season: Math.floor(i / 13) + 1, img: 'http://g-ecx.images-amazon.com/images/G/02/uk-dvd/images/warner/hbo-logo-small._SS50_V198464807_.jpg', title: 'The Sopraninos episode ' + i, description: 'Tonino is really really depressed, at least for the ' + i + 'st time...'});
@@ -38,7 +37,7 @@
 				detailed: {} // store information about catalog entries that are selected to display details
 			};
 			
-			var CatalogEntryRenderer = declare([_EntryRendererBase, _TemplatedMixin], {
+			var CatalogEntryRenderer = declare([AbstractEntryRenderer, _TemplatedMixin], {
 			
 				catalogController: catalogController,
 				
@@ -50,10 +49,11 @@
 				},
 
 				doFocus: function(next){
-					this.inherited(arguments);
+					var returnedId = this.inherited(arguments);
 					if(!this.catalogController.detailed[this.entryIndex]){
 						this.toggleDetail();
 					}
+					return returnedId;
 				},
 
 				doBlur: function(){
@@ -63,13 +63,19 @@
 					}
 				},
 
+				buildRendering: function(){
+					this.inherited(arguments);
+					this.title.id = this.id + 'title';
+					this.description.id = this.id + 'description';
+					this.addToCartLink.id = this.id + 'addToCartLink';
+				},
+
 				renderEntry: function(value){
 					var img = value ? (value.img ? value.img : '') : '';
 					var title = value ? (value.title ? value.title : '') : '';
 					var description = value ? (value.description ? value.description : '') : '';
 					this.image.setAttribute('src', img);
 					this.title.innerHTML = title;
-					this.title.id = this.id + 'title';
 					this.description.innerHTML = description;
 					this._updateDetailRendering();
 					this._updateAddToCartLinkRendering();
@@ -116,7 +122,7 @@
 			});
 			
 			// Custom renderer for the categories
-			var CatalogCategoryRenderer = declare([_CategoryRendererBase], {
+			var CatalogCategoryRenderer = declare([AbstractCategoryRenderer], {
 				renderCategory: function(value){
 					this.domNode.innerHTML = 'SEASON ' + value;
 				}

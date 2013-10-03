@@ -4,32 +4,29 @@
 	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
 	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
 	<meta name="apple-mobile-web-app-capable" content="yes"/>
-	<title>Lists for dojo 2 (version that use widgets as renderers)</title>
+	<title>Lists for dojo 2</title>
 
-	<link rel="stylesheet" type="text/css" href="../../../dui/mobile/list/List.css">
-	<script type="text/javascript" src="../deviceTheme.js"></script>
-	<script type="text/javascript" src="../../../dojo/dojo.js"
+	<link rel="stylesheet" type="text/css" href="../../../../dui/mobile/list/css/List.css">
+	<script type="text/javascript" src="../../deviceTheme.js"></script>
+	<script type="text/javascript" src="../../../../dojo/dojo.js"
 		data-dojo-config="packages: [{name: 'dojox', location:'../dui'}, {name: 'dijit', location:'../dui'}], async: true, parseOnLoad: true"></script>
 
 	<script type="text/javascript">
 		require([
-			"dojo/_base/declare",
 			"dojo/_base/lang",
 			"dojo/_base/array",
 			"dojo/parser",
 			"dui/registry",
 			"dojo/on",
-			"dui/mobile/list/List2",
+			"dui/mobile/list/decorator/List",
 			"dojo/dom",
 			"dojo/dom-construct",
 			"dojo/dom-class",
 			"dojo/request",
 			"dojo/when",
 			"dojo/store/util/QueryResults",
-	        "dui/_WidgetBase",
-	        "dui/_TemplatedMixin",
 			"dojox/mobile/common"
-		], function(declare, lang, array, parser, registry, on, List, dom, domConstruct, domClass, request, when, QueryResults, _WidgetBase, _TemplateMixin){
+		], function(lang, array, parser, registry, on, List, dom, domConstruct, domClass, request, when, QueryResults){
 			
 			/////////////////////////////////////////
 			// Demo 2: 4999 entries
@@ -42,148 +39,118 @@
 			var list2 = new List({height: 200, entries: list2Model}, 'list2');
 			list2.startup();
 			on(dom.byId('autoscroll'), 'click', function(){
-				list2._animateScroll(dom.byId('fps').valueAsNumber, dom.byId('duration').valueAsNumber, dom.byId('length').valueAsNumber);
+				list2._animateScroll(dom.byId('duration').valueAsNumber, dom.byId('length').valueAsNumber);
 			});
 
 
 			////////////////////////////////////////////////////
-			// Demo 3: Shopping catalog using a templated entries renderer
+			// Demo 3: Shopping catalog using an HTML renderer
 			////////////////////////////////////////////////////
 
- 			// the model that contains the list entries from the catalog
+			// the model that contains the list entries from the catalog
 			var catalogModel = [];
 			for (var i = 1; i < 100; i++){
 				catalogModel.push({img: 'http://g-ecx.images-amazon.com/images/G/02/uk-dvd/images/warner/hbo-logo-small._SS50_V198464807_.jpg', title: 'The Sopranos episode ' + i, description: 'Tony is really really depressed, at least for the ' + i + 'st time...'});
 			};
-			// Custom renderer for the catalog entries
+			// a controller that is also the renderer for the catalog entries
 			var catalogController = {
 				cart: {}, // the cart in which user push catalog entries to buy
-				detailed: {} // store information about catalog entries that are selected to display details
-			};
-			var CatalogEntryRenderer = declare([_WidgetBase, _TemplateMixin], {
-				catalogController: catalogController,
-				templateString: '<div class="entryContainer" data-dojo-attach-event="onclick: toggleDetail"><div class="entryHeader"><img class="entryIcon" data-dojo-attach-point="image"><span class="entryTitle" data-dojo-attach-point="title"></span></div><div data-dojo-attach-point="entryDetail" class="entryDetails hidden"><span class="entryDescription" data-dojo-attach-point="description"></span><a class="" href="javascript:;" data-dojo-attach-point="addToCartLink" data-dojo-attach-event="onclick: addToCart">Add to Cart</a></div></div>',
-				entryIndex: null,
-				_setEntryIndexAttr: function(value){
-					this._set('entryIndex', value);
-					this._updateDetailRendering();
-					this._updateAddToCartLinkRendering();
+				_selected: {}, // store information about catalog entries that are selected to display details
+				render: function(entry, entryIndex){ // catalog entries renderer
+					return '<div class="entryContainer"><div class="entryHeader"><img class="entryIcon" src="' + entry.img + '"/><span class="entryTitle">' + entry.title + '</span></div><div id="entryDetails' + entryIndex + '" class="entryDetails' + (this._selected[entryIndex]?'':' hidden') + '"><span class="entryDescription">' + entry.description + '</span><a class="' + (this.cart[entryIndex]?'hidden':'') + '" href="javascript:;">Add to Cart</a></div></div>';
 				},
-				entry: null,
-				_setEntryAttr: function(value){
-					var img = value ? (value.img ? value.img : '') : '';
-					var title = value ? (value.title ? value.title : '') : '';
-					var description = value ? (value.description ? value.description : '') : '';
-					this._set('entry', value);
-					this.image.setAttribute('src', img);
-					this.title.innerHTML = title;
-					this.description.innerHTML = description;
-					// notify the list that we have externaly updated its rendering, so that it
-					// performs internal sizing calculations if it needs to.
-					registry.byId('list3').renderingUpdated();
-				},
-				toggleDetail: function(event){
-					if(this.catalogController.detailed[this.entryIndex]){
-						delete this.catalogController.detailed[this.entryIndex];
+				onEntryClick: function(e, entryIndex){ // a handler for click events on a rendered catalog entry
+					if(entryIndex != null){
+						if(e.target.tagName == 'A'){
+							// The "add to cart" link was clicked
+							alert('Item ' + JSON.stringify(catalogModel[entryIndex]) + ' has been added to your cart.');
+							domClass.toggle( e.target, 'hidden');
+							this.cart[entryIndex] = true;
+						}else{
+							// toggle the hidden class on the entry Index
+							domClass.toggle('entryDetails' + entryIndex, 'hidden');
+							// notify the list that we have externaly updated its rendering, so that it
+							// performs internal sizing calculations if it needs to.
+							registry.byId('list3').renderingUpdated();
+							// update our internal list of selected items
+							if(this._selected[entryIndex]){
+								delete this._selected[entryIndex];
+							}else{
+								this._selected[entryIndex] = true;
+							}
+						}
 					}else{
-						this.catalogController.detailed[this.entryIndex] = true;
-					}
-					this._updateDetailRendering();
-				},
-				addToCart: function(event){
-					event.stopPropagation();
-					alert('Item ' + JSON.stringify(catalogModel[this.entryIndex]) + ' has been added to your cart.');
-					this.catalogController.cart[this.entryIndex] = true;
-					this._updateAddToCartLinkRendering();
-				},
-				_updateDetailRendering: function(){
-					if(this.catalogController.detailed[this.entryIndex]){
-						domClass.remove(this.entryDetail, 'hidden');
-					}else{
-						domClass.add(this.entryDetail, 'hidden');
-					}
-					// notify the list that we have externaly updated its rendering, so that it
-					// performs internal sizing calculations if it needs to.
-					registry.byId('list3').renderingUpdated();
-				},
-				_updateAddToCartLinkRendering: function(){
-					if(this.catalogController.cart[this.entryIndex]){
-						domClass.add(this.addToCartLink, 'hidden');
-					}else{
-						domClass.remove(this.addToCartLink, 'hidden');
+						console.log(e);
 					}
 				}
-			});
-			// create a list widget for the catalog, using the custom entries renderer
-			var list3 = new List({id: 'list3', height: 600, entries: catalogModel, entriesRenderer: CatalogEntryRenderer}, 'list3');
+			};
+			// create a list widget for the catalog
+			var list3 = new List({id: 'list3', height: 600, entries: catalogModel}, 'list3');
+			// register our controller as the renderer for catalog entries
+			list3.entriesRenderer = catalogController;
+			// register our handler for click on a rendered catalog entry
+			list3.onCellEvent('click', lang.hitch(catalogController, 'onEntryClick'));
 			// startup the list
 			list3.startup();
 
 			////////////////////////////////////////////////////
-			// Demo 4: Shopping catalog using a templated entries renderer (same as demo 3)
+			// Demo 4: Shopping catalog using a node renderer
 			////////////////////////////////////////////////////
 
-			// Custom renderer for the catalog entries
-			var catalogController2 = {
-				cart: {}, // the cart in which user push catalog entries to buy
-				detailed: {} // store information about catalog entries that are selected to display details
-			};
-			var CatalogEntryRenderer2 = declare([_WidgetBase, _TemplateMixin], {
-				catalogController: catalogController2,
-				templateString: '<div class="entryContainer" data-dojo-attach-event="onclick: toggleDetail"><div class="entryHeader"><img class="entryIcon" data-dojo-attach-point="image"><span class="entryTitle" data-dojo-attach-point="title"></span></div><div data-dojo-attach-point="entryDetail" class="entryDetails hidden"><span class="entryDescription" data-dojo-attach-point="description"></span><a class="" href="javascript:;" data-dojo-attach-point="addToCartLink" data-dojo-attach-event="onclick: addToCart">Add to Cart</a></div></div>',
-				entryIndex: null,
-				_setEntryIndexAttr: function(value){
-					this._set('entryIndex', value);
-					this._updateDetailRendering();
-					this._updateAddToCartLinkRendering();
-				},
-				entry: null,
-				_setEntryAttr: function(value){
-					var img = value ? (value.img ? value.img : '') : '';
-					var title = value ? (value.title ? value.title : '') : '';
-					var description = value ? (value.description ? value.description : '') : '';
-					this._set('entry', value);
-					this.image.setAttribute('src', img);
-					this.title.innerHTML = title;
-					this.description.innerHTML = description;
-					// notify the list that we have externaly updated its rendering, so that it
-					// performs internal sizing calculations if it needs to.
-					registry.byId('list4').renderingUpdated();
-				},
-				toggleDetail: function(event){
-					if(this.catalogController.detailed[this.entryIndex]){
-						delete this.catalogController.detailed[this.entryIndex];
-					}else{
-						this.catalogController.detailed[this.entryIndex] = true;
+			var catalogRenderer = {
+					cart: {},
+					_handlers: {},
+					_selected: {},
+					render: function(entry, entryIndex){ // catalog entries renderer
+						// create the domNote to return for the rendered entry
+						var entryContainer = domConstruct.create('div', {className: 'entryContainer'});
+						var entryHeader = domConstruct.create('div', {className: 'entryHeader'}, entryContainer);
+						domConstruct.create('img', {src: entry.img}, entryHeader);
+						domConstruct.create('span', {className: 'entryTitle', innerHTML: entry.title}, entryHeader);
+						var entryDetails = domConstruct.create('div', {id: 'xEntryDetails' + entryIndex, className: 'entryDetails'}, entryContainer);
+						if(!this._selected[entryIndex]){
+							domClass.add(entryDetails, 'hidden');
+						}
+						domConstruct.create('span', {className: 'entryDescription', innerHTML: entry.description}, entryDetails);
+						var cartLink = domConstruct.create('a', {innerHTML: 'Add to Cart', href: 'javascript:;'}, entryDetails);
+						if(this.cart[entryIndex]){
+							domClass.add(cartLink, 'hidden');
+						}
+						// Register handlers for clicks in the rendered list entry
+						this._handlers[entryIndex] = [];
+						// Callback for click in the entry header
+						this._handlers[entryIndex].push(on(entryHeader, 'click', lang.hitch(this, function(e){
+							// toggle the hidden class on the entry Index
+							domClass.toggle('xEntryDetails' + entryIndex, 'hidden');
+							// notify the list that we have externaly updated its rendering, so that it
+							// performs internal sizing calculations if it needs to.
+							registry.byId('list4').renderingUpdated();
+							// update our internal list of selected items
+							if(this._selected[entryIndex]){
+								delete this._selected[entryIndex];
+							}else{
+								this._selected[entryIndex] = true;
+							}
+						})));
+						// Callback for click on the "add to cart" link
+						this._handlers[entryIndex].push(on(cartLink, 'click', lang.hitch(this, function(e){
+							// The "add to cart" link was clicked
+							alert('Item ' + JSON.stringify(catalogModel[entryIndex]) + ' has been added to your cart.');
+							domClass.toggle( e.target, 'hidden');
+							this.cart[entryIndex] = true;
+						})));
+						return entryContainer;
+					},
+					onCellCleanup: function(event){ // remove event handlers when a cleanup event is amited for the cell that display a list entry
+						array.forEach(this._handlers[event.entryIndex], function(handler){
+							handler.remove();
+						});
 					}
-					this._updateDetailRendering();
-				},
-				addToCart: function(event){
-					event.stopPropagation();
-					alert('Item ' + JSON.stringify(catalogModel[this.entryIndex]) + ' has been added to your cart.');
-					this.catalogController.cart[this.entryIndex] = true;
-					this._updateAddToCartLinkRendering();
-				},
-				_updateDetailRendering: function(){
-					if(this.catalogController.detailed[this.entryIndex]){
-						domClass.remove(this.entryDetail, 'hidden');
-					}else{
-						domClass.add(this.entryDetail, 'hidden');
-					}
-					// notify the list that we have externaly updated its rendering, so that it
-					// performs internal sizing calculations if it needs to.
-					registry.byId('list4').renderingUpdated();
-				},
-				_updateAddToCartLinkRendering: function(){
-					if(this.catalogController.cart[this.entryIndex]){
-						domClass.add(this.addToCartLink, 'hidden');
-					}else{
-						domClass.remove(this.addToCartLink, 'hidden');
-					}
-				}
-			});
-			// create a list widget for the catalog, using the custom entries renderer
-			var list4 = new List({id: 'list4', height: 600, entries: catalogModel, entriesRenderer: CatalogEntryRenderer2}, 'list4');
+				};
+			// create a list widget for the catalog
+			var list4 = new List({id: 'list4', height: 600, entries: catalogModel}, 'list4');
+			// register our custom renderer
+			list4.entriesRenderer = catalogRenderer;
 			// startup the list
 			list4.startup();
 
@@ -222,25 +189,15 @@
 			                        {type: 'vegetable', name: 'Spinach'},
 			                        {type: 'vegetable', name: 'Watercress'},
 			                        ];
-			var FruitAndVegRenderer = declare([_WidgetBase, _TemplateMixin], {
-				templateString: '<span data-dojo-attach-point="name"></span>',
-				entryIndex: null,
-				_setEntryIndexAttr: function(value){
-					this._set('entryIndex', value);
-				},
-				entry: null,
-				_setEntryAttr: function(value){
-					var type = value ? (value.type ? value.type : '') : '';
-					var name = value ? (value.name ? value.name : '') : '';
-					this._set('entry', value);
-					this.name.className = type + 'Entry';
-					this.name.innerHTML = name;
-				},
-			});
+			var fruitAndVegRenderer = {
+				render: function(listEntry, listEntryIndex){
+					return '<span class="' + listEntry.type + 'Entry">' + listEntry.name + '</span>';
+				}	
+			};
 			// create a list widget for the categorized list
 			var list5 = new List({id: 'list5', height: 200, entries: fruitAndVegModel, categoryAttribute: 'type'}, 'list5');
 			// register our custom renderer
-			list5.entriesRenderer = FruitAndVegRenderer;
+			list5.entriesRenderer = fruitAndVegRenderer;
 			// startup the list
 			list5.startup();
 
@@ -251,7 +208,7 @@
 			// our custom store
 			var entriesStore = {
 				query: function(query, options){
-					var promise = request.get('../list/List.js').then(
+					var promise = request.get('./data.txt').then(
 						function(response){
 							var i;
 							var start = options ? (options.start ? options.start : 0) : 0;;
@@ -292,7 +249,7 @@
 			
 			var categorizedEntriesStore = {
 					query: function(query, options){
-						var promise = request.get('../list/List.js').then(
+						var promise = request.get('./data.txt').then(
 							function(response){
 								var i;
 								var category;
@@ -334,9 +291,9 @@
 	 				dom.byId('list9Console').innerHTML = 'Selected entry: none';
 				}
 			};
- 			list9.on('entryDeselected', updateList9Console);
+  			list9.on('entryDeselected', updateList9Console);
  			list9.on('entrySelected', updateList9Console);
- 
+
 			////////////////////////////////////////////////////
 			// Demo 10: list that supports multiple selection
 			////////////////////////////////////////////////////
@@ -375,7 +332,7 @@
  			list11.on('entryDeselected', updateList11Console);
  			list11.on('entrySelected', updateList11Console);
 			on(dom.byId('autoscroll11'), 'click', function(){
-				list11._animateScroll(dom.byId('fps11').valueAsNumber, dom.byId('duration11').valueAsNumber, dom.byId('length11').valueAsNumber);
+				list11._animateScroll(dom.byId('duration11').valueAsNumber, dom.byId('length11').valueAsNumber);
 			});
 
  });
@@ -445,8 +402,8 @@
 		<ul>
 			<li><a href="#l1">Demo 1:</a> a list that is smaller than its viewport (<span class="pbDescription">work in progress, not currently working</span>)</li>
 			<li><a href="#l2">Demo 2:</a> a list that displays 4999 entries in a small viewport</li>
-			<li><a href="#l3">Demo 3:</a> a shopping catalog implemented using a templated list entries renderer</li>
-			<li><a href="#l4">Demo 4:</a> a shopping catalog implemented using a templated list entries renderer (same as demo 3)</li>
+			<li><a href="#l3">Demo 3:</a> a shopping catalog implemented using a list entries renderer that render HTML entries</li>
+			<li><a href="#l4">Demo 4:</a> a shopping catalog implemented using a list entries renderer that render node entries</li>
 			<li><a href="#l5">Demo 5:</a> a categorized list of fruits and vegetables</li>
 			<li><a href="#l6">Demo 6:</a> two lists that uses a dojo object store with paging to retrieve list items</li>
 			<li><a href="#l7">Demo 7:</a> a list with pagingLength > 0 while not using a dojo object store (no paging)</li>
@@ -459,27 +416,48 @@
 	<!-- markup example -->
 	<a id="l1"></a>
 	<h2>Demo 1:</h2>
-	<div id="list1" data-dojo-type="dui/mobile/list/List2" data-dojo-props="height: 200, entries: [{label: 'entry001'},
+	<div id="list1" data-dojo-type="dui/mobile/list/decorator/List" data-dojo-props="height: 200, entries: [{label: 'entry001'},
 	                                                                         {label: 'entry002'},
 	                                                                         {label: 'entry003'},
 	                                                                         {label: 'entry004'}]"></div>
+	<p>
+	<ol id="list1b" data-dojo-type="dui/mobile/list/decorator/List" data-dojo-props="height: 200">
+		<li data-dojo-type="dui/mobile/list/decorator/ListItem" data-dojo-props="label: 'entry001'"></li>
+		<li data-dojo-type="dui/mobile/list/decorator/ListItem" data-dojo-props="label: 'entry002'"></li>
+		<li data-dojo-type="dui/mobile/list/decorator/ListItem" data-dojo-props="label: 'entry003'"></li>
+		<li data-dojo-type="dui/mobile/list/decorator/ListItem" data-dojo-props="label: 'entry004'"></li>
+		<li data-dojo-type="dui/mobile/list/decorator/ListItem" data-dojo-props="label: 'entry005'"></li>
+		<li data-dojo-type="dui/mobile/list/decorator/ListItem" data-dojo-props="label: 'entry006'"></li>
+		<li data-dojo-type="dui/mobile/list/decorator/ListItem" data-dojo-props="label: 'entry007'"></li>
+		<li data-dojo-type="dui/mobile/list/decorator/ListItem" data-dojo-props="label: 'entry008'"></li>
+		<li data-dojo-type="dui/mobile/list/decorator/ListItem" data-dojo-props="label: 'entry009'"></li>
+		<li data-dojo-type="dui/mobile/list/decorator/ListItem" data-dojo-props="label: 'entry010'"></li>
+		<li data-dojo-type="dui/mobile/list/decorator/ListItem" data-dojo-props="label: 'entry011'"></li>
+		<li data-dojo-type="dui/mobile/list/decorator/ListItem" data-dojo-props="label: 'entry012'"></li>
+		<li data-dojo-type="dui/mobile/list/decorator/ListItem" data-dojo-props="label: 'entry013'"></li>
+		<li data-dojo-type="dui/mobile/list/decorator/ListItem" data-dojo-props="label: 'entry014'"></li>
+		<li data-dojo-type="dui/mobile/list/decorator/ListItem" data-dojo-props="label: 'entry015'"></li>
+		<li data-dojo-type="dui/mobile/list/decorator/ListItem" data-dojo-props="label: 'entry016'"></li>
+		<li data-dojo-type="dui/mobile/list/decorator/ListItem" data-dojo-props="label: 'entry017'"></li>
+		<li data-dojo-type="dui/mobile/list/decorator/ListItem" data-dojo-props="label: 'entry018'"></li>
+		<li data-dojo-type="dui/mobile/list/decorator/ListItem" data-dojo-props="label: 'entry019'"></li>
+		<li data-dojo-type="dui/mobile/list/decorator/ListItem" data-dojo-props="label: 'entry020'"></li>
+	</ol>
 	<!-- a really basic list with a lot of entries -->
 	<a id="l2"></a>
 	<h2>Demo 2: 4999 entries</h2>
-	<div>fps: <input id='fps' type='number' value='25'/> duration (s): <input id='duration' type='number' value='3'/> length (px): <input id='length' type='number' value='-50000'/><button id='autoscroll'>auto scroll</button></div>
+	<div>duration (s): <input id='duration' type='number' value='3'/> length (px): <input id='length' type='number' value='-50000'/><button id='autoscroll'>auto scroll</button></div>
 	<br>
 	<div id="list2"></div>
 
-	<!-- a sample shopping catalog using a templated renderer for the catalog entries -->
+	<!-- a sample shopping catalog using an HTML renderer for the catalog entries -->
 	<a id="l3"></a>
-	<h2>Demo 3: Shopping catalog using a templated renderer</h2>
-	<p class="pbDescription">Current pb: on desktop, scrolling by dragging the list send a click event to the dragged entry...</p>
+	<h2>Demo 3: Shopping catalog using an HTML renderer</h2>
 	<div id="list3"></div>
 	
 	<!-- a sample shopping catalog using a node renderer for the catalog entries -->
 	<a id="l4"></a>
-	<h2>Demo 4: Shopping catalog using a templated renderer (same as demo 3)</h2>
-	<p class="pbDescription">Current pb: on desktop, scrolling by dragging the list send a click event to the dragged entry...</p>
+	<h2>Demo 4: Shopping catalog using a node renderer</h2>
 	<div id="list4"></div>
 
 	<!-- a sample categorized list -->
@@ -520,7 +498,7 @@
 	<!-- categorized list that supports single selection -->
 	<a id="l11"></a>
 	<h2>Demo 11: categorized list that supports single selection</h2>
-	<div>fps: <input id='fps11' type='number' value='25'/> duration (s): <input id='duration11' type='number' value='3'/> length (px): <input id='length11' type='number' value='-45000'/><button id='autoscroll11'>auto scroll</button></div>
+	<div>duration (s): <input id='duration11' type='number' value='3'/> length (px): <input id='length11' type='number' value='-45000'/><button id='autoscroll11'>auto scroll</button></div>
 	<span id="list11Console">Selected entry: none</span>
 	<div id="list11"></div>
 	

@@ -8,14 +8,20 @@ define(["dojo/_base/declare",
         "dojo/dom-construct",
         "dojo/dom-geometry",
         "dojo/dom-class",
+        "dojo/dom-style",
         "dojo/touch",
         "dojo/on",
         "dojo/keys",
-        "../_css3",
+        "dui/mobile/_css3",
+        "dui/registry",
         "dui/_WidgetBase",
-        "dui/mixins/Selection"
-], function(declare, lang, array, when, win, has, dom, domConstruct, domGeometry, domClass, touch, on, keys, css3, _WidgetBase, Selection){
-	
+        "dui/_Container",
+        "dui/mixins/Selection",
+        "./DefaultEntryRenderer",
+        "./DefaultCategoryRenderer",
+        "./DefaultPageLoaderRenderer"
+], function(declare, lang, array, when, win, has, dom, domConstruct, domGeometry, domClass, domStyle, touch, on, keys, css3, registry, _WidgetBase, _Container, Selection, DefaultEntryRenderer, DefaultCategoryRenderer, DefaultPageLoaderRenderer){
+
 	// TODO: ADD THIS TO DOJO
 	window.requestAnimFrame = (function(){
 		  return  window.requestAnimationFrame       ||
@@ -26,11 +32,17 @@ define(["dojo/_base/declare",
 		          };
 		})();
 
-	return declare([_WidgetBase, Selection], {
+	return declare([_WidgetBase, _Container, Selection], {
 
 		/////////////////////////////////
 		// Public attributes
 		/////////////////////////////////
+
+		entriesRenderer: DefaultEntryRenderer,
+
+		categoriesRenderer: DefaultCategoryRenderer, // renders the category headers when the list entries are categorized. The default one is defined in the postMixInProperties method.
+
+		pageLoaderRenderer: DefaultPageLoaderRenderer, // when pageLength > 0, use this renderer to render the content of the cell that can be clicked to load one more page of entries.
 
 		entries: [], // list entries to display. Can be an array or an object that define a store, a query and -optional- query options (ex: {store: myStore, query: 'my query', options: {sort: [{attribute: 'label', descending: true}]}}).
 
@@ -61,21 +73,25 @@ define(["dojo/_base/declare",
 		_lastEntryIndex: null, // index of the entry in the last cell
 		_browserScroll: 0, // the browser modify the scrollTop of the domNode when navigating the list using a keyboard. The current browser scroll on the y axis is stored there.
 		_touchHandlersRefs: null,
-		_loaderCell: null,
 		_loaderCellClickHandlerRef: null,
 		_lastPressStopedAnimation: false,
 		_lastYTouch: null,
 		_lastMoveTimeStamp: null,
 		_dy: null,
 		_dt: null,
-		_focusedCell: null,
+		_focusedNode: null,
 		_currentPage: 0,
 		_hasNextPage: false,
 		_queryOptions: null,
 		_loadingPage: false,
+		_renderedEntriesPool: null,
+		_renderedCategoriesPool: null,
+		_isLoaderCellDisplayed: false,
+		_hiddenCellsOnTop: 0,
 		_cellEntryIndexes: null,
 		_cellCategoryHeaders: null,
 		_scrollAnimationSpec: null,
+		_cellManagedFocus: false,
 
 		/////////////////////////////////
 		// Widget lifecycle
@@ -84,6 +100,8 @@ define(["dojo/_base/declare",
 		postMixInProperties: function(){
 			this.inherited(arguments);
 			this._touchHandlersRefs = [];
+			this._renderedEntriesPool = [];
+			this._renderedCategoriesPool = [];
 			this._cellEntryIndexes = {};
 			this._cellCategoryHeaders = {};
 		},
@@ -120,7 +138,7 @@ define(["dojo/_base/declare",
 			}
 			// listen to click events to cancel clicks at the end of a scroll on desktop
 			if(!has('touch')){
-				this.on('click', lang.hitch(this, '_onClick'));
+				this.domNode.addEventListener('click', lang.hitch(this, '_onClick'), true);
 			};
 		},
 
@@ -140,23 +158,29 @@ define(["dojo/_base/declare",
 			// calculate the dimensions of the container
 			this._visibleHeight = this._getNodeHeight(this.domNode);
 		},
-
+		
 		destroy: function(){
+			var widget;
 			this.inherited(arguments);
-			if(this._loaderCell){
-				this._destroyPageLoader();
-			}
-		},
-
-		addChild: function(/*Widget*/ child){
-			if(child && child._type == 'ListItem'){
-				if(this.entries instanceof Array){
-					this.entries.push({label: child.label});
+			this._destroyPageLoader();
+			while(this._renderedEntriesPool.length){
+				widget = this._renderedEntriesPool.pop();
+				if(widget){
+					widget.destroyRecursive();
 				}
-				child.destroyRecursive();
-			}else{
-				this.inherited(arguments);
 			}
+			while(this._renderedCategoriesPool.length){
+				widget = this._renderedCategoriesPool.pop();
+				if(widget){
+					widget.destroyRecursive();
+				}
+			}
+			if(this._renderedPageLoader){
+				this._renderedPageLoader.destroyRecursive();
+			}
+			if(this.domNode && !has('touch')){
+				this.domNode.removeEventListener('click', lang.hitch(this, '_onClick'), true);
+			};
 		},
 
 		/////////////////////////////////
@@ -192,17 +216,13 @@ define(["dojo/_base/declare",
 		},
 
 		updateRenderers: function(entryIndexes){
-			var entryIndex, cell;
+			var entryIndex, node;
 			if(this.selectionMode !== 'none'){
 				for(var i=0; i < entryIndexes.length; i++){
 					entryIndex = entryIndexes[i];
-					cell = this._getCellByEntryIndex(entryIndex);
-					if(cell){
-						if(this.isItemSelected(entryIndex)){
-							domClass.add(cell, 'duiListSelectedCell');
-						}else{
-							domClass.remove(cell, 'duiListSelectedCell');
-						}
+					node = this._getCellNodeByEntryIndex(entryIndex);
+					if(node){
+						this._setSelectionStyle(node, entryIndex);
 					}
 				}
 			}
@@ -245,9 +265,9 @@ define(["dojo/_base/declare",
 
 		_onNextPageReady: function(){
 			var loaderCell = this._getLoaderCell();
-			var loaderCellHasFocus = loaderCell && loaderCell === this._focusedCell;
+			var loaderCellHasFocus = loaderCell && loaderCell.domNode === this._focusedNode;
 			if(loaderCellHasFocus){
-				this._focusNextCell(false);
+				this._focusNextNode(false);
 			}
 			if(this.cellPages > 0){
 				this._recycleCells(false);
@@ -257,9 +277,9 @@ define(["dojo/_base/declare",
 			if(loaderCell){
 				if(this._hasNextPage){
 					if(loaderCellHasFocus){
-						this._focusNextCell(true);
+						this._focusNextNode(true);
 					}
-					this._updatePageLoaderStatus(false);
+					this._renderPageLoader(false);
 				}else{
 					this._destroyPageLoader();
 					this.defer(this._endScroll, 10); // defer (10ms because 0 doesn't work on IE) so that any browser scroll event is taken into account before _endScroll
@@ -269,7 +289,7 @@ define(["dojo/_base/declare",
 		},
 
 		_toggleListLoadingStyle: function(){
-			domClass.toggle(this.domNode, this.baseClass + 'Loading');
+			domClass.toggle(this.domNode, 'duiListLoading');
 		},
 
 		_getEntriesCount: function(){
@@ -282,7 +302,7 @@ define(["dojo/_base/declare",
 
 		_getCellHeight: function(cell){
 			// TODO: CACHE CELL HEIGHT
-			return this._getNodeHeight(cell);
+			return this._getNodeHeight(cell.domNode);
 		},
 
 		_getNodeHeight: function(node){
@@ -297,10 +317,9 @@ define(["dojo/_base/declare",
 		_createCells: function(){
 			var entryIndex = this._lastEntryIndex != null ? this._lastEntryIndex + 1 : 0;
 			var currentEntry;
-			var currentCell;
 			var lastCategory = this.categoryAttribute && this._lastEntryIndex ? this._getEntry(this._lastEntryIndex - 1)[this.categoryAttribute] : null;
 			var loaderCell = this._getLoaderCell();
-			// Create cells, calling renderers to generate content for the cells
+			// Create cells using renderers
 			for (entryIndex; entryIndex < this._getEntriesCount(); entryIndex++){
 				if((this.cellPages > 0) && (this._cellsHeight > (this.cellPages * this._visibleHeight))){
 					break;
@@ -309,116 +328,74 @@ define(["dojo/_base/declare",
 				if(this.categoryAttribute && currentEntry[this.categoryAttribute] != lastCategory){
 					// create a category header
 					lastCategory = currentEntry[this.categoryAttribute];
-					currentCell = domConstruct.create('li', {id: this.domNode.id + '_' + this._nextCellIndex++, className: 'duiListCategoryHeader', tabindex: '-1'}, this.containerNode);
-					this._setCellContent(currentCell, this._renderCategory(currentEntry[this.categoryAttribute]));
-					this._setCellCategoryHeader(currentCell, currentEntry[this.categoryAttribute]);
 					// FIXME: cells height calculation is not correct in some cases here (example: list3 in test page !!!)
-					this._cellsHeight += this._getCellHeight(currentCell);
+					this._renderCategory(currentEntry[this.categoryAttribute], 'bottom');
 				}
-				currentCell = domConstruct.create('li', {id: this.domNode.id + '_' + this._nextCellIndex++, className: 'duiListCell', tabindex: '-1'}, this.containerNode);
-				if(this.selectionMode !== 'none' && this.isItemSelected(entryIndex)){
-					domClass.add(currentCell, 'duiListSelectedCell');
-				}
-				this._setCellContent(currentCell, this._renderEntry(currentEntry, entryIndex));
-				this._setCellEntryIndex(currentCell, entryIndex);
 				// FIXME: cells height calculation is not correct in some cases here (example: list3 in test page !!!)
-				this._cellsHeight += this._getCellHeight(currentCell);
+				this._renderEntry(currentEntry, entryIndex, 'bottom');
 				this._lastEntryIndex = entryIndex;
 			}
 			if(loaderCell){
 				// move it to the end of the list
-				domConstruct.place(loaderCell, this.containerNode);
+				domConstruct.place(loaderCell.domNode, this.containerNode);
 			}else{
 				if(this._hasNextPage){
-					// create the loader cell
-					this._loaderCell = domConstruct.create('li', {className: 'duiListLoaderCell', tabindex: '-1'}, this.containerNode);
-					// TODO: should we issue an event to notify that we're changing the content of the cell ?
-					this._setCellContent(this._loaderCell, this._renderPageLoader(false));
+					loaderCell = this._renderPageLoader(false);
+					this.addChild(loaderCell);
+					this._isLoaderCellDisplayed = true;
 					// FIXME: cells height calculation is not correct in some cases here (example: list3 in test page !!!)
-					this._cellsHeight += this._getCellHeight(this._loaderCell);
-					this._loaderCellClickHandlerRef = this.own(on(this._loaderCell, 'click', lang.hitch(this, '_onLoaderCellClick')))[0];
+					this._cellsHeight += this._getCellHeight(loaderCell);
+					////////////////////////////////////////////////////
+					// TODO: Move this handler in the Renderer itself ?
+					////////////////////////////////////////////////////
+					this._loaderCellClickHandlerRef = this.own(on(loaderCell, 'click', lang.hitch(this, '_onLoaderCellClick')))[0];
 				}
 			}
 		},
 
 		_recycleCells: function(fromBottomToTop){
 			// TODO: the height calculations may cause bad performances on slower devices ?
-			var recycledCell, recycledCellIsCategoryHeader;
-			var cellHeightBeforeUpdate, cellHeightAfterUpdate;
 			// FIXME: THE FOLLOWING IS A HACK: IT APPEARS THAT THE VALUE CALCULATED FOR this._cellsHeight when creating the cells is not always ok (see example List3 in the test page)
 			this._cellsHeight = this._getNodeHeight(this.containerNode) - this._spacerHeight;
 			if(fromBottomToTop){
 				while(!this._centerOfListAboveCenterOfViewport()){
 					if(this._firstEntryIndex > 0){
+						// move the bottom cell to a pool
+						this._moveBottomCellToPool();
 						// move the bottom cell to the top while updating its content
-						recycledCell = this._getLastCell();
-						recycledCellIsCategoryHeader = this._cellRendersCategoryHeader(recycledCell);
-						cellHeightAfterUpdate = 0;
-						if(this.categoryAttribute && (this._getEntry(this._firstEntryIndex - 1)[this.categoryAttribute] != this._getEntry(this._firstEntryIndex)[this.categoryAttribute]) && !this._cellRendersCategoryHeader(this._getFirstCell())){
-							// recycle the cell to a header cell and get the next one to recycle it to display the list entry
-							cellHeightAfterUpdate += this._updateCell(recycledCell, this._getEntry(this._firstEntryIndex), null, true, true);
-							if(!recycledCellIsCategoryHeader){
-								this._lastEntryIndex--;
-							}
-							domConstruct.place(recycledCell, this._getFirstCell(), 'before'); // TODO: can we optimize this, even if less maintainable ?
-							recycledCell = this._getLastCell();
-							recycledCellIsCategoryHeader = this._cellRendersCategoryHeader(recycledCell);
+						if(this.categoryAttribute && (this._getEntry(this._firstEntryIndex - 1)[this.categoryAttribute] != this._getEntry(this._firstEntryIndex)[this.categoryAttribute]) && !this._nodeRendersCategoryHeader(this._getFirstCellNode())){
+							// render a category header at the top
+							this._renderCategory(this._getEntry(this._firstEntryIndex)[this.categoryAttribute], 'top');
+							// move the new bottom cell to the pool
+							this._moveBottomCellToPool();
 						}
+						// render the new entry at the top
 						--this._firstEntryIndex;
-						cellHeightAfterUpdate += this._updateCell(recycledCell, this._getEntry(this._firstEntryIndex), this._firstEntryIndex, false, true);
-						if(!recycledCellIsCategoryHeader){
-							this._lastEntryIndex--;
-						}
-						domConstruct.place(recycledCell, this._getFirstCell(), 'before'); // TODO: can we optimize this, even if less maintainable ?
-						// we cannot use _scrollBy here to compensate for the node move, as it cause
-						// flickering on iOS. Instead, we resize the spacer element.
-						this._spacerHeight -= cellHeightAfterUpdate;
-						this._updateSpacerHeight();
+						this._renderEntry(this._getEntry(this._firstEntryIndex), this._firstEntryIndex, 'top');
 					}else{
-						if(this.categoryAttribute && this._firstEntryIndex == 0 && !this._cellRendersCategoryHeader(this._getFirstCell())){
-							// recycle the last cell to a category header for the first cell
-							recycledCell = this._getLastCell();
-							recycledCellIsCategoryHeader = this._cellRendersCategoryHeader(recycledCell);
-							cellHeightAfterUpdate = this._updateCell(recycledCell, this._getEntry(this._firstEntryIndex), null, true, true);
-							if(!recycledCellIsCategoryHeader){
-								this._lastEntryIndex--;
-							}
-							domConstruct.place(recycledCell, this._getFirstCell(), 'before'); // TODO: can we optimize this, even if less maintainable ?
-							// we cannot use _scrollBy here to compensate for the node move, as it cause
-							// flickering on iOS. Instead, we resize the spacer element.
-							this._spacerHeight -= cellHeightAfterUpdate;
-							this._updateSpacerHeight();
+						if(this.categoryAttribute && this._firstEntryIndex == 0 && !this._nodeRendersCategoryHeader(this._getFirstCellNode())){
+							// move the bottom cell to a pool
+							this._moveBottomCellToPool();
+							// render a category header at the top
+							this._renderCategory(this._getEntry(this._firstEntryIndex)[this.categoryAttribute], 'top');
 						}
 						break;
 					}
 				}
-			}else if(!fromBottomToTop){
+			}else{ // from top to bottom
 				while(this._centerOfListAboveCenterOfViewport()){
 					if(this._lastEntryIndex < this._getEntriesCount() - 1){
-						// move the top cell to the bottom while updating its content
-						recycledCell = this._getFirstCell();
-						recycledCellIsCategoryHeader = this._cellRendersCategoryHeader(recycledCell);
-						cellHeightBeforeUpdate = 0;
-						if(this.categoryAttribute && (this._getEntry(this._lastEntryIndex + 1)[this.categoryAttribute] != this._getEntry(this._lastEntryIndex)[this.categoryAttribute]) && !this._cellRendersCategoryHeader(this._getLastCell())){
-							// recycle the cell to a header cell and get the next one to recycle it to display the list entry
-							cellHeightBeforeUpdate += this._updateCell(recycledCell, this._getEntry(this._lastEntryIndex + 1), null, true, false);
-							domConstruct.place(recycledCell, this._getLastCell(), 'after'); // TODO: can we optimize this, , even if less maintainable ?
-							if(!recycledCellIsCategoryHeader){
-								this._firstEntryIndex++;
-							}
-							recycledCell = this._getFirstCell();
-							recycledCellIsCategoryHeader = this._cellRendersCategoryHeader(recycledCell);
+						// move the top cell to a pool
+						this._moveTopCellToPool();
+						if(this.categoryAttribute && (this._getEntry(this._lastEntryIndex + 1)[this.categoryAttribute] != this._getEntry(this._lastEntryIndex)[this.categoryAttribute]) && !this._nodeRendersCategoryHeader(this._getLastCellNode())){
+							// render a category header at the bottom
+							this._renderCategory(this._getEntry(this._lastEntryIndex + 1)[this.categoryAttribute], 'bottom');
+							// move the new top cell to the pool
+							this._moveTopCellToPool();
 						}
+						// render the new entry at the bottom
 						++this._lastEntryIndex;
-						cellHeightBeforeUpdate += this._updateCell(recycledCell, this._getEntry(this._lastEntryIndex), this._lastEntryIndex, false, false);
-						if(!recycledCellIsCategoryHeader){
-							this._firstEntryIndex++;
-						}
-						domConstruct.place(recycledCell, this._getLastCell(), 'after'); // TODO: can we optimize this, , even if less maintainable ?
-						// we cannot use _scrollBy here to compensate for the node move, as it cause
-						// flickering on iOS. Instead, we resize the spacer element.
-						this._spacerHeight += cellHeightBeforeUpdate;
-						this._updateSpacerHeight();
+						this._renderEntry(this._getEntry(this._lastEntryIndex), this._lastEntryIndex, 'bottom');
 					}else{
 						break;
 					}
@@ -426,134 +403,201 @@ define(["dojo/_base/declare",
 			}
 		},
 
-		_updateSpacerHeight: function(){
+		_moveTopCellToPool: function(){
+			var topCellNode = this._getFirstCellNode();
+			var topCell = registry.byNode(topCellNode);
+			var topCellIsCategoryHeader = this._nodeRendersCategoryHeader(topCell.domNode);
+			var removedHeight = this._getCellHeight(topCell);
+			// update spacer height with the height of the cell and hide the cell
+			this._updateSpacerHeight(removedHeight);
+			domStyle.set(topCell.domNode, 'display', 'none');
+			this._cellsHeight -= removedHeight;
+			this._hiddenCellsOnTop += 1;
+			if(topCellIsCategoryHeader){
+				this._renderedCategoriesPool.push(topCell);
+			}else{
+				this._renderedEntriesPool.push(topCell);
+				this._firstEntryIndex++;
+			}
+		},
+
+		_moveBottomCellToPool: function(){
+			var bottomCellNode = this._getLastCellNode();
+			var bottomCell = registry.byNode(bottomCellNode);
+			var removedHeight = this._getCellHeight(bottomCell);
+			var bottomCellIsCategoryHeader = this._nodeRendersCategoryHeader(bottomCellNode);
+			domStyle.set(bottomCellNode, 'display', 'none');
+			this._cellsHeight -= removedHeight;
+			domConstruct.place(bottomCellNode, this.containerNode, 1);
+			this._hiddenCellsOnTop += 1;
+			if(bottomCellIsCategoryHeader){
+				this._renderedCategoriesPool.push(bottomCell);
+			}else{
+				this._renderedEntriesPool.push(bottomCell);
+				this._lastEntryIndex--;
+			}
+		},
+
+		_updateSpacerHeight: function(addedValue){
+			if(!addedValue){
+				return;
+			}else{
+				this._spacerHeight += addedValue;
+			}
 			if(this._spacerHeight < 0){ // make sure the height is not negative otherwise it may be ignored
 				this._spacerHeight = 0;
 			}
 			this._getSpacerNode().style.height = this._spacerHeight + 'px';
 		},
 
-		_updateCell: function(cell, newEntry, newEntryIndex, renderCategory, returnNewCellHeight){
-			var oldCellHeight = this._getCellHeight(cell);
-			var newCellHeight = null;
-			var cellInitialEntryIndex = this._getCellEntryIndex(cell);
-			var cellInitialCategoryHeader = this._getCellCategoryHeader(cell);
-			var renderedContent = renderCategory ? this._renderCategory(newEntry[this.categoryAttribute]) : this._renderEntry(newEntry, newEntryIndex);
-			if(this.categoryAttribute){
-				if(renderCategory){
-					domClass.replace(cell, 'duiListCategoryHeader', 'duiListCell');
-					this._setCellCategoryHeader(cell, newEntry[this.categoryAttribute]);
-				}else{
-					domClass.replace(cell, 'duiListCell', 'duiListCategoryHeader');
-					this._setCellCategoryHeader(cell, null);
-				}
+		_renderEntry: function(entry, entryIndex, pos){
+			var addedHeight, fromCache = false;
+			var renderedEntry = this._renderedEntriesPool.shift();
+			if(renderedEntry){
+				fromCache = true;
+				renderedEntry._setEntryIndexAttr(entryIndex);
+				renderedEntry._setEntryAttr(entry);
+//				renderedEntry.set('entryIndex', entryIndex);
+//				renderedEntry.set('entry', entry);
+			}else{
+				renderedEntry = new this.entriesRenderer({entry: entry, entryIndex: entryIndex, tabindex: "-1"});
+				renderedEntry.startup();
 			}
+			//////////////////////////////////
+			// TODO: UPDATE OR REMOVE THIS ? (NOTIFY RENDERER OF ITS SELECTION STATUS ?)
+			//////////////////////////////////
+			this._setSelectionStyle(renderedEntry.domNode, entryIndex);
+			this._setCellEntryIndex(renderedEntry, entryIndex);
+			this._setCellCategoryHeader(renderedEntry, null);
+			if(fromCache){
+				this._hiddenCellsOnTop -= 1;
+				// move the node to the bottom before displaying it and getting its height, to avoid flickering
+				this._placeCellNode(renderedEntry.domNode, 'bottom');
+				domStyle.set(renderedEntry.domNode, 'display', '');
+				addedHeight = this._getCellHeight(renderedEntry);
+			}
+			this._placeCellNode(renderedEntry.domNode, pos);
+			if(!fromCache){
+				addedHeight = this._getCellHeight(renderedEntry);
+			}
+			this._cellsHeight += addedHeight;
+			if(pos == 'top'){
+				this._updateSpacerHeight(-addedHeight);
+			}
+		},
+
+		_setSelectionStyle: function(cellNode, entryIndex){
 			if(this.selectionMode !== 'none'){
-				if(this.isItemSelected(newEntryIndex)){
-					domClass.add(cell, 'duiListSelectedCell');
+				if (this.isItemSelected(entryIndex)){
+					domClass.add(cellNode, 'duiListSelectedCell');
 				}else{
-					domClass.remove(cell, 'duiListSelectedCell');
-				}
-			}
-			if(cellInitialEntryIndex != null){
-				this._recycleEntryRenderer(cellInitialEntryIndex);
-			}else{
-				this._recycleCategoryRenderer(cellInitialCategoryHeader);
-			}
-			this._setCellContent(cell, renderedContent);
-			this._setCellEntryIndex(cell, newEntryIndex);
-			newCellHeight = this._getCellHeight(cell);
-			this._cellsHeight += (newCellHeight - oldCellHeight);
-			if(returnNewCellHeight){
-				return newCellHeight;
-			}else{
-				return oldCellHeight;
-			}
-		},
-
-		_setCellContent: function(cell, content){
-			if(typeof content === 'string'){
-				cell.innerHTML = content;
-			}else{
-				if(cell.children[0] != content){
-					domConstruct.empty(cell);
-					cell.appendChild(content);
+					domClass.remove(cellNode, 'duiListSelectedCell');
 				}
 			}
 		},
 
-		_renderEntry: function(entry, entryIndex){
-			// TO BE IMPLEMENTED BY CONCRETE LIST CLASS
-		},
-		
-		_recycleEntryRenderer: function(entryIndex){
-			// TO BE IMPLEMENTED BY CONCRETE LIST CLASS
-		},
-
-		_renderCategory: function(category){
-			// TO BE IMPLEMENTED BY CONCRETE LIST CLASS
-		},
-
-		_recycleCategoryRenderer: function(category){
-			// TO BE IMPLEMENTED BY CONCRETE LIST CLASS
+		_renderCategory: function(category, pos){
+			var addedHeight, fromCache = false;
+			var renderedCategory = this._renderedCategoriesPool.shift();
+			if(renderedCategory){
+				fromCache = true;
+				renderedCategory._setCategoryAttr(category);
+//				renderedCategory.set('category', category);
+			}else{
+				renderedCategory = new this.categoriesRenderer({category: category, tabindex: "-1"});
+				renderedCategory.startup();
+			}
+			this._setCellEntryIndex(renderedCategory, null);
+			this._setCellCategoryHeader(renderedCategory, category);
+			if(fromCache){
+				this._hiddenCellsOnTop -= 1;
+				// move the node to the bottom before displaying it and getting its height, to avoid flickering
+				this._placeCellNode(renderedCategory.domNode, 'bottom');
+				domStyle.set(renderedCategory.domNode, 'display', '');
+				addedHeight = this._getCellHeight(renderedCategory);
+			}
+			this._placeCellNode(renderedCategory.domNode, pos);
+			if(!fromCache){
+				addedHeight = this._getCellHeight(renderedCategory);
+			}
+			this._cellsHeight += addedHeight;
+			if(pos == 'top'){
+				this._updateSpacerHeight(-addedHeight);
+			}
 		},
 
 		_renderPageLoader: function(loading){
-			// TO BE IMPLEMENTED BY CONCRETE LIST CLASS
-		},
-
-		_updatePageLoaderStatus: function(loading){
 			var loaderCell = this._getLoaderCell();
 			if(loaderCell){
-				if(loading){
-					domClass.add(loaderCell, 'duiListLoaderCellLoading');
-				}else{
-					domClass.remove(loaderCell, 'duiListLoaderCellLoading');
-				}
-				this._setCellContent(loaderCell, this._renderPageLoader(loading));
+				loaderCell.set('loading', loading);
+			}else{
+				loaderCell = new this.pageLoaderRenderer({loading: loading, pageLength: this.pageLength, tabindex: "-1"});
 			}
+			return loaderCell;
 		},
 
 		_destroyPageLoader: function(){
-			this._loaderCellClickHandlerRef.remove();
-			this._loaderCellClickHandlerRef = null;
-			// TODO: EMIT AN EVENT TO SIGNAL WE'RE DESTROYING THE LOADER CELL ???
-			this._cellsHeight -= this._getNodeHeight(this._loaderCell);
-			domConstruct.destroy(this._loaderCell);
-			delete this._loaderCell;
+			var loaderCell = this._getLoaderCell();
+			if(loaderCell){
+				this._loaderCellClickHandlerRef.remove();
+				this._loaderCellClickHandlerRef = null;
+				this._cellsHeight -= this._getCellHeight(loaderCell);
+				this.removeChild(loaderCell);
+				loaderCell.destroyRecursive();
+				this._isLoaderCellDisplayed = false;
+			}
+		},
+
+		_placeCellNode: function(node, pos){
+			var position, listLength;
+			if(pos === 'bottom'){
+				listLength = this.containerNode.children.length;
+				position = this._isLoaderCellDisplayed ? listLength - 1 : listLength;
+			}else if(pos === 'top'){
+				position = 1 + this._hiddenCellsOnTop;
+			}else{
+				// TODO: THROW EXCEPTION ?
+			}
+			domConstruct.place(node, this.containerNode, position);
 		},
 
 		_getSpacerNode: function(){
 			return this.containerNode.children[0];
 		},
 
-		_getFirstCell: function(){
-			return this.containerNode.children[1];
+		_getFirstCellNode: function(){
+			return this.containerNode.children[1 + this._hiddenCellsOnTop];
 		},
-		
-		_getLastCell: function(){
+
+		_getLastCellNode: function(){
+			var children = this.containerNode.children;
 			if(this._hasNextPage){
-				return this.containerNode.children[this.containerNode.children.length - 2];
+				return children[children.length - 2];
 			}else{
-				return this.containerNode.lastChild;
+				return children[children.length - 1];
 			}
 		},
 
 		_getLoaderCell: function(){
-			return this._loaderCell;
+			var children = this.getChildren();
+			if(this._isLoaderCellDisplayed){
+				return children[children.length - 1];
+			}else{
+				return null;
+			}
 		},
 
-		_getCellByEntryIndex: function(entryIndex){
-			var cell = null;
+		_getCellNodeByEntryIndex: function(entryIndex){
+			var node = null;
 			if(entryIndex >= this._firstEntryIndex && entryIndex <= this._lastEntryIndex){
 				for(var id in this._cellEntryIndexes){
 					if(this._cellEntryIndexes[id] == entryIndex){
-						cell = dom.byId(id);
+						node = dom.byId(id);
 						break;
 					}
 				}
 			}
-			return cell;
+			return node;
 		},
 
 		_getCellEntryIndex: function(cell){
@@ -568,8 +612,8 @@ define(["dojo/_base/declare",
 			}
 		},
 
-		_getCellCategoryHeader: function(cell){
-			return this._cellCategoryHeaders[cell.id];
+		_getNodeCategoryHeader: function(node){
+			return this._cellCategoryHeaders[node.id];
 		},
 
 		_setCellCategoryHeader: function(cell, categoryName){
@@ -585,27 +629,27 @@ define(["dojo/_base/declare",
 			while(currentNode && !domClass.contains(currentNode, 'duiListCell')){
 				currentNode = currentNode.parentNode;
 			}
-			return currentNode;
+			return registry.byNode(currentNode);
 		},
 
-		_topOfCellIsBelowTopOfViewport: function(cell){
-			return this._topOfCellDistanceToTopOfViewport(cell) >= 0;
+		_topOfNodeIsBelowTopOfViewport: function(node){
+			return this._topOfNodeDistanceToTopOfViewport(node) >= 0;
 		},
 
-		_topOfCellDistanceToTopOfViewport: function(cell){
-			return cell.offsetTop + this._translation - this._browserScroll;
+		_topOfNodeDistanceToTopOfViewport: function(node){
+			return node.offsetTop + this._translation - this._browserScroll;
 		},
 
-		_bottomOfCellDistanceToBottomOfViewport: function(cell){
-			return cell.offsetTop + cell.offsetHeight + this._translation - this._browserScroll - this._visibleHeight;
+		_bottomOfNodeDistanceToBottomOfViewport: function(node){
+			return node.offsetTop + node.offsetHeight + this._translation - this._browserScroll - this._visibleHeight;
 		},
 
 		_centerOfListAboveCenterOfViewport: function(){
 			return (this._visibleHeight / 2) - this._getApparentScroll() > (this._cellsHeight / 2);
 		},
 
-		_cellRendersCategoryHeader: function(cell){
-			return (this._getCellCategoryHeader(cell) != null);
+		_nodeRendersCategoryHeader: function(node){
+			return (this._getNodeCategoryHeader(node) != null);
 		},
 
 		/////////////////////////////////
@@ -650,6 +694,34 @@ define(["dojo/_base/declare",
 			}
 		},
 
+//		_animateScroll: function(duration, length){
+//			var fps = 25;
+//			var nbOfFrames = fps * duration;
+//			var lengthPerFrame = Math.round(length / nbOfFrames);
+//			var frameDuration = 1 / fps;
+//			var that = this;
+//			this._stopAnimatedScroll();
+//			this._currentAnimatedScroll = setInterval(function(){
+//				if(nbOfFrames-- <= 0){
+//					that._stopAnimatedScroll();
+//					that._endScroll();
+//				}else{
+//					that.scrollBy(lengthPerFrame, false);
+//				}
+//			}, frameDuration * 1000);
+//		},
+//
+//		_stopAnimatedScroll: function(){
+//			// TODO: WHAT IF ANIMATION USING _scrollBy ?
+//			if(this._currentAnimatedScroll){
+//				clearInterval(this._currentAnimatedScroll);
+//				this._currentAnimatedScroll = null;
+//				return true;
+//			}else{
+//				return false;
+//			}
+//		},
+
 		_animateScroll: function(duration, length){
 			var lengthPerMillisec = length / (duration * 1000);
 			if(Math.abs(lengthPerMillisec) > 0.1){
@@ -660,8 +732,8 @@ define(["dojo/_base/declare",
 						start: null,
 						lastTS: null,
 						cancel: false
-					};
-					requestAnimFrame(lang.hitch(this, this._renderScrollAnimation));
+				};
+				requestAnimFrame(lang.hitch(this, this._renderScrollAnimation));
 			}
 		},
 
@@ -759,9 +831,9 @@ define(["dojo/_base/declare",
 		},
 
 		_handleSelection: function(event){
-			var entryIndex, entrySelected;
-			var eventCell = this._getParentCell(event.target);
+			var entryIndex, entrySelected, eventCell;
 			if(this.selectionMode !== 'none' && !this._dy){
+				eventCell = this._getParentCell(event.target);
 				entryIndex = this._getCellEntryIndex(eventCell);
 				if(entryIndex != null){
 					entrySelected = !this.isItemSelected(entryIndex);
@@ -784,87 +856,135 @@ define(["dojo/_base/declare",
 		},
 
 		_onLoaderCellClick: function(event){
-			if(this._loaderCell){
+			if(this._getLoaderCell){
 				if(this._dy || this._loadingPage){
 					return;
 				}
 				this._loadingPage = true;
-				this._updatePageLoaderStatus(true);
+				this._renderPageLoader(true);
 				this._loadEntriesFromStore(this._onNextPageReady);
 			}
 		},
 
 		_onFocus: function(event){
-			if(this._focusedCell){
-				domClass.remove(this._focusedCell, this.baseClass + 'FocusedCell');
-				this._focusedCell = null;
+			if(this._focusedNode){
+				domClass.remove(this._focusedNode, 'duiListFocusedCell');
+				this._focusedNode = null;
 			}
 		},
 
 		_onKeyDown: function(event){
+			var cell;
 			switch (event.keyCode) {
 				case keys.UP_ARROW:
 					event.preventDefault();
-					this._focusNextCell(false);
+					this._focusNextNode(false);
 					break;
 				case keys.DOWN_ARROW:
 					event.preventDefault();
-					this._focusNextCell(true);
+					this._focusNextNode(true);
+					break;
+				case keys.RIGHT_ARROW:
+					if(this._focusedNode){
+						event.preventDefault();
+						this._focusCellContent(true);
+					}
+					break;
+				case keys.LEFT_ARROW:
+					if(this._focusedNode){
+						event.preventDefault();
+						this._focusCellContent(false);
+					}
 					break;
 				case keys.ENTER:
 				case keys.SPACE:
-					if(this._hasNextPage && domClass.contains(event.target, 'duiListLoaderCell')){
-						event.preventDefault();
-						this._onLoaderCellClick(event);
-					}else if(this.selectionMode !== 'none'){
-						event.preventDefault();
-						this._handleSelection(event);
+					if(!this._cellManagedFocus){
+						if(this._hasNextPage && domClass.contains(event.target, 'duiListLoaderCell')){
+							event.preventDefault();
+							this._onLoaderCellClick(event);
+						}else if(this.selectionMode !== 'none'){
+							event.preventDefault();
+							this._handleSelection(event);
+						}
+						break;
 					}
-					break;
+				default:
+					if(this._cellManagedFocus){
+						cell = registry.byNode(this._focusedNode);
+						if(cell.onKeyDown){
+							cell.onKeyDown(event);
+						}
+					}
 			};
 		},
 
-		_focusNextCell: function(down){
-			var cell;
+		_focusNextNode: function(down){
+			var node, cell;
 			var distanceToEdgeOfViewport;
-			if(this._focusedCell){
-				cell = down?this._focusedCell.nextSibling:this._focusedCell.previousSibling;
-				if(cell != null && (down || cell.previousSibling != null)){ // do not set focus on the spacer cell
-					domClass.remove(this._focusedCell, this.baseClass + 'FocusedCell');
-					this._focusedCell = cell;
+			if(this._focusedNode){
+				if(!this._cellManagedFocus){
+					node = down?this._focusedNode.nextElementSibling:this._focusedNode.previousElementSibling;
+					if(node != null && (down || node.previousElementSibling != null)){ // do not set focus on the spacer cell
+						///////////////////////////////////////////////
+						// TODO: THIS SHOULD BE DONE IN THE RENDERED WIDGET
+						///////////////////////////////////////////////
+						cell = registry.byNode(this._focusedNode);
+						domClass.remove(this._focusedNode, 'duiListFocusedCell');
+						this._focusedNode = node;
+					}else{
+						return;
+					}
 				}else{
-					return;
+					cell = registry.byNode(this._focusedNode);
+					if(cell.doBlur){
+						cell.doBlur();
+					}
 				}
 			}else{
-				// Focus the first visible cell
-				cell = this._getFirstCell();
-				while(cell){
-					if(this._topOfCellIsBelowTopOfViewport(cell)){
-						this._focusedCell = cell;
+				// Focus the first visible cell node
+				node = this._getFirstCellNode();
+				while(node){
+					if(this._topOfNodeIsBelowTopOfViewport(node)){
+						this._focusedNode = node;
 						break;
 					}
-					cell = cell.nextSibling;
+					node = node.nextElementSibling;
 				}
 			}
-			this._focusedCell.focus();
-			domClass.add(this._focusedCell, this.baseClass + 'FocusedCell');
-			this.domNode.setAttribute('aria-activedescendant', this._focusedCell.id);
+			this._cellManagedFocus = false;
+			this._focusedNode.focus();
+			domClass.add(this._focusedNode, 'duiListFocusedCell');
+			this.domNode.setAttribute('aria-activedescendant', this._focusedNode.id);
 			this.defer(function(){
 				// scroll has been updated: verify that the focused cell is visible, if not scroll to make it appear
 				if(this._browserScroll == 0){
 					// the browser won't scroll with negative values: if the focused cell is not entirely visible,
 					// scroll it to make it visible.
-					distanceToEdgeOfViewport = this._topOfCellDistanceToTopOfViewport(cell);
+					distanceToEdgeOfViewport = this._topOfNodeDistanceToTopOfViewport(this._focusedNode);
 					if(distanceToEdgeOfViewport < 0){
 						this.scrollBy(-distanceToEdgeOfViewport);
 					}
 				}else{
-					distanceToEdgeOfViewport = this._bottomOfCellDistanceToBottomOfViewport(cell);
+					distanceToEdgeOfViewport = this._bottomOfNodeDistanceToBottomOfViewport(this._focusedNode);
 					if(distanceToEdgeOfViewport > 0){
 						this.scrollBy(-distanceToEdgeOfViewport);
 					}
 				}
 			}, 10);
+		},
+
+		_focusCellContent: function(next){
+			var cell, cellFocusedNodeId;
+			if(!this._nodeRendersCategoryHeader(this._focusedNode)){				
+				cell = registry.byNode(this._focusedNode);
+				if(cell.doFocus){
+					cellFocusedNodeId = cell.doFocus(next);
+					if(cellFocusedNodeId){
+						this.domNode.setAttribute('aria-activedescendant', cellFocusedNodeId);
+					}
+					this._cellManagedFocus = true;
+				}
+			}
 		},
 
 		_captureEvent: function(event){

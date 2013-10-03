@@ -1,5 +1,9 @@
 This directory contains a proof of concept for dui List widget.
 
-List1.js is the implementation that uses Decorators to render the content of a list cell.
+css contains the stylesheet(s) for the List widgets.
 
-List3.js is the implementation that uses Renderers to render list cells.
+demo contains the demo pages.
+
+decorator contains the List implementations that uses decorators to render the content of a cell.
+
+rederer contains the List implementation that uses renderers to render list cells.

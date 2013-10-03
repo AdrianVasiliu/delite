@@ -6,9 +6,9 @@
 	<meta name="apple-mobile-web-app-capable" content="yes"/>
 	<title>Lists for dojo 2 (version that use widgets as renderers)</title>
 
-	<link rel="stylesheet" type="text/css" href="../../../dui/mobile/list/List.css">
-	<script type="text/javascript" src="../deviceTheme.js"></script>
-	<script type="text/javascript" src="../../../dojo/dojo.js"
+	<link rel="stylesheet" type="text/css" href="../../../../dui/mobile/list/css/List.css">
+	<script type="text/javascript" src="../../deviceTheme.js"></script>
+	<script type="text/javascript" src="../../../../dojo/dojo.js"
 		data-dojo-config="packages: [{name: 'dojox', location:'../dui'}, {name: 'dijit', location:'../dui'}], async: true, parseOnLoad: true"></script>
 
 	<script type="text/javascript">
@@ -19,16 +19,16 @@
 			"dojo/parser",
 			"dui/registry",
 			"dojo/on",
-			"dui/mobile/list/List3",
+			"dui/mobile/list/renderer/List",
 			"dojo/dom",
 			"dojo/dom-construct",
 			"dojo/dom-class",
 			"dojo/request",
 			"dojo/when",
 			"dojo/store/util/QueryResults",
-	        "dui/mobile/list/_EntryRendererBase",
+	        "dui/mobile/list/renderer/AbstractEntryRenderer",
 	        "dui/_TemplatedMixin",
-	        "dui/mobile/list/DefaultEntryRenderer2",
+	        "dui/mobile/list/renderer/DefaultEntryRenderer",
 	        "dojox/mobile/common"
 		], function(declare, lang, array, parser, registry, on, List, dom, domConstruct, domClass, request, when, QueryResults, _EntryRendererBase, _TemplateMixin){
 			
@@ -250,7 +250,7 @@
 			// our custom store
 			var entriesStore = {
 				query: function(query, options){
-					var promise = request.get('../list/List.js').then(
+					var promise = request.get('./data.txt').then(
 						function(response){
 							var i;
 							var start = options ? (options.start ? options.start : 0) : 0;;
@@ -291,7 +291,7 @@
 			
 			var categorizedEntriesStore = {
 					query: function(query, options){
-						var promise = request.get('../list/List.js').then(
+						var promise = request.get('./data.txt').then(
 							function(response){
 								var i;
 								var category;
@@ -458,32 +458,32 @@
 	<!-- markup example -->
 	<a id="l1"></a>
 	<h2>Demo 1:</h2>
- 	<div id="list1" data-dojo-type="dui/mobile/list/List3" data-dojo-props="height: 200, entries: [{label: 'entry001'},
+ 	<div id="list1" data-dojo-type="dui/mobile/list/renderer/List" data-dojo-props="height: 200, entries: [{label: 'entry001'},
 	                                                                         {label: 'entry002'},
 	                                                                         {label: 'entry003'},
 	                                                                         {label: 'entry004'}]"></div>
 	<p>
-	<ol id="list1b" data-dojo-type="dui/mobile/list/List3" data-dojo-props="height: 200">
-		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer2" data-dojo-props="entry: {label: 'entry001'}"></li>
-		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer2" data-dojo-props="entry: {label: 'entry002'}"></li>
-		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer2" data-dojo-props="entry: {label: 'entry003'}"></li>
-		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer2" data-dojo-props="entry: {label: 'entry004'}"></li>
-		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer2" data-dojo-props="entry: {label: 'entry005'}"></li>
-		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer2" data-dojo-props="entry: {label: 'entry006'}"></li>
-		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer2" data-dojo-props="entry: {label: 'entry007'}"></li>
-		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer2" data-dojo-props="entry: {label: 'entry008'}"></li>
-		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer2" data-dojo-props="entry: {label: 'entry009'}"></li>
-		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer2" data-dojo-props="entry: {label: 'entry010'}"></li>
-		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer2" data-dojo-props="entry: {label: 'entry011'}"></li>
-		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer2" data-dojo-props="entry: {label: 'entry012'}"></li>
-		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer2" data-dojo-props="entry: {label: 'entry013'}"></li>
-		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer2" data-dojo-props="entry: {label: 'entry014'}"></li>
-		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer2" data-dojo-props="entry: {label: 'entry015'}"></li>
-		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer2" data-dojo-props="entry: {label: 'entry016'}"></li>
-		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer2" data-dojo-props="entry: {label: 'entry017'}"></li>
-		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer2" data-dojo-props="entry: {label: 'entry018'}"></li>
-		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer2" data-dojo-props="entry: {label: 'entry019'}"></li>
-		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer2" data-dojo-props="entry: {label: 'entry020'}"></li>
+	<ol id="list1b" data-dojo-type="dui/mobile/list/renderer/List" data-dojo-props="height: 200">
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry001'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry002'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry003'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry004'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry005'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry006'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry007'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry008'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry009'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry010'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry011'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry012'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry013'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry014'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry015'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry016'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry017'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry018'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry019'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry020'}"></li>
 	</ol>
 
 	<!-- a really basic list with a lot of entries -->
@@ -496,13 +496,11 @@
 	<!-- a sample shopping catalog using a templated renderer for the catalog entries -->
 	<a id="l3"></a>
 	<h2>Demo 3: Shopping catalog using a templated renderer</h2>
-	<p class="pbDescription">Current pb: on desktop, scrolling by dragging the list send a click event to the dragged entry...</p>
 	<div id="list3"></div>
 	
 	<!-- a sample shopping catalog using a node renderer for the catalog entries -->
 	<a id="l4"></a>
 	<h2>Demo 4: Shopping catalog using a templated renderer (same as demo 3)</h2>
-	<p class="pbDescription">Current pb: on desktop, scrolling by dragging the list send a click event to the dragged entry...</p>
 	<div id="list4"></div>
 
 	<!-- a sample categorized list -->
