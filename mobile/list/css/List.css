@@ -59,6 +59,20 @@
 	cursor: wait;
 }
 
+.duiListLoaderNode{
+    padding: 0 8px;
+	color: blue;
+	cursor: pointer;
+	height: 43px;
+	line-height: 43px;
+  background-color: #ffffff;
+}
+
+.duiListLoaderNodeLoading{
+	color: gray;
+	cursor: wait;
+}
+
 /* The following two are only temporary */
 .duiListLoading{
 	padding-top: 50px;

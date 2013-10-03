@@ -1,6 +1,7 @@
 define(["dojo/_base/declare",
         "dojo/_base/lang",
         "dojo/_base/array",
+        "dojo/string",
         "dojo/when",
     	"dojo/_base/window",
         "dojo/sniff",
@@ -18,9 +19,8 @@ define(["dojo/_base/declare",
         "dui/_Container",
         "dui/mixins/Selection",
         "./DefaultEntryRenderer",
-        "./DefaultCategoryRenderer",
-        "./DefaultPageLoaderRenderer"
-], function(declare, lang, array, when, win, has, dom, domConstruct, domGeometry, domClass, domStyle, touch, on, keys, css3, registry, _WidgetBase, _Container, Selection, DefaultEntryRenderer, DefaultCategoryRenderer, DefaultPageLoaderRenderer){
+        "./DefaultCategoryRenderer"
+], function(declare, lang, array, string, when, win, has, dom, domConstruct, domGeometry, domClass, domStyle, touch, on, keys, css3, registry, _WidgetBase, _Container, Selection, DefaultEntryRenderer, DefaultCategoryRenderer){
 
 	// TODO: ADD THIS TO DOJO
 	window.requestAnimFrame = (function(){
@@ -42,13 +42,15 @@ define(["dojo/_base/declare",
 
 		categoriesRenderer: DefaultCategoryRenderer, // renders the category headers when the list entries are categorized. The default one is defined in the postMixInProperties method.
 
-		pageLoaderRenderer: DefaultPageLoaderRenderer, // when pageLength > 0, use this renderer to render the content of the cell that can be clicked to load one more page of entries.
-
 		entries: [], // list entries to display. Can be an array or an object that define a store, a query and -optional- query options (ex: {store: myStore, query: 'my query', options: {sort: [{attribute: 'label', descending: true}]}}).
 
 		categoryAttribute: null, // define the list entry attribute that define the category of a list entry. If null, the list is not categorized.
 
 		pageLength: 0, // if > 0 define paging with the number of entries to display per page.
+
+		pageLoadingMessage: 'Loading ${pageLength} more entries...',
+		
+		pageToLoadMessage: 'Click to load ${pageLength} more entries',
 
 		height: 0, // the height of the list widget, in pixel
 
@@ -73,7 +75,7 @@ define(["dojo/_base/declare",
 		_lastEntryIndex: null, // index of the entry in the last cell
 		_browserScroll: 0, // the browser modify the scrollTop of the domNode when navigating the list using a keyboard. The current browser scroll on the y axis is stored there.
 		_touchHandlersRefs: null,
-		_loaderCellClickHandlerRef: null,
+		_loaderNodeClickHandlerRef: null,
 		_lastPressStopedAnimation: false,
 		_lastYTouch: null,
 		_lastMoveTimeStamp: null,
@@ -86,7 +88,7 @@ define(["dojo/_base/declare",
 		_loadingPage: false,
 		_renderedEntriesPool: null,
 		_renderedCategoriesPool: null,
-		_isLoaderCellDisplayed: false,
+		_isLoaderNodeDisplayed: false,
 		_hiddenCellsOnTop: 0,
 		_cellEntryIndexes: null,
 		_cellCategoryHeaders: null,
@@ -264,9 +266,9 @@ define(["dojo/_base/declare",
 		},
 
 		_onNextPageReady: function(){
-			var loaderCell = this._getLoaderCell();
-			var loaderCellHasFocus = loaderCell && loaderCell.domNode === this._focusedNode;
-			if(loaderCellHasFocus){
+			var loaderNode = this._getLoaderNode();
+			var loaderNodeHasFocus = loaderNode && loaderNode === this._focusedNode;
+			if(loaderNodeHasFocus){
 				this._focusNextNode(false);
 			}
 			if(this.cellPages > 0){
@@ -274,9 +276,9 @@ define(["dojo/_base/declare",
 			}else{
 				this._createCells();
 			}
-			if(loaderCell){
+			if(loaderNode){
 				if(this._hasNextPage){
-					if(loaderCellHasFocus){
+					if(loaderNodeHasFocus){
 						this._focusNextNode(true);
 					}
 					this._renderPageLoader(false);
@@ -318,7 +320,7 @@ define(["dojo/_base/declare",
 			var entryIndex = this._lastEntryIndex != null ? this._lastEntryIndex + 1 : 0;
 			var currentEntry;
 			var lastCategory = this.categoryAttribute && this._lastEntryIndex ? this._getEntry(this._lastEntryIndex - 1)[this.categoryAttribute] : null;
-			var loaderCell = this._getLoaderCell();
+			var loaderNode = this._getLoaderNode();
 			// Create cells using renderers
 			for (entryIndex; entryIndex < this._getEntriesCount(); entryIndex++){
 				if((this.cellPages > 0) && (this._cellsHeight > (this.cellPages * this._visibleHeight))){
@@ -335,20 +337,20 @@ define(["dojo/_base/declare",
 				this._renderEntry(currentEntry, entryIndex, 'bottom');
 				this._lastEntryIndex = entryIndex;
 			}
-			if(loaderCell){
+			if(loaderNode){
 				// move it to the end of the list
-				domConstruct.place(loaderCell.domNode, this.containerNode);
+				domConstruct.place(loaderNode, this.containerNode);
 			}else{
 				if(this._hasNextPage){
-					loaderCell = this._renderPageLoader(false);
-					this.addChild(loaderCell);
-					this._isLoaderCellDisplayed = true;
+					loaderNode = this._renderPageLoader(false);
+					domConstruct.place(loaderNode, this.containerNode);
+					this._isLoaderNodeDisplayed = true;
 					// FIXME: cells height calculation is not correct in some cases here (example: list3 in test page !!!)
-					this._cellsHeight += this._getCellHeight(loaderCell);
+					this._cellsHeight += this._getNodeHeight(loaderNode);
 					////////////////////////////////////////////////////
 					// TODO: Move this handler in the Renderer itself ?
 					////////////////////////////////////////////////////
-					this._loaderCellClickHandlerRef = this.own(on(loaderCell, 'click', lang.hitch(this, '_onLoaderCellClick')))[0];
+					this._loaderNodeClickHandlerRef = this.own(on(loaderNode, 'click', lang.hitch(this, '_onLoaderNodeClick')))[0];
 				}
 			}
 		},
@@ -527,24 +529,30 @@ define(["dojo/_base/declare",
 		},
 
 		_renderPageLoader: function(loading){
-			var loaderCell = this._getLoaderCell();
-			if(loaderCell){
-				loaderCell.set('loading', loading);
-			}else{
-				loaderCell = new this.pageLoaderRenderer({loading: loading, pageLength: this.pageLength, tabindex: "-1"});
+			var loaderNode = this._getLoaderNode();
+			var message = string.substitute(loading ? this.pageLoadingMessage : this.pageToLoadMessage, this);
+			if(!loaderNode){
+				loaderNode = domConstruct.create("li", {tabindex: "-1"})
 			}
-			return loaderCell;
+			loaderNode.innerHTML = message;
+			if(loading){
+				domClass.remove(loaderNode, 'duiListLoaderNode');
+				domClass.add(loaderNode, 'duiListLoaderNodeLoading');
+			}else{
+				domClass.remove(loaderNode, 'duiListLoaderNodeLoading');
+				domClass.add(loaderNode, 'duiListLoaderNode');
+			}
+			return loaderNode;
 		},
 
 		_destroyPageLoader: function(){
-			var loaderCell = this._getLoaderCell();
-			if(loaderCell){
-				this._loaderCellClickHandlerRef.remove();
-				this._loaderCellClickHandlerRef = null;
-				this._cellsHeight -= this._getCellHeight(loaderCell);
-				this.removeChild(loaderCell);
-				loaderCell.destroyRecursive();
-				this._isLoaderCellDisplayed = false;
+			var loaderNode = this._getLoaderNode();
+			if(loaderNode){
+				this._loaderNodeClickHandlerRef.remove();
+				this._loaderNodeClickHandlerRef = null;
+				this._cellsHeight -= this._getNodeHeight(loaderNode);
+				this.containerNode.removeChild(loaderNode);
+				this._isLoaderNodeDisplayed = false;
 			}
 		},
 
@@ -552,7 +560,7 @@ define(["dojo/_base/declare",
 			var position, listLength;
 			if(pos === 'bottom'){
 				listLength = this.containerNode.children.length;
-				position = this._isLoaderCellDisplayed ? listLength - 1 : listLength;
+				position = this._isLoaderNodeDisplayed ? listLength - 1 : listLength;
 			}else if(pos === 'top'){
 				position = 1 + this._hiddenCellsOnTop;
 			}else{
@@ -578,9 +586,9 @@ define(["dojo/_base/declare",
 			}
 		},
 
-		_getLoaderCell: function(){
-			var children = this.getChildren();
-			if(this._isLoaderCellDisplayed){
+		_getLoaderNode: function(){
+			var children = this.containerNode.children;
+			if(this._isLoaderNodeDisplayed){
 				return children[children.length - 1];
 			}else{
 				return null;
@@ -855,8 +863,8 @@ define(["dojo/_base/declare",
 			}
 		},
 
-		_onLoaderCellClick: function(event){
-			if(this._getLoaderCell){
+		_onLoaderNodeClick: function(event){
+			if(this._getLoaderNode){
 				if(this._dy || this._loadingPage){
 					return;
 				}
@@ -903,9 +911,9 @@ define(["dojo/_base/declare",
 				case keys.ENTER:
 				case keys.SPACE:
 					if(!this._cellManagedFocus){
-						if(this._hasNextPage && domClass.contains(event.target, 'duiListLoaderCell')){
+						if(this._hasNextPage && domClass.contains(event.target, 'duiListLoaderNode')){
 							event.preventDefault();
-							this._onLoaderCellClick(event);
+							this._onLoaderNodeClick(event);
 						}else if(this.selectionMode !== 'none'){
 							event.preventDefault();
 							this._handleSelection(event);

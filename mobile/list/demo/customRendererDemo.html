@@ -40,7 +40,7 @@
 			var CatalogEntryRenderer = declare([AbstractEntryRenderer, _TemplatedMixin], {
 			
 				catalogController: catalogController,
-				
+
 				templateString: '<li><div class="entryContainer" data-dojo-attach-event="onclick: toggleDetail"><div class="entryHeader"><img class="entryIcon" data-dojo-attach-point="image"><span class="entryTitle" data-dojo-attach-point="title" tabindex=-1></span></div><div data-dojo-attach-point="entryDetail" class="entryDetails hidden"><span class="entryDescription" data-dojo-attach-point="description" tabindex=-1></span><a class="" href="javascript:;" data-dojo-attach-point="addToCartLink" data-dojo-attach-event="onclick: addToCart" tabindex=-1>Add to Cart</a></div></div></li>',
 
 				startup: function(){
@@ -130,7 +130,9 @@
 			var list = new List({id: 'list',
 				                 height: 600,
 				                 entries: {store: catalogModel},
-				                 pageLength: 50,
+				                 pageLength: 20,
+				 				 pageLoadingMessage: 'Loading ${pageLength} more episodes...',
+								 pageToLoadMessage: 'Click to load ${pageLength} more episodes',
 				                 entriesRenderer: CatalogEntryRenderer,
 				                 categoriesRenderer: CatalogCategoryRenderer,
 				                 categoryAttribute: 'season'}, 'list3');
@@ -175,6 +177,12 @@
 			display: none;
 		}
 
+		.duiListLoaderNode{
+			height: 71px;
+			line-height: 71px;
+			padding: 0px 16px;
+		}
+
 	</style>
 </head>
 <body style="visibility:hidden;">
@@ -182,8 +190,6 @@
 		<div data-dojo-type="dui/mobile/Heading" data-dojo-props="label: 'Sopraninos Episodes'"></div>
 		<p>Click on an episode to see details and reveal add to cart button.</p>
 		TODO: ACTION ON CUSTOM CATEGORY RENDERER (TO DISPLAY A SUMMARY OF THE SEASON, FOR EXAMPLE)<br>
-		TODO: CUSTOM PAGE LOADER RENDERER<br>
-		TODO: KEYBOARD NAVIGATION: SHOULD A RENDERER BE NOTIFIED THAT THE CELL HAS THE FOCUS ? IMPLEMENT AN EXAMPLE THAT REACT TO THE CELL BEING FOCUSED<br>
 		<div id="list3"></div>
 	</div>
 </body>
