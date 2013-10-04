@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Lists for dojo 2 (version that use widgets as renderers)</title>
+
+	<link rel="stylesheet" type="text/css" href="../../../../dui/mobile/list/css/List.css">
+	<link rel="stylesheet" type="text/css" href="../../../../dui/mobile/list/mixins/Scrollable.css">
+	<script type="text/javascript" src="../../deviceTheme.js"></script>
+	<script type="text/javascript" src="../../../../dojo/dojo.js"
+		data-dojo-config="packages: [{name: 'dojox', location:'../dui'}, {name: 'dijit', location:'../dui'}], async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"dojo/_base/declare",
+			"dojo/_base/lang",
+			"dojo/_base/array",
+			"dojo/parser",
+			"dui/registry",
+			"dojo/on",
+			"dui/mobile/list/renderer/List2",
+			"dui/mobile/list/mixins/Scrollable",
+			"dojo/dom",
+			"dojo/dom-construct",
+			"dojo/dom-class",
+			"dojo/request",
+			"dojo/when",
+			"dojo/store/util/QueryResults",
+	        "dui/mobile/list/renderer/AbstractEntryRenderer",
+	        "dui/_TemplatedMixin",
+	        "dui/mobile/list/renderer/DefaultEntryRenderer",
+	        "dojox/mobile/common"
+		], function(declare, lang, array, parser, registry, on, List, Scrollable, dom, domConstruct, domClass, request, when, QueryResults, _EntryRendererBase, _TemplateMixin){
+			
+			/////////////////////////////////////////
+			// Demo 2: 4999 entries
+			/////////////////////////////////////////
+
+			list2Model = [];
+			for (var i = 1; i < 5000; i++){
+				list2Model.push({label: 'list entry ' + i});
+			};
+
+			var list2 = new declare([List, Scrollable])({height: 200, entries: list2Model, cellPages: 2});
+			list2.placeAt(dom.byId('list2'), 'replace');
+			list2.startup();
+			on(dom.byId('autoscroll'), 'click', function(){
+				list2._animateScroll(dom.byId('duration').valueAsNumber, dom.byId('length').valueAsNumber);
+			});
+
+			////////////////////////////////////////////////////
+			// Demo 3: Shopping catalog using a templated entries renderer
+			////////////////////////////////////////////////////
+
+ 			// the model that contains the list entries from the catalog
+			var catalogModel = [];
+			for (var i = 1; i < 100; i++){
+				catalogModel.push({img: 'http://g-ecx.images-amazon.com/images/G/02/uk-dvd/images/warner/hbo-logo-small._SS50_V198464807_.jpg', title: 'The Sopranos episode ' + i, description: 'Tony is really really depressed, at least for the ' + i + 'st time...'});
+			};
+			// Custom renderer for the catalog entries
+			var catalogController = {
+				cart: {}, // the cart in which user push catalog entries to buy
+				detailed: {} // store information about catalog entries that are selected to display details
+			};
+			var CatalogEntryRenderer = declare([_EntryRendererBase, _TemplateMixin], {
+				catalogController: catalogController,
+				templateString: '<li><div class="entryContainer" data-dojo-attach-event="onclick: toggleDetail"><div class="entryHeader"><img class="entryIcon" data-dojo-attach-point="image"><span class="entryTitle" data-dojo-attach-point="title"></span></div><div data-dojo-attach-point="entryDetail" class="entryDetails hidden"><span class="entryDescription" data-dojo-attach-point="description"></span><a class="" href="javascript:;" data-dojo-attach-point="addToCartLink" data-dojo-attach-event="onclick: addToCart">Add to Cart</a></div></div></li>',
+				// redefine setter for entryIndex
+				_setEntryIndexAttr: function(value){
+					this.inherited(arguments);
+					this._updateDetailRendering();
+					this._updateAddToCartLinkRendering();
+				},
+				// redefine setter for entry
+				_setEntryAttr: function(value){
+					this.inherited(arguments);
+					var img = value ? (value.img ? value.img : '') : '';
+					var title = value ? (value.title ? value.title : '') : '';
+					var description = value ? (value.description ? value.description : '') : '';
+					this.image.setAttribute('src', img);
+					this.title.innerHTML = title;
+					this.description.innerHTML = description;
+					// notify the list that we have externaly updated its rendering, so that it
+					// performs internal sizing calculations if it needs to.
+					registry.byId('list3').renderingUpdated();
+				},
+				toggleDetail: function(event){
+					if(this.catalogController.detailed[this.entryIndex]){
+						delete this.catalogController.detailed[this.entryIndex];
+					}else{
+						this.catalogController.detailed[this.entryIndex] = true;
+					}
+					this._updateDetailRendering();
+				},
+				addToCart: function(event){
+					event.stopPropagation();
+					alert('Item ' + JSON.stringify(catalogModel[this.entryIndex]) + ' has been added to your cart.');
+					this.catalogController.cart[this.entryIndex] = true;
+					this._updateAddToCartLinkRendering();
+				},
+				_updateDetailRendering: function(){
+					if(this.catalogController.detailed[this.entryIndex]){
+						domClass.remove(this.entryDetail, 'hidden');
+					}else{
+						domClass.add(this.entryDetail, 'hidden');
+					}
+					// notify the list that we have externaly updated its rendering, so that it
+					// performs internal sizing calculations if it needs to.
+					registry.byId('list3').renderingUpdated();
+				},
+				_updateAddToCartLinkRendering: function(){
+					if(this.catalogController.cart[this.entryIndex]){
+						domClass.add(this.addToCartLink, 'hidden');
+					}else{
+						domClass.remove(this.addToCartLink, 'hidden');
+					}
+				}
+			});
+			// create a list widget for the catalog, using the custom entries renderer
+			var list3 = new declare([List, Scrollable])({id: 'list3', height: 600, cellPages: 2, entries: catalogModel, entriesRenderer: CatalogEntryRenderer}, 'list3');
+			// startup the list
+			list3.startup();
+
+			////////////////////////////////////////////////////
+			// Demo 5: Different rendering for different catefories
+			////////////////////////////////////////////////////
+
+			// the model that contains the categorized list entries
+			var fruitAndVegModel = [{type: 'fruit', name: 'Apple'},
+			                        {type: 'fruit', name: 'Banana'},
+			                        {type: 'fruit', name: 'Cranberry'},
+			                        {type: 'fruit', name: 'Fig'},
+			                        {type: 'fruit', name: 'Gooseberry'},
+			                        {type: 'fruit', name: 'Grape'},
+			                        {type: 'fruit', name: 'Kiwifruit'},
+			                        {type: 'fruit', name: 'Lemon'},
+			                        {type: 'fruit', name: 'Lime'},
+			                        {type: 'fruit', name: 'Melon'},
+			                        {type: 'fruit', name: 'Pear'},
+			                        {type: 'fruit', name: 'Pineapple'},
+			                        {type: 'fruit', name: 'Pomegranate'},
+			                        {type: 'fruit', name: 'Pumpkin'},
+			                        {type: 'fruit', name: 'Raspberry'},
+			                        {type: 'fruit', name: 'Strawberry'},
+			                        {type: 'fruit', name: 'Tomato'},
+			                        {type: 'vegetable', name: 'Artichoke'},
+			                        {type: 'vegetable', name: 'Broccoli'},
+			                        {type: 'vegetable', name: 'Brussel sprout'},
+			                        {type: 'vegetable', name: 'Caper'},
+			                        {type: 'vegetable', name: 'Cauliflower'},
+			                        {type: 'vegetable', name: 'Celery'},
+			                        {type: 'vegetable', name: 'Kale'},
+			                        {type: 'vegetable', name: 'Leek'},
+			                        {type: 'vegetable', name: 'Lettuce'},
+			                        {type: 'vegetable', name: 'Potatoes'},
+			                        {type: 'vegetable', name: 'Spinach'},
+			                        {type: 'vegetable', name: 'Watercress'},
+			                        ];
+			var FruitAndVegRenderer = declare([_EntryRendererBase, _TemplateMixin], {
+				templateString: '<li data-dojo-attach-point="name"></li>',
+				_type: null,
+				// redefine setter for entry
+				_setEntryAttr: function(value){
+					domClass.remove(this.name, this._type + 'Entry');
+					this.inherited(arguments);
+					this._type = value ? (value.type ? value.type : '') : '';
+					var name = value ? (value.name ? value.name : '') : '';
+					domClass.add(this.name, this._type + 'Entry');
+					this.name.innerHTML = name;
+				},
+			});
+			// create a list widget for the categorized list
+			var list5 = new declare([List, Scrollable])({id: 'list5', height: 200, cellPages: 2, entries: fruitAndVegModel, categoryAttribute: 'type'}, 'list5');
+			// register our custom renderer
+			list5.entriesRenderer = FruitAndVegRenderer;
+			// startup the list
+			list5.startup();
+
+			////////////////////////////////////////////////////
+			// Demo 6: Using a dojo object store with paging to retrieve list items
+			////////////////////////////////////////////////////
+
+			// our custom store
+			var entriesStore = {
+				query: function(query, options){
+					var promise = request.get('./data.txt').then(
+						function(response){
+							var i;
+							var start = options ? (options.start ? options.start : 0) : 0;;
+							var count = options && options.count;
+							var entries = [];
+							for(i=start; i < 500; i++){
+								if (count && ((i - start) >= count)) {
+									break;
+								} else {
+									entries[i - start] = {label: 'this is list entry ' + i}; 
+								}
+							}
+							return entries;
+						}
+					);
+					return new QueryResults(promise);
+				}	
+			};
+ 			var list6a = new declare([List, Scrollable])({id: 'list6a', height: 300, entries: {store: entriesStore, query: ''}, pageLength: 100, cellPages: 2}, 'list6a');
+ 			list6a.startup();
+ 			var list6b = new declare([List, Scrollable])({id: 'list6b', height: 300, entries: {store: entriesStore, query: ''}, pageLength: 100}, 'list6b');
+ 			list6b.startup();
+ 			
+			////////////////////////////////////////////////////
+			// Demo 7: pagingLength > 0 while not using a dojo object store (no paging)
+			////////////////////////////////////////////////////
+
+			var list7Model = [];
+			for (var i = 1; i < 100; i++){
+				list7Model.push({label: 'list entry ' + i});
+			};
+			var list7 = new declare([List, Scrollable])({height: 200, cellPages: 2, entries: list7Model, pageLength: 50}, 'list7');
+			list7.startup();
+
+			////////////////////////////////////////////////////
+			// Demo 8: a categorized list that uses a dojo object store with paging to retrieve list items
+			////////////////////////////////////////////////////
+			
+			var categorizedEntriesStore = {
+					query: function(query, options){
+						var promise = request.get('./data.txt').then(
+							function(response){
+								var i;
+								var category;
+								var start = options ? (options.start ? options.start : 0) : 0;;
+								var count = options && options.count;
+								var entries = [];
+								for(i=start; i < 2000; i++){
+									if (count && ((i - start) >= count)) {
+										break;
+									} else {
+										category = 'category ' + Math.floor(i / 10);
+										entries[i - start] = {category: category, label: 'this is list entry ' + i}; 
+									}
+								}
+								return entries;
+							}
+						);
+						return new QueryResults(promise);
+					}	
+				};
+			var list8 = new declare([List, Scrollable])({id: 'list8', height: 200, cellPages: 2, entries: {store: categorizedEntriesStore, query: ''}, categoryAttribute: 'category', pageLength: 50}, 'list8');
+			list8.startup();
+
+			////////////////////////////////////////////////////
+			// Demo 9: list that supports single selection
+			////////////////////////////////////////////////////
+
+			var list9 = new declare([List, Scrollable])({height: 200, cellPages: 2, entries: list2Model, selectionMode: 'single'}, 'list9');
+			list9.startup();
+			var updateList9Console = function(){
+				var selectedEntries = list9.get('selectedItems');
+				var i = 0;
+				for(i; i < selectedEntries.length; i++){
+					selectedEntries[i] = list2Model[selectedEntries[i]].label;
+				}
+				if(selectedEntries.length){
+	 				dom.byId('list9Console').innerHTML = 'Selected entry: ' + selectedEntries;
+				}else{
+	 				dom.byId('list9Console').innerHTML = 'Selected entry: none';
+				}
+			};
+ 			list9.on('entryDeselected', updateList9Console);
+ 			list9.on('entrySelected', updateList9Console);
+ 
+			////////////////////////////////////////////////////
+			// Demo 10: list that supports multiple selection
+			////////////////////////////////////////////////////
+
+			var list10 = new declare([List, Scrollable])({height: 200, cellPages: 2, entries: list2Model, selectionMode: 'multiple'}, 'list10');
+			list10.startup();
+			var updateList10Console = function(){
+				var selectedEntries = list10.get('selectedItems');
+				var i = 0;
+				for(i; i < selectedEntries.length; i++){
+					selectedEntries[i] = ' ' + list2Model[selectedEntries[i]].label;
+				}
+				if(selectedEntries.length){
+	 				dom.byId('list10Console').innerHTML = 'Selected entries: ' + selectedEntries;
+				}else{
+	 				dom.byId('list10Console').innerHTML = 'Selected entries: none';
+				}
+			};
+ 			list10.on('entryDeselected', updateList10Console);
+ 			list10.on('entrySelected', updateList10Console);
+ 			
+			////////////////////////////////////////////////////
+			// Demo 11: categorized list that supports single selection
+			////////////////////////////////////////////////////
+
+			var list11 = new declare([List, Scrollable])({id: 'list11', height: 200, cellPages: 2, entries: {store: categorizedEntriesStore, query: ''}, categoryAttribute: 'category', selectionMode: 'single'}, 'list11');
+			list11.startup();
+			var updateList11Console = function(){
+				var selectedEntries = list11.get('selectedItems');
+				if(selectedEntries.length){
+	 				dom.byId('list11Console').innerHTML = 'Selected entry: ' + selectedEntries[0];
+				}else{
+	 				dom.byId('list11Console').innerHTML = 'Selected entry: none';
+				}
+			};
+ 			list11.on('entryDeselected', updateList11Console);
+ 			list11.on('entrySelected', updateList11Console);
+			on(dom.byId('autoscroll11'), 'click', function(){
+				list11._animateScroll(dom.byId('duration11').valueAsNumber, dom.byId('length11').valueAsNumber);
+			});
+
+ });
+	</script>
+	
+	<style type="text/css">
+
+		/* Styles for the demo page */
+
+		.pbDescription{
+			font-style: italic;
+		}
+
+		/* Catalog list entries */
+
+ 		.entryContainer{
+			padding: 8px 8px 8px 8px;
+		}
+
+		.entryHeader{
+			cursor: pointer;
+		}
+
+		.entryTitle{
+			font-weight: bold;
+			font-size: large;
+			position: relative;
+			padding-left: 10px;
+			top: -18px;
+		}
+
+		.entryLabel{
+			font-size: large;
+			padding-left: 15px;
+		}
+
+		.entryDetails{
+		}
+
+		.entryDescription{
+			font-style: italic;
+		}
+
+		.hidden{
+			display: none;
+		}
+
+		/* Fruits and vegetables */
+		
+		.fruitEntry{
+			color: red;
+			font-size: xx-large;
+		}
+		
+		.vegetableEntry{
+			color: green;
+			font-size: xx-large;
+		}
+
+	</style>
+</head>
+<body style="visibility:hidden;">
+
+	<h2>Available list demos</h2>
+	<p>
+		The following demos are available on the page:
+		<ul>
+			<li><a href="#l1">Demo 1:</a> a list that is smaller than its viewport (<span class="pbDescription">work in progress, not currently working</span>)</li>
+			<li><a href="#l2">Demo 2:</a> a list that displays 4999 entries in a small viewport</li>
+			<li><a href="#l3">Demo 3:</a> a shopping catalog implemented using a templated list entries renderer</li>
+			<li><a href="#l5">Demo 5:</a> a categorized list of fruits and vegetables</li>
+			<li><a href="#l6">Demo 6:</a> two lists that uses a dojo object store with paging to retrieve list items</li>
+			<li><a href="#l7">Demo 7:</a> a list with pagingLength > 0 while not using a dojo object store (no paging)</li>
+			<li><a href="#l8">Demo 8:</a> a categorized list that uses a dojo object store with paging to retrieve list items</li>
+			<li><a href="#l9">Demo 9:</a> a list that supports single selection</li>
+			<li><a href="#l10">Demo 10:</a> a list that supports multiple selection</li>
+			<li><a href="#l11">Demo 11:</a> a categorized list that supports single selection</li>
+		</ul>
+	<p>
+	<!-- markup example -->
+	<a id="l1"></a>
+	<h2>Demo 1:</h2>
+ 	<div id="list1" data-dojo-type="dui/mobile/list/renderer/List2" data-dojo-props="height: 200, entries: [{label: 'entry001'},
+	                                                                         {label: 'entry002'},
+	                                                                         {label: 'entry003'},
+	                                                                         {label: 'entry004'}]"></div>
+	<p>
+	<ol id="list1b" data-dojo-type="dui/mobile/list/renderer/List2" data-dojo-mixins="dui/mobile/list/mixins/Scrollable" data-dojo-props="height: 200">
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry001'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry002'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry003'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry004'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry005'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry006'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry007'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry008'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry009'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry010'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry011'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry012'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry013'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry014'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry015'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry016'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry017'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry018'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry019'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry020'}"></li>
+	</ol>
+	<p>
+	<ol id="list1c" data-dojo-type="dui/mobile/list/renderer/List2" data-dojo-mixins="dui/mobile/list/mixins/Scrollable" data-dojo-props="height: 200, cellPages: 2">
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry001'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry002'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry003'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry004'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry005'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry006'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry007'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry008'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry009'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry010'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry011'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry012'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry013'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry014'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry015'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry016'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry017'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry018'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry019'}"></li>
+		<li data-dojo-type="dui/mobile/list/renderer/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry020'}"></li>
+	</ol>
+
+	<!-- a really basic list with a lot of entries -->
+	<a id="l2"></a>
+	<h2>Demo 2: 4999 entries</h2>
+	<div>duration (s): <input id='duration' type='number' value='3'/> length (px): <input id='length' type='number' value='-50000'/><button id='autoscroll'>auto scroll</button></div>
+	<br>
+	<div id="list2"></div>
+	<p>
+	<ol id="list2a" data-dojo-type="dui/mobile/list/renderer/List2" data-dojo-mixins="dui/mobile/list/mixins/Scrollable" data-dojo-props="entries: list2Model, height: 200, cellPages: 2">
+	</ol>
+
+	<!-- a sample shopping catalog using a custom renderer for the catalog entries -->
+	<a id="l3"></a>
+	<h2>Demo 3: Shopping catalog using a templated renderer</h2>
+	<div id="list3"></div>
+	
+	<!-- a sample categorized list -->
+	<a id="l5"></a>
+	<h2>Demo 5: Categorized list</h2>
+	<div id="list5"></div>
+
+	<!-- a sample list that use a dojo object store with paging to retrieve list items -->
+	<a id="l6"></a>
+	<h2>Demo 6: Using a dojo object store with paging to retrieve list items</h2>
+	<h3>List that use a fixed number of cells (cellPages == 2):</h3>
+	<div id="list6a"></div>
+	<h3>List that use one cell per list entry:</h3>
+	<div id="list6b"></div>
+
+	<!-- pagingLength > 0 while not using a dojo object store (no paging) -->
+	<a id="l7"></a>
+	<h2>Demo 7: pagingLength > 0 while not using a dojo object store (no paging)</h2>
+	<div id="list7"></div>
+
+	<!-- paging for a categorized list -->
+	<a id="l8"></a>
+	<h2>Demo 8: Paging for a categorized list</h2>
+	<div id="list8"></div>
+
+	<!-- list that supports single selection -->
+	<a id="l9"></a>
+	<h2>Demo 9: list that supports single selection</h2>
+	<span id="list9Console">Selected entry: none</span>
+	<div id="list9"></div>
+
+	<!-- list that supports multiple selection -->
+	<a id="l10"></a>
+	<h2>Demo 10: list that supports multiple selection</h2>
+	<span id="list10Console">Selected entries: none</span>
+	<div id="list10"></div>
+
+	<!-- categorized list that supports single selection -->
+	<a id="l11"></a>
+	<h2>Demo 11: categorized list that supports single selection</h2>
+	<div><input id='duration11' type='number' value='3'/> length (px): <input id='length11' type='number' value='-45000'/><button id='autoscroll11'>auto scroll</button></div>
+	<span id="list11Console">Selected entry: none</span>
+	<div id="list11"></div>
+	
+	<p>
+</body>
+</html>
