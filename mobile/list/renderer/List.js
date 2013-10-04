@@ -697,7 +697,6 @@ define(["dojo/_base/declare",
 					// TODO: find the correct animation for end of scroll... (see scrollable.js)
 //					this._scrollBy(velocity*110, true, {duration: '1s'});
 //				}
-				this._endScroll();
 			}
 		},
 
@@ -755,6 +754,7 @@ define(["dojo/_base/declare",
 				requestAnimFrame(lang.hitch(this, this._renderScrollAnimation));
 			}else{
 				this._scrollAnimationSpec = null;
+				this._endScroll();
 			}
 		},
 
