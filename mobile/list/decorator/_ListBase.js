@@ -2,7 +2,6 @@ define(["dojo/_base/declare",
         "dojo/_base/lang",
         "dojo/_base/array",
         "dojo/when",
-    	"dojo/_base/window",
         "dojo/sniff",
         "dojo/dom",
         "dojo/dom-construct",
@@ -14,7 +13,7 @@ define(["dojo/_base/declare",
         "dui/mobile/_css3",
         "dui/_WidgetBase",
         "dui/mixins/Selection"
-], function(declare, lang, array, when, win, has, dom, domConstruct, domGeometry, domClass, touch, on, keys, css3, _WidgetBase, Selection){
+], function(declare, lang, array, when, has, dom, domConstruct, domGeometry, domClass, touch, on, keys, css3, _WidgetBase, Selection){
 	
 	// TODO: ADD THIS TO DOJO
 	window.requestAnimFrame = (function(){
@@ -706,7 +705,7 @@ define(["dojo/_base/declare",
 			// this handler (that performs stopImmediatePropagation) is the first of its kind
 			// registered.
 			// listen to mousewheel events
-			if(win.doc.onmousewheel !== undefined){
+			if(document.onmousewheel !== undefined){
 				this.on('mousewheel', lang.hitch(this, '_onMouseWheel'));
 			}
 			// listen to drag events
@@ -726,9 +725,9 @@ define(["dojo/_base/declare",
 
 		_onTouchPress: function(event){
 			this._captureEvent(event);
-			this._touchHandlersRefs.push(this.own(on(win.doc, touch.move, lang.hitch(this, '_onTouchMove')))[0]);
-			this._touchHandlersRefs.push(this.own(on(win.doc, touch.cancel, lang.hitch(this, '_onTouchRelease')))[0]);
-			this._touchHandlersRefs.push(this.own(on(win.doc, touch.release, lang.hitch(this, '_onTouchRelease')))[0]);
+			this._touchHandlersRefs.push(this.own(on(document, touch.move, lang.hitch(this, '_onTouchMove')))[0]);
+			this._touchHandlersRefs.push(this.own(on(document, touch.cancel, lang.hitch(this, '_onTouchRelease')))[0]);
+			this._touchHandlersRefs.push(this.own(on(document, touch.release, lang.hitch(this, '_onTouchRelease')))[0]);
 			this._lastYTouch = event.clientY;
 			this._lastMoveTimeStamp = event.timeStamp;
 			this._dy = 0;

@@ -3,7 +3,6 @@ define(["dojo/_base/declare",
         "dojo/_base/array",
         "dojo/string",
         "dojo/when",
-    	"dojo/_base/window",
         "dojo/sniff",
         "dojo/dom",
         "dojo/dom-construct",
@@ -20,7 +19,7 @@ define(["dojo/_base/declare",
         "dui/mixins/Selection",
         "./DefaultEntryRenderer",
         "./DefaultCategoryRenderer"
-], function(declare, lang, array, string, when, win, has, dom, domConstruct, domGeometry, domClass, domStyle, touch, on, keys, css3, registry, _WidgetBase, _Container, Selection, DefaultEntryRenderer, DefaultCategoryRenderer){
+], function(declare, lang, array, string, when, has, dom, domConstruct, domGeometry, domClass, domStyle, touch, on, keys, css3, registry, _WidgetBase, _Container, Selection, DefaultEntryRenderer, DefaultCategoryRenderer){
 
 	// TODO: ADD THIS TO DOJO
 	window.requestAnimFrame = (function(){
@@ -783,7 +782,7 @@ define(["dojo/_base/declare",
 			// this handler (that performs stopImmediatePropagation) is the first of its kind
 			// registered.
 			// listen to mousewheel events
-			if(win.doc.onmousewheel !== undefined){
+			if(document.onmousewheel !== undefined){
 				this.on('mousewheel', lang.hitch(this, '_onMouseWheel'));
 			}
 			// listen to drag events
@@ -803,9 +802,9 @@ define(["dojo/_base/declare",
 
 		_onTouchPress: function(event){
 			this._captureEvent(event);
-			this._touchHandlersRefs.push(this.own(on(win.doc, touch.move, lang.hitch(this, '_onTouchMove')))[0]);
-			this._touchHandlersRefs.push(this.own(on(win.doc, touch.cancel, lang.hitch(this, '_onTouchRelease')))[0]);
-			this._touchHandlersRefs.push(this.own(on(win.doc, touch.release, lang.hitch(this, '_onTouchRelease')))[0]);
+			this._touchHandlersRefs.push(this.own(on(document, touch.move, lang.hitch(this, '_onTouchMove')))[0]);
+			this._touchHandlersRefs.push(this.own(on(document, touch.cancel, lang.hitch(this, '_onTouchRelease')))[0]);
+			this._touchHandlersRefs.push(this.own(on(document, touch.release, lang.hitch(this, '_onTouchRelease')))[0]);
 			this._lastYTouch = event.clientY;
 			this._lastMoveTimeStamp = event.timeStamp;
 			this._dy = 0;
