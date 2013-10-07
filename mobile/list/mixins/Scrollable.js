@@ -20,12 +20,15 @@ define(["dojo/_base/declare",
 		})();
 
 	return declare(null, {
+		// summary:
+		//		Scrollable wraps a Widget inside a scrollable div (viewport). The height of this div is defined by the height parameter
+		//		of the Scrollable mixin. To register the mixin event handlers, call the registerScrollableEventHandlers method.
 
 		/////////////////////////////////
 		// Public attributes
 		/////////////////////////////////
 
-		height: 0, // the height of the list widget, in pixel
+		height: 0, // the height of the scrollable viewport, in pixel
 
 		/////////////////////////////////
 		// Private attributes
@@ -71,7 +74,7 @@ define(["dojo/_base/declare",
 			// abstract method
 		},
 
-		_getCurrentScroll: function(){
+		getCurrentScroll: function(){
 			return this._translation - this._browserScroll;
 		},
 
@@ -155,10 +158,10 @@ define(["dojo/_base/declare",
 		},
 
 		_endScroll: function(velocity){
-			if(this._getCurrentScroll() > 0 && this._firstEntryIndex == 0){
-				this._scrollBy(-(this._getCurrentScroll()), true);
-			}else if(this._visibleHeight - this._getContentHeight() > this._getCurrentScroll()){
-				this._scrollBy((this._visibleHeight - this._getContentHeight() - this._getCurrentScroll()), true);
+			if(this.getCurrentScroll() > 0 && this._firstEntryIndex == 0){
+				this._scrollBy(-(this.getCurrentScroll()), true);
+			}else if(this._visibleHeight - this._getContentHeight() > this.getCurrentScroll()){
+				this._scrollBy((this._visibleHeight - this._getContentHeight() - this.getCurrentScroll()), true);
 			}else if(velocity){
 //				if(this.cellPages > 0){
 					this._animateScroll(0.9, velocity*200);

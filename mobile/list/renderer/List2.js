@@ -606,15 +606,15 @@ define(["dojo/_base/declare",
 		},
 
 		_topOfNodeDistanceToTopOfViewport: function(node){
-			return node.offsetTop + this._getCurrentScroll();
+			return node.offsetTop + this.getCurrentScroll();
 		},
 
 		_bottomOfNodeDistanceToBottomOfViewport: function(node){
-			return node.offsetTop + node.offsetHeight + this._getCurrentScroll() - this._visibleHeight;
+			return node.offsetTop + node.offsetHeight + this.getCurrentScroll() - this._visibleHeight;
 		},
 
 		_centerOfListAboveCenterOfViewport: function(){
-			return (this._visibleHeight / 2) - this._getCurrentScroll() - this._spacerHeight > (this._cellsHeight / 2);
+			return (this._visibleHeight / 2) - this.getCurrentScroll() - this._spacerHeight > (this._cellsHeight / 2);
 		},
 
 		_nodeRendersCategoryHeader: function(node){
