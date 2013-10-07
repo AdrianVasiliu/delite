@@ -61,8 +61,6 @@ define(["dojo/_base/declare",
 			}
 			// listen to drag events
 			this.on(touch.press, lang.hitch(this, '_scrollableOnTouchPress'));
-			// listen to scroll initiated by the browser (when the user navigates the list using the TAB key)
-			this._viewportNode.addEventListener('scroll', lang.hitch(this, '_scrollableOnBrowserScroll'), true);
 		},
 
 		scrollBy: function(y, animate, animOptions){
@@ -99,6 +97,8 @@ define(["dojo/_base/declare",
 			if(!has('touch')){
 				this._viewportNode.addEventListener('click', lang.hitch(this, '_scrollableOnClick'), true);
 			};
+			// listen to scroll initiated by the browser (when the user navigates the list using the TAB key)
+			this._viewportNode.addEventListener('scroll', lang.hitch(this, '_scrollableOnBrowserScroll'), true);
 		},
 
 		placeAt: function(){
@@ -158,7 +158,7 @@ define(["dojo/_base/declare",
 		},
 
 		_endScroll: function(velocity){
-			if(this.getCurrentScroll() > 0 && this._firstEntryIndex == 0){
+			if(this.getCurrentScroll() > 0){
 				this._scrollBy(-(this.getCurrentScroll()), true);
 			}else if(this._visibleHeight - this._getContentHeight() > this.getCurrentScroll()){
 				this._scrollBy((this._visibleHeight - this._getContentHeight() - this.getCurrentScroll()), true);
