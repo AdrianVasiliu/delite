@@ -22,10 +22,6 @@ define(["dojo/_base/declare",
 		// Public attributes
 		/////////////////////////////////
 
-		entriesRenderer: DefaultEntryRenderer,
-
-		categoriesRenderer: DefaultCategoryRenderer, // renders the category headers when the list entries are categorized. The default one is defined in the postMixInProperties method.
-
 		entries: [], // list entries to display. Can be an array or an object that define a store, a query and -optional- query options (ex: {store: myStore, query: 'my query', options: {sort: [{attribute: 'label', descending: true}]}}).
 
 		categoryAttribute: null, // define the list entry attribute that define the category of a list entry. If null, the list is not categorized.
@@ -35,6 +31,10 @@ define(["dojo/_base/declare",
 		pageLoadingMessage: 'Loading ${pageLength} more entries...',
 		
 		pageToLoadMessage: 'Click to load ${pageLength} more entries',
+
+		entriesRenderer: DefaultEntryRenderer,
+
+		categoriesRenderer: DefaultCategoryRenderer, // renders the category headers when the list entries are categorized.
 
 		// TODO: FIND A BETTER NAME ? (SEEMS RELATED TO PAGELENGTH WHILE IT'S NOT !!!!)
 		// Ignored if the Scrollable mixin is not added to the list
@@ -54,7 +54,6 @@ define(["dojo/_base/declare",
 		_nextCellIndex: 0, // the _createCells method use this to retrieve the index of the next cell to create
 		_firstEntryIndex: 0, // index of the entry in the first cell
 		_lastEntryIndex: null, // index of the entry in the last cell
-		_touchHandlersRefs: null,
 		_loaderNodeClickHandlerRef: null,
 		_focusedNode: null,
 		_currentPage: 0,
@@ -139,9 +138,6 @@ define(["dojo/_base/declare",
 				if(widget){
 					widget.destroyRecursive();
 				}
-			}
-			if(this._renderedPageLoader){
-				this._renderedPageLoader.destroyRecursive();
 			}
 		},
 

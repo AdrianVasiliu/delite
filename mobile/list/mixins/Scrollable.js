@@ -45,6 +45,7 @@ define(["dojo/_base/declare",
 		_dy: null,
 		_dt: null,
 		_scrollAnimationSpec: null,
+		_touchHandlersRefs: null,
 
 		/////////////////////////////////
 		// Public methods
@@ -79,6 +80,11 @@ define(["dojo/_base/declare",
 		/////////////////////////////////
 		// Widget methods updated by this mixin
 		/////////////////////////////////
+
+		postMixInProperties: function(){
+			this.inherited(arguments);
+			this._touchHandlersRefs = [];
+		},
 
 		buildRendering: function(){
 			this.inherited(arguments);
