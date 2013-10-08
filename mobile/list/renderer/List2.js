@@ -74,7 +74,6 @@ define(["dojo/_base/declare",
 
 		postMixInProperties: function(){
 			this.inherited(arguments);
-			this._touchHandlersRefs = [];
 			this._renderedEntriesPool = [];
 			this._renderedCategoriesPool = [];
 			this._cellEntryIndexes = {};
@@ -717,7 +716,9 @@ define(["dojo/_base/declare",
 						///////////////////////////////////////////////
 						// TODO: THIS SHOULD BE DONE IN THE RENDERED WIDGET
 						///////////////////////////////////////////////
+						console.log(this._focusedNode);
 						cell = registry.byNode(this._focusedNode);
+						console.log(cell);
 						domClass.remove(this._focusedNode, 'duiListFocusedCell');
 						if(cell.onBlur){
 							cell.onBlur();
