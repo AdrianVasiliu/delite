@@ -941,7 +941,7 @@ define(["dojo/_base/declare",
 						///////////////////////////////////////////////
 						cell = registry.byNode(this._focusedNode);
 						domClass.remove(this._focusedNode, 'duiListFocusedCell');
-						if(cell.onBlur){
+						if(cell && cell.onBlur){
 							cell.onBlur();
 						}
 						this._focusedNode = node;
@@ -950,7 +950,7 @@ define(["dojo/_base/declare",
 					}
 				}else{
 					cell = registry.byNode(this._focusedNode);
-					if(cell.blurCurrentElement){
+					if(cell && cell.blurCurrentElement){
 						cell.blurCurrentElement();
 					}
 				}
@@ -969,7 +969,7 @@ define(["dojo/_base/declare",
 			domClass.add(this._focusedNode, 'duiListFocusedCell');
 			this.domNode.setAttribute('aria-activedescendant', this._focusedNode.id);
 			cell = registry.byNode(this._focusedNode);
-			if(!this._cellManagedFocus && cell.onFocus){
+			if(cell && !this._cellManagedFocus && cell.onFocus){
 				cell.onFocus();
 			}
 			this._cellManagedFocus = false;
