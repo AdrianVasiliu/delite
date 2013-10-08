@@ -22,6 +22,7 @@
 			"dojo/on",
 			"dui/mobile/list/final/List",
 			"dui/mobile/list/mixins/Scrollable",
+			"dui/mobile/list/mixins/StoreModel",
 			"dojo/dom",
 			"dojo/dom-construct",
 			"dojo/dom-class",
@@ -32,7 +33,7 @@
 	        "dui/_TemplatedMixin",
 	        "dui/mobile/list/final/DefaultEntryRenderer",
 	        "dojox/mobile/common"
-		], function(declare, lang, array, parser, registry, on, List, Scrollable, dom, domConstruct, domClass, request, when, QueryResults, _EntryRendererBase, _TemplateMixin){
+		], function(declare, lang, array, parser, registry, on, List, Scrollable, StoreModel, dom, domConstruct, domClass, request, when, QueryResults, _EntryRendererBase, _TemplateMixin){
 			
 			/////////////////////////////////////////
 			// Demo 2: 4999 entries
@@ -204,9 +205,9 @@
 					return new QueryResults(promise);
 				}	
 			};
- 			var list6a = new declare([List, Scrollable])({id: 'list6a', height: 300, entries: {store: entriesStore, query: ''}, pageLength: 100, cellPages: 2}, 'list6a');
+ 			var list6a = new declare([List, Scrollable, StoreModel])({id: 'list6a', height: 300, store: entriesStore, query: '', pageLength: 100, cellPages: 2}, 'list6a');
  			list6a.startup();
- 			var list6b = new declare([List, Scrollable])({id: 'list6b', height: 300, entries: {store: entriesStore, query: ''}, pageLength: 100}, 'list6b');
+ 			var list6b = new declare([List, Scrollable, StoreModel])({id: 'list6b', height: 300, store: entriesStore, query: '', pageLength: 100}, 'list6b');
  			list6b.startup();
  			
 			////////////////////////////////////////////////////
@@ -247,7 +248,7 @@
 						return new QueryResults(promise);
 					}	
 				};
-			var list8 = new declare([List, Scrollable])({id: 'list8', height: 200, cellPages: 2, entries: {store: categorizedEntriesStore, query: ''}, categoryAttribute: 'category', pageLength: 50}, 'list8');
+			var list8 = new declare([List, Scrollable, StoreModel])({id: 'list8', height: 200, cellPages: 2, store: categorizedEntriesStore, query: '', categoryAttribute: 'category', pageLength: 50}, 'list8');
 			list8.startup();
 
 			////////////////////////////////////////////////////
@@ -296,7 +297,7 @@
 			// Demo 11: categorized list that supports single selection
 			////////////////////////////////////////////////////
 
-			var list11 = new declare([List, Scrollable])({id: 'list11', height: 200, cellPages: 2, entries: {store: categorizedEntriesStore, query: ''}, categoryAttribute: 'category', selectionMode: 'single'}, 'list11');
+			var list11 = new declare([List, Scrollable, StoreModel])({id: 'list11', height: 200, cellPages: 2, store: categorizedEntriesStore, query: '', categoryAttribute: 'category', selectionMode: 'single'}, 'list11');
 			list11.startup();
 			var updateList11Console = function(){
 				var selectedEntries = list11.get('selectedItems');

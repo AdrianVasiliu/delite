@@ -1,6 +1,5 @@
 define(["dojo/_base/declare",
         "dojo/_base/lang",
-        "dojo/string",
         "dojo/when",
         "dojo/on",
         "dojo/dom",
@@ -14,7 +13,7 @@ define(["dojo/_base/declare",
         "dui/mixins/Selection",
         "./DefaultEntryRenderer",
         "./DefaultCategoryRenderer"
-], function(declare, lang, string, when, on, dom, domConstruct, domClass, domStyle, keys, registry, _WidgetBase, _Container, Selection, DefaultEntryRenderer, DefaultCategoryRenderer){
+], function(declare, lang, when, on, dom, domConstruct, domClass, domStyle, keys, registry, _WidgetBase, _Container, Selection, DefaultEntryRenderer, DefaultCategoryRenderer){
 
 	return declare([_WidgetBase, _Container, Selection], {
 
@@ -22,15 +21,9 @@ define(["dojo/_base/declare",
 		// Public attributes
 		/////////////////////////////////
 
-		entries: [], // list entries to display. Can be an array or an object that define a store, a query and -optional- query options (ex: {store: myStore, query: 'my query', options: {sort: [{attribute: 'label', descending: true}]}}).
+		entries: [],
 
 		categoryAttribute: null, // define the list entry attribute that define the category of a list entry. If null, the list is not categorized.
-
-		pageLength: 0, // if > 0 define paging with the number of entries to display per page.
-
-		pageLoadingMessage: 'Loading ${pageLength} more entries...',
-		
-		pageToLoadMessage: 'Click to load ${pageLength} more entries',
 
 		entriesRenderer: DefaultEntryRenderer,
 
@@ -48,21 +41,15 @@ define(["dojo/_base/declare",
 		// Private attributes
 		/////////////////////////////////
 
-		_entries: null, // array that contains the entries (resolved if entries are retrieved from a store that returns a promise...)
+		_initialized: false,
 		_spacerHeight: 0, // the height of the spacer element on top of the list
 		_cellsHeight: 0, // the total height of the cells
 		_nextCellIndex: 0, // the _createCells method use this to retrieve the index of the next cell to create
 		_firstEntryIndex: 0, // index of the entry in the first cell
 		_lastEntryIndex: null, // index of the entry in the last cell
-		_loaderNodeClickHandlerRef: null,
 		_focusedNode: null,
-		_currentPage: 0,
-		_hasNextPage: false,
-		_queryOptions: null,
-		_loadingPage: false,
 		_renderedEntriesPool: null,
 		_renderedCategoriesPool: null,
-		_isLoaderNodeDisplayed: false,
 		_hiddenCellsOnTop: 0,
 		_cellEntryIndexes: null,
 		_cellCategoryHeaders: null,
@@ -120,12 +107,15 @@ define(["dojo/_base/declare",
 					this._recycleCells(scroll > 0);
 				};
 			}
-			if(this.entries instanceof Array){
-				this._entries = this.entries;
-				this._onFirstPageReady();
-			}else{
-				this._loadEntriesFromStore(this._onFirstPageReady);
-			}
+			// TODO: use when(this._renderEntries(), function(){
+			//		this._toggleListLoadingStyle();
+			//		this._registerEventHandlers();
+			//		if(this._isScrollable){
+			//			this.registerScrollableEventHandlers();
+			//		}
+			//		this._initialized = true;
+			// }); AND REMOVE initit code from _renderEntries .????
+			this._renderEntries();
 		},
 
 		destroy: function(){
@@ -143,7 +133,6 @@ define(["dojo/_base/declare",
 					widget.destroyRecursive();
 				}
 			}
-			this._destroyPageLoader();
 		},
 
 		/////////////////////////////////
@@ -192,63 +181,16 @@ define(["dojo/_base/declare",
 		// Private methods
 		/////////////////////////////////
 
-		_loadEntriesFromStore: function(/*Function*/onDataReadyHandler){
-			if(!this._queryOptions){
-				this._queryOptions = this.entries.options ? lang.clone(this.entries.options) : {};
-				if(this.pageLength > 0){
-					this._queryOptions.start = (this.entries.options && this.entries.options.start ? this.entries.options.start : 0);
-					this._queryOptions.count = this.pageLength;
-				}
-			}
-			if(this._hasNextPage){
-				this._queryOptions.start += this.pageLength;
-			}
-			when(this.entries.store.query(this.entries.query, this._queryOptions), lang.hitch(this, function(result){
-				this._hasNextPage = (result.length == this._queryOptions.count);
-				if(this._entries){
-					this._entries = this._entries.concat(result);
-				}else{
-					this._entries = result;
-				}
-				lang.hitch(this, onDataReadyHandler)();
-			}), function(error){
-				// WHAT TO DO WITH THE ERROR ?
-				console.log(error);
-			});
-		},
-
-		_onFirstPageReady: function(){
+		_renderEntries: function(){
 			this._createCells();
-			this._toggleListLoadingStyle();
-			this._registerEventHandlers();
-			if(this._isScrollable){
-				this.registerScrollableEventHandlers();
-			}
-		},
-
-		_onNextPageReady: function(){
-			var loaderNode = this._getLoaderNode();
-			var loaderNodeHasFocus = loaderNode && loaderNode === this._focusedNode;
-			if(loaderNodeHasFocus){
-				this._focusNextNode(false);
-			}
-			if(this._isScrollable && this.cellPages > 0){
-				this._recycleCells(false);
-			}else{
-				this._createCells();
-			}
-			if(loaderNode){
-				if(this._hasNextPage){
-					if(loaderNodeHasFocus){
-						this._focusNextNode(true);
-					}
-					this._renderPageLoader(false);
-				}else{
-					this._destroyPageLoader();
-					this.defer(this._endScroll, 10); // defer (10ms because 0 doesn't work on IE) so that any browser scroll event is taken into account before _endScroll
+			if(!this._initialized){
+				this._toggleListLoadingStyle();
+				this._registerEventHandlers();
+				if(this._isScrollable){
+					this.registerScrollableEventHandlers();
 				}
+				this._initialized = true;
 			}
-			this._loadingPage = false;
 		},
 
 		_toggleListLoadingStyle: function(){
@@ -256,11 +198,11 @@ define(["dojo/_base/declare",
 		},
 
 		_getEntriesCount: function(){
-			return this._entries.length;
+			return this.entries.length;
 		},
 
 		_getEntry: function(index){
-			return this._entries[index];
+			return this.entries[index];
 		},
 
 		_getCellHeight: function(cell, isEntryCell){
@@ -281,7 +223,6 @@ define(["dojo/_base/declare",
 			var entryIndex = this._lastEntryIndex != null ? this._lastEntryIndex + 1 : 0;
 			var currentEntry;
 			var lastCategory = this.categoryAttribute && this._lastEntryIndex ? this._getEntry(this._lastEntryIndex - 1)[this.categoryAttribute] : null;
-			var loaderNode = this._getLoaderNode();
 			// Create cells using renderers
 			for (entryIndex; entryIndex < this._getEntriesCount(); entryIndex++){
 				if(this._isScrollable && (this.cellPages > 0) && (this._cellsHeight > (this.cellPages * this._visibleHeight))){
@@ -305,20 +246,6 @@ define(["dojo/_base/declare",
 				/////////////////////////////////////////
 				this._renderEntry(currentEntry, entryIndex, 'bottom');
 				this._lastEntryIndex = entryIndex;
-			}
-			if(loaderNode){
-				// move it to the end of the list
-				domConstruct.place(loaderNode, this.containerNode);
-			}if(this._hasNextPage){
-				loaderNode = this._renderPageLoader(false);
-				domConstruct.place(loaderNode, this.containerNode);
-				this._isLoaderNodeDisplayed = true;
-				// FIXME: cells height calculation is not correct in some cases here (example: list3 in test page !!!)
-				this._cellsHeight += this._getNodeHeight(loaderNode);
-				////////////////////////////////////////////////////
-				// TODO: Move this handler in the Renderer itself ?
-				////////////////////////////////////////////////////
-				this._loaderNodeClickHandlerRef = this.own(on(loaderNode, 'click', lang.hitch(this, '_onLoaderNodeClick')))[0];
 			}
 		},
 
@@ -497,41 +424,12 @@ define(["dojo/_base/declare",
 			}
 		},
 
-		_renderPageLoader: function(loading){
-			var loaderNode = this._getLoaderNode();
-			var message = string.substitute(loading ? this.pageLoadingMessage : this.pageToLoadMessage, this);
-			if(!loaderNode){
-				loaderNode = domConstruct.create("div", {tabindex: "-1"});
-			}
-			loaderNode.innerHTML = message;
-			if(loading){
-				domClass.remove(loaderNode, this.baseClass + '-loaderNode');
-				domClass.add(loaderNode, this.baseClass + '-loaderNodeLoading');
-			}else{
-				domClass.remove(loaderNode, this.baseClass + '-loaderNodeLoading');
-				domClass.add(loaderNode, this.baseClass + '-loaderNode');
-			}
-			return loaderNode;
-		},
-
-		_destroyPageLoader: function(){
-			var loaderNode = this._getLoaderNode();
-			if(loaderNode){
-				this._loaderNodeClickHandlerRef.remove();
-				this._loaderNodeClickHandlerRef = null;
-				this._cellsHeight -= this._getNodeHeight(loaderNode);
-				this.containerNode.removeChild(loaderNode);
-				this._isLoaderNodeDisplayed = false;
-			}
-		},
-
 		_placeCellNode: function(node, pos){
-			var position, listLength;
+			var position;
 			if(pos === 'bottom'){
-				listLength = this.containerNode.children.length;
-				position = this._isLoaderNodeDisplayed ? listLength - 1 : listLength;
+				position = this._getLastCellNodePosition();
 			}else if(pos === 'top'){
-				position = this._hiddenCellsOnTop;
+				position = this._getFirstCellNodePosition();
 			}else{
 				// TODO: THROW EXCEPTION ?
 				return;
@@ -544,25 +442,19 @@ define(["dojo/_base/declare",
 		},
 
 		_getFirstCellNode: function(){
-			return this.containerNode.children[this._hiddenCellsOnTop];
+			return this.containerNode.children[this._getFirstCellNodePosition()];
 		},
 
 		_getLastCellNode: function(){
-			var children = this.containerNode.children;
-			if(this._hasNextPage){
-				return children[children.length - 2];
-			}else{
-				return children[children.length - 1];
-			}
+			return this.containerNode.children[this._getLastCellNodePosition() - 1];
 		},
 
-		_getLoaderNode: function(){
-			var children = this.containerNode.children;
-			if(this._isLoaderNodeDisplayed){
-				return children[children.length - 1];
-			}else{
-				return null;
-			}
+		_getFirstCellNodePosition: function(){
+			return this._hiddenCellsOnTop;
+		},
+
+		_getLastCellNodePosition: function(){
+			return this.containerNode.children.length;
 		},
 
 		_getCellNodeByEntryIndex: function(entryIndex){
@@ -641,17 +533,6 @@ define(["dojo/_base/declare",
 			}
 		},
 
-		_onLoaderNodeClick: function(event){
-			if(this._getLoaderNode){
-				if(this._dy || this._loadingPage){
-					return;
-				}
-				this._loadingPage = true;
-				this._renderPageLoader(true);
-				this._loadEntriesFromStore(this._onNextPageReady);
-			}
-		},
-
 		_onFocus: function(event){
 			if(this._focusedNode){
 				var cell = registry.byNode(this._focusedNode);
@@ -689,13 +570,7 @@ define(["dojo/_base/declare",
 				case keys.ENTER:
 				case keys.SPACE:
 					if(!this._cellManagedFocus){
-						if(this._hasNextPage && domClass.contains(event.target, this.baseClass + '-loaderNode')){
-							event.preventDefault();
-							this._onLoaderNodeClick(event);
-						}else if(this.selectionMode !== 'none'){
-							event.preventDefault();
-							this._handleSelection(event);
-						}
+						this._onActionKeyDown(event);
 						break;
 					}
 				default:
@@ -706,6 +581,13 @@ define(["dojo/_base/declare",
 						}
 					}
 			};
+		},
+
+		_onActionKeyDown: function(event){
+			if(this.selectionMode !== 'none'){
+				event.preventDefault();
+				this._handleSelection(event);
+			}
 		},
 
 		_focusNextNode: function(down){
