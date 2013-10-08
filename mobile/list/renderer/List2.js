@@ -162,6 +162,14 @@ define(["dojo/_base/declare",
 		},
 
 		/////////////////////////////////
+		// Methods for Scrollable support
+		/////////////////////////////////
+
+		getCurrentScroll: function(){
+			return 0;
+		},
+
+		/////////////////////////////////
 		// Selection implementation
 		/////////////////////////////////
 
