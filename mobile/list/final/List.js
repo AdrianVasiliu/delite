@@ -74,12 +74,12 @@ define(["dojo/_base/declare",
 			this.inherited(arguments);
 			// Create the main node
 			if(this.domNode.parentNode){
-				this.domNode = domConstruct.create('div', {className: this.baseClass, tabindex: '0'}, this.domNode, 'replace');
+				this.domNode = domConstruct.create('div', {className: this.baseClass}, this.domNode, 'replace');
 			}else{
-				this.domNode = domConstruct.create('div', {className: this.baseClass, tabindex: '0'});
+				this.domNode = domConstruct.create('div', {className: this.baseClass});
 			}
 			this._topNode = domConstruct.create('div', {className: this.baseClass + '-header'}, this.domNode);
-			this.containerNode = domConstruct.create('div', {className: this.baseClass + '-container'}, this.domNode);
+			this.containerNode = domConstruct.create('div', {className: this.baseClass + '-container', tabIndex: '0'}, this.domNode);
 			this._bottomNode = domConstruct.create('div', {className: this.baseClass + '-footer'}, this.domNode);
 			// Create the spacer node, as a child of the top node. It is dynamically resized when moving list cells
 			// in the _recycleCells method, to avoid flickering on iOS (if scrolling on iOS to
