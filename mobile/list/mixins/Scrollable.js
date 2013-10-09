@@ -89,7 +89,7 @@ define(["dojo/_base/declare",
 		buildRendering: function(){
 			this.inherited(arguments);
 			// Create a scrollable container and add the widget domNode to it
-			this._viewportNode = domConstruct.create('div', {class: 'duiScrollable', tabindex: -1});
+			this._viewportNode = domConstruct.create('div', {class: 'duiScrollable'});
 			if(this.height){
 				this._viewportNode.style.height = this.height + 'px';
 			}else{
