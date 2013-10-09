@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Lists for dojo 2</title>
+
+	<link rel="stylesheet" type="text/css" href="./List.css">
+	<link rel="stylesheet" type="text/css" href="../mixins/Scrollable.css">
+	<script type="text/javascript" src="../../deviceTheme.js"></script>
+	<script type="text/javascript" src="../../../../dojo/dojo.js"
+		data-dojo-config="packages: [{name: 'dojox', location:'../dui'}, {name: 'dijit', location:'../dui'}], async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+		    "dojo/_base/declare",
+		    "dojo/_base/lang",
+		    "dojo/_base/window",
+			"dui/registry",
+			"dojo/on",
+			"dui/mobile/list/sandbox/List",
+			"dui/mobile/list/mixins/Scrollable",
+			"dui/mobile/list/mixins/StoreModel",
+			"dojo/dom",
+			"dojo/request",
+			"dojo/store/util/QueryResults",
+			"dui/mobile/common"
+		], function(declare, lang, win, registry, on, List, Scrollable, StoreModel, dom, request, QueryResults){
+			// List model
+			var useIcon, useRightText, useRightIcon, useRightIcon2;
+			var entriesStore = {
+					entriesCount: 2000,
+					query: function(query, options){
+						var promise = request.get('./data.txt').then(lang.hitch(this,
+							function(response){
+								var i;
+								var category;
+								var start = options ? (options.start ? options.start : 0) : 0;;
+								var count = options && options.count;
+								var entries = [];
+								for(i=start; i < this.entriesCount; i++){
+									if (count && ((i - start) >= count)) {
+										break;
+									} else {
+										category = 'category ' + Math.floor(i / 10);
+										entries[i - start] = {category: category,
+															  label: 'this is list entry ' + i,
+															  icon: useIcon ? '../../tests/images/i-icon-' + (i % 10 + 1) + '.png' : null,
+															  rightText: useRightText ? 'right text ' + i : null,
+															  rightIcon: useRightIcon ? '../../tests/images/a-icon-1.png' : null,
+															  rightIcon2: useRightIcon2 ? '../../tests/images/b-icon-' + (i % 8 + 1) + '.png' : null}; 
+									}
+								}
+								return entries;
+							}
+						));
+						return new QueryResults(promise);
+					}	
+			};
+			// List
+			var list = null;
+			var autoScrollHandler = null;
+			// Builder
+			var buildList = function(){
+				dom.byId("autoScroller").style.display = '';
+				if(list){
+					list.destroyRecursive();
+				}
+				var listParams = {
+					domNode: dom.byId("listNode"),
+					selectionMode: 	dom.byId("selectionMode").value,
+					pageLength: parseInt(dom.byId("pageLength").value),
+					cellPages: parseInt(dom.byId("cellPages").value),
+					height: parseInt(dom.byId("height").value)
+				}
+				if(dom.byId("useCategory").value){
+					listParams.categoryAttribute = "category";
+				};
+				if(dom.byId("renderIcon").value){
+					useIcon = true;
+				}else{
+					useIcon = false;
+				};
+				if(dom.byId("renderRightText").value){
+					useRightText = true;
+				}else{
+					useRightText = false;
+				};
+				if(dom.byId("renderRightIcon").value){
+					useRightIcon = true;
+				}else{
+					useRightIcon = false;
+				};
+				if(dom.byId("renderRightIcon2").value){
+					useRightIcon2 = true;
+				}else{
+					useRightIcon2 = false;
+				};
+				entriesStore.entriesCount = parseInt(dom.byId("entriesCount").value);
+				if(dom.byId("scrollable").value){
+					list = new declare([List, StoreModel, Scrollable], {})(listParams);
+				}else{
+					list = new declare([List, StoreModel], {})(listParams);
+				}
+				list.store = entriesStore;
+				list.placeAt(win.body());
+				list.startup();
+				if(!autoScrollHandler){
+					autoScrollHandler = on(dom.byId('autoscroll'), 'click', function(){
+						list._animateScroll(dom.byId('duration').valueAsNumber, dom.byId('length').valueAsNumber);
+					});
+				}
+			}
+			var handler = on(dom.byId("buildButton"), 'click', lang.hitch(this, buildList));
+		});
+	</script>
+</head>
+<body style="visibility:hidden;">
+	<div id="listBuilder">
+		<h1>List builder</h1>
+		<p>Select the attributes of the list and then click the Build button to create it.</p>
+		<label for="scrollable">Scrollable:</label>
+		<select id="scrollable">
+			<option value="true">Yes</option>
+			<option value="">No</option>
+		</select>
+		<label for="height">Height in px:</label>
+		<input id="height" type="number" value="200"></input>
+		<br>
+		<label for="renderIcon">Render icon:</label>
+		<select id="renderIcon">
+			<option value="true">Yes</option>
+			<option value="">No</option>
+		</select>
+		<label for="renderRightText">, right text:</label>
+		<select id="renderRightText">
+			<option value="true">Yes</option>
+			<option value="">No</option>
+		</select>
+		<label for="renderRightIcon">, right icon:</label>
+		<select id="renderRightIcon">
+			<option value="true">Yes</option>
+			<option value="">No</option>
+		</select>
+		<label for="renderRightIcon2">, right icon 2:</label>
+		<select id="renderRightIcon2">
+			<option value="true">Yes</option>
+			<option value="">No</option>
+		</select>
+		<br>
+		<label for="entriesCount">Nb of entries:</label>
+		<input id="entriesCount" type="number" value="20"></input>
+		<br>
+		<label for="useCategory">Categorized entries:</label>
+		<select id="useCategory">
+			<option value="">No</option>
+			<option value="true">Yes</option>
+		</select>
+		<br>
+		<label for="selectionMode">Selection mode:</label>
+		<select id="selectionMode">
+			<option value="none">none</option>
+			<option value="single">single</option>
+			<option value="multiple">multiple</option>
+		</select>
+		<br>
+		<label for="pageLength">Page length:</label>
+		<input id="pageLength" type="number" value="0"></input>
+		<br>
+		<label for="cellPages">Cell pages:</label>
+		<input id="cellPages" type="number" value="0"></input>
+		<br>
+		<button id="buildButton">Build</button>
+	</div>
+	<p>
+	<div id='autoScroller' style='display: none'>duration (s): <input id='duration' type='number' value='3'/> length (px): <input id='length' type='number' value='-50000'/><button id='autoscroll'>auto scroll</button></div>
+	<br>
+</body>
+</html>
