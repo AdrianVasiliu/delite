@@ -713,7 +713,7 @@ define(["dojo/_base/declare",
 			// listen to scroll initiated by the browser (when the user navigates the list using the TAB key)
 			this.on('scroll', lang.hitch(this, '_onBrowserScroll'));
 			// listen to keypress events to allow keyboard navigation in the list
-			this.on('keydown', lang.hitch(this, '_onKeyDown'));
+			this.on('keydown', lang.hitch(this, '_onKeydown'));
 			this.on('focus', lang.hitch(this, '_onFocus'));
 		},
 
@@ -803,7 +803,7 @@ define(["dojo/_base/declare",
 			}
 		},
 
-		_onKeyDown: function(event){
+		_onKeydown: function(event){
 			switch (event.keyCode) {
 				case keys.UP_ARROW:
 					event.preventDefault();

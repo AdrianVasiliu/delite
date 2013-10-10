@@ -44,7 +44,7 @@ define(["dojo/_base/declare"
 			console.log("onBlur " + this.id);
 		},
 
-		onKeyDown: function(evt){
+		onKeydown: function(evt){
 			// abstract method
 			console.log("Key down event received:");
 			console.log(evt);

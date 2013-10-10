@@ -505,7 +505,11 @@ define(["dojo/_base/declare",
 
 		_getParentCell: function(node){
 			var currentNode = dom.byId(node);
-			while(currentNode && !domClass.contains(currentNode, this.baseClass + '-cell')){
+//			while(currentNode && !domClass.contains(currentNode, this.baseClass + '-cell')){
+			while(currentNode){
+				if(currentNode.parentNode && domClass.contains(currentNode.parentNode, this.baseClass + '-container')){
+					break;
+				}
 				currentNode = currentNode.parentNode;
 			}
 			return registry.byNode(currentNode);
@@ -522,6 +526,26 @@ define(["dojo/_base/declare",
 		/////////////////////////////////
 		// Keyboard navigation (_KeyNavMixin implementation)
 		/////////////////////////////////
+
+		_onContainerKeydown: function(evt){
+			var continueProcessing = true, cell = this._getFocusedCell();
+			if(cell && cell.onKeydown){
+				continueProcessing = cell.onKeydown(evt);
+			}
+			if(continueProcessing !== false){ // onKeydown implementation can return false to cancel the default action
+				if((evt.keyCode == keys.SPACE && !this._searchTimer) || evt.keyCode == keys.ENTER){
+					this._onActionKeydown(evt);
+				};
+			}
+			this.inherited(arguments);
+		},
+
+		_onActionKeydown: function(evt){
+			if(this.selectionMode !== 'none'){
+				evt.preventDefault();
+				this._handleSelection(event);
+			}
+		},
 
 		childSelector: function(node){
 			return node;
@@ -549,7 +573,19 @@ define(["dojo/_base/declare",
 			return registry.byNode(node);
 		},
 
+		//////////////////////////////////////////
+		// FIXME: TO ENABLE KEYBOARD SEARCH, _getNext MUST
+		// BE ABLE TO RETURN NEXT ELEMENT FROM WITHIN A CELL
+		// WHEN THE child PARAMETER IS A CELL ELEMENT.
+		// => FEATURE IS CURRENTLY INHIBITED
+		//////////////////////////////////////////
+		_keyboardSearch: function(/*Event*/ evt, /*String*/ keyChar){
+			console.log("FIXME: Keyboard search is not yet implemented");
+			return null;
+		},
+
 		_getNext: function(child, dir){
+			// return the next cell
 			var nextNode = child.domNode[(dir == 1)?'nextElementSibling':'previousElementSibling'];
 			if(nextNode){
 				return registry.byNode(nextNode);
@@ -581,18 +617,16 @@ define(["dojo/_base/declare",
 		},
 
 		_onDownArrow: function(){
-			var cell = this._getFocusedCell();
-			var child = this._getNext(cell, 1);
-			if(child){
-				this.focusChild(child);
-			}else{
-				this.focusChild(cell);
-			}
+			this._focusNextChild(1);
 		},
 
 		_onUpArrow: function(){
+			this._focusNextChild(-1);
+		},
+
+		_focusNextChild: function(dir){
 			var cell = this._getFocusedCell();
-			var child = this._getNext(cell, -1);
+			var child = this._getNext(cell, dir);
 			if(child){
 				this.focusChild(child);
 			}else{
@@ -625,7 +659,7 @@ define(["dojo/_base/declare",
 		/////////////////////////////////
 
 		_registerEventHandlers: function(){
-//			this.on('keydown', lang.hitch(this, '_onKeyDown'));
+//			this.on('keydown', lang.hitch(this, '_onKeydown'));
 //			this.on('focus', lang.hitch(this, '_onFocus'));
 			if(this.selectionMode !== 'none'){
 				this.on('click', lang.hitch(this, '_handleSelection'));
@@ -643,8 +677,7 @@ define(["dojo/_base/declare",
 			}
 		},
 
-
-//		_onKeyDown: function(event){
+//		_onKeydown: function(event){
 //			console.log("DEBUG");
 //			var cell;
 //			switch (event.keyCode) {
@@ -671,25 +704,19 @@ define(["dojo/_base/declare",
 //				case keys.ENTER:
 //				case keys.SPACE:
 //					if(!this._cellManagedFocus){
-//						this._onActionKeyDown(event);
+//						this._onActionKeydown(event);
 //						break;
 //					}
 //				default:
 //					if(this._cellManagedFocus){
 //						cell = registry.byNode(this._focusedNode);
-//						if(cell.onKeyDown){
-//							cell.onKeyDown(event);
+//						if(cell.onKeydown){
+//							cell.onKeydown(event);
 //						}
 //					}
 //			};
 //		},
 
-//		_onActionKeyDown: function(event){
-//			if(this.selectionMode !== 'none'){
-//				event.preventDefault();
-//				this._handleSelection(event);
-//			}
-//		},
 
 //		_focusNextNode: function(down){
 //			var node, cell;

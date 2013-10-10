@@ -523,7 +523,7 @@ define(["dojo/_base/declare",
 		/////////////////////////////////
 
 		_registerEventHandlers: function(){
-			this.on('keydown', lang.hitch(this, '_onKeyDown'));
+			this.on('keydown', lang.hitch(this, '_onKeydown'));
 			this.on('focus', lang.hitch(this, '_onFocus'));
 			if(this.selectionMode !== 'none'){
 				this.on('click', lang.hitch(this, '_handleSelection'));
@@ -552,7 +552,7 @@ define(["dojo/_base/declare",
 			}
 		},
 
-		_onKeyDown: function(event){
+		_onKeydown: function(event){
 			var cell;
 			switch (event.keyCode) {
 				case keys.UP_ARROW:
@@ -578,20 +578,20 @@ define(["dojo/_base/declare",
 				case keys.ENTER:
 				case keys.SPACE:
 					if(!this._cellManagedFocus){
-						this._onActionKeyDown(event);
+						this._onActionKeydown(event);
 						break;
 					}
 				default:
 					if(this._cellManagedFocus){
 						cell = registry.byNode(this._focusedNode);
-						if(cell.onKeyDown){
-							cell.onKeyDown(event);
+						if(cell.onKeydown){
+							cell.onKeydown(event);
 						}
 					}
 			};
 		},
 
-		_onActionKeyDown: function(event){
+		_onActionKeydown: function(event){
 			if(this.selectionMode !== 'none'){
 				event.preventDefault();
 				this._handleSelection(event);

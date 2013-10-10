@@ -22,6 +22,7 @@ define(["dojo/_base/declare",
 		_setEntryAttr: function(value){
 			this._set('entry', value);
 			this.renderEntry(value, this.entryIndex);
+			this.label = value.label; // For text search in keyboard navigation
 		},
 
 		buildRendering: function(){

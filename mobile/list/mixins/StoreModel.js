@@ -4,8 +4,9 @@ define(["dojo/_base/declare",
         "dojo/when",
         "dojo/on",
         "dojo/dom-construct",
-        "dojo/dom-class"
-], function(declare, lang, string, when, on, domConstruct, domClass){
+        "dojo/dom-class",
+        "dui/_WidgetBase",
+], function(declare, lang, string, when, on, domConstruct, domClass, _WidgetBase){
 
 	return declare(null , {
 
@@ -79,9 +80,10 @@ define(["dojo/_base/declare",
 
 		_onNextPageReady: function(){
 			var loaderNode = this._getLoaderNode();
-			var loaderNodeHasFocus = loaderNode && loaderNode === this._focusedNode;
+			var focusedCell = this._getFocusedCell();
+			var loaderNodeHasFocus = loaderNode && focusedCell && loaderNode === focusedCell.domNode;
 			if(loaderNodeHasFocus){
-				this._focusNextNode(false);
+				this._focusNextChild(-1);
 			}
 			if(this._isScrollable && this.cellPages > 0){
 				this._recycleCells(false);
@@ -91,7 +93,7 @@ define(["dojo/_base/declare",
 			if(loaderNode){
 				if(this._hasNextPage){
 					if(loaderNodeHasFocus){
-						this._focusNextNode(true);
+						this._focusNextChild(1);
 					}
 					this._renderPageLoader(false);
 				}else{
@@ -130,6 +132,11 @@ define(["dojo/_base/declare",
 			var message = string.substitute(loading ? this.pageLoadingMessage : this.pageToLoadMessage, this);
 			if(!loaderNode){
 				loaderNode = domConstruct.create("div", {tabindex: "-1"});
+				////////////////////
+				// FIXME: WILL THE NEXT VERSION ALLOW TO WORK WITH DOM NODES ???
+				// Create a widget so that it can be focused using _KeyNavMixin
+				////////////////////
+				new _WidgetBase({focus: function(){this.domNode.focus();}}, loaderNode);
 			}
 			loaderNode.innerHTML = message;
 			if(loading){
@@ -145,6 +152,9 @@ define(["dojo/_base/declare",
 		_destroyPageLoader: function(){
 			var loaderNode = this._getLoaderNode();
 			if(loaderNode){
+				////////////////////////////
+				// FIXME: IF WE CREATE A WIDGET TO WRAP THE NODE, WE NEED TO DESTROY IT !!!
+				////////////////////////////
 				this._loaderNodeClickHandlerRef.remove();
 				this._loaderNodeClickHandlerRef = null;
 				this._cellsHeight -= this._getNodeHeight(loaderNode);
@@ -178,7 +188,7 @@ define(["dojo/_base/declare",
 			}
 		},
 
-		_onActionKeyDown: function(event){
+		_onActionKeydown: function(event){
 			if(this._hasNextPage && domClass.contains(event.target, this.baseClass + '-loaderNode')){
 				event.preventDefault();
 				this._onLoaderNodeClick(event);
