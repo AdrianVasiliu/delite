@@ -14,7 +14,7 @@ define(["dojo/_base/declare",
 			this._renderTextNode("rightText", entry ? entry.rightText : null, "duiListEntryRightText");
 			this._renderImageNode("rightIcon2", entry ? entry.rightIcon2 : null, "duiListEntryRightIcon2");
 			this._renderImageNode("rightIcon", entry ? entry.rightIcon : null, "duiListEntryRightIcon");
-			this._setFocusableNodes(["iconNode", "labelNode", "rightText", "rightIcon2", "rightIcon"]);
+			this._setFocusableChildren(["iconNode", "labelNode", "rightText", "rightIcon2", "rightIcon"]);
 		},
 
 		_renderTextNode: function(nodeName, text, nodeClass){

@@ -505,7 +505,6 @@ define(["dojo/_base/declare",
 
 		_getParentCell: function(node){
 			var currentNode = dom.byId(node);
-//			while(currentNode && !domClass.contains(currentNode, this.baseClass + '-cell')){
 			while(currentNode){
 				if(currentNode.parentNode && domClass.contains(currentNode.parentNode, this.baseClass + '-container')){
 					break;
@@ -527,6 +526,7 @@ define(["dojo/_base/declare",
 		// Keyboard navigation (_KeyNavMixin implementation)
 		/////////////////////////////////
 
+		// Handle keydown events
 		_onContainerKeydown: function(evt){
 			var continueProcessing = true, cell = this._getFocusedCell();
 			if(cell && cell.onKeydown){
@@ -540,6 +540,7 @@ define(["dojo/_base/declare",
 			this.inherited(arguments);
 		},
 
+		// Handle SPACE and ENTER keys
 		_onActionKeydown: function(evt){
 			if(this.selectionMode !== 'none'){
 				evt.preventDefault();
@@ -547,8 +548,8 @@ define(["dojo/_base/declare",
 			}
 		},
 
-		childSelector: function(node){
-			return node;
+		childSelector: function(child){
+			return child;
 		},
 
 		_getFirst: function(){
@@ -573,45 +574,47 @@ define(["dojo/_base/declare",
 			return registry.byNode(node);
 		},
 
-		//////////////////////////////////////////
-		// FIXME: TO ENABLE KEYBOARD SEARCH, _getNext MUST
-		// BE ABLE TO RETURN NEXT ELEMENT FROM WITHIN A CELL
-		// WHEN THE child PARAMETER IS A CELL ELEMENT.
-		// => FEATURE IS CURRENTLY INHIBITED
-		//////////////////////////////////////////
-		_keyboardSearch: function(/*Event*/ evt, /*String*/ keyChar){
-			console.log("FIXME: Keyboard search is not yet implemented");
-			return null;
-		},
-
 		_getNext: function(child, dir){
-			// return the next cell
-			var nextNode = child.domNode[(dir == 1)?'nextElementSibling':'previousElementSibling'];
-			if(nextNode){
-				return registry.byNode(nextNode);
+			var focusedCell, refChild, nextChild;
+			if(this.focusedChild){
+				focusedCell = this._getFocusedCell();
+				if(focusedCell === this.focusedChild){
+					// The cell itself has the focus
+					refChild = child || this.focusedChild;
+					if(refChild){
+						nextChild = refChild.domNode[(dir == 1)?'nextElementSibling':'previousElementSibling'];
+						if(nextChild){
+							return registry.byNode(nextChild);
+						}
+					}
+					return null;
+				}else{
+					// A descendant of the cell has the focus
+					// FIXME: can it be a category header, with no _getNextFocusableChild method ?
+					return focusedCell._getNextFocusableChild(child, dir);
+				}
 			}else{
-				return null;
-			};
+				return dir == 1 ? this._getFirst() : this._getLast();
+			}
 		},
 
 		_onLeftArrow: function(){
-			var nextNode;
-			if (this._getFocusedCell()._getNextFocusableNode){
-				nextNode = this._getFocusedCell()._getNextFocusableNode(-1);
-				if(nextNode){
-					// TODO: TURN THE NODE INTO A WIDGET ???
-					this.focusChild(nextNode);
+			var nextChild;
+			if (this._getFocusedCell()._getNextFocusableChild){
+				nextChild = this._getFocusedCell()._getNextFocusableChild(null, -1);
+				if(nextChild){
+					this.focusChild(nextChild);
 				}
 			}
 		},
 
 		_onRightArrow: function(){
-			var nextNode;
-			if (this._getFocusedCell()._getNextFocusableNode){
-				nextNode = this._getFocusedCell()._getNextFocusableNode(1);
-				if(nextNode){
+			var nextChild;
+			if (this._getFocusedCell()._getNextFocusableChild){
+				nextChild = this._getFocusedCell()._getNextFocusableChild(null, 1);
+				if(nextChild){
 					// TODO: TURN THE NODE INTO A WIDGET ???
-					this.focusChild(nextNode);
+					this.focusChild(nextChild);
 				}
 			}
 		},
@@ -625,17 +628,20 @@ define(["dojo/_base/declare",
 		},
 
 		_focusNextChild: function(dir){
-			var cell = this._getFocusedCell();
-			var child = this._getNext(cell, dir);
-			if(child){
-				this.focusChild(child);
+			var child, cell = this._getFocusedCell();
+			if(cell === this.focusedChild){
+				child = this._getNext(cell, dir);
+				if(!child){
+					child = cell;
+				}
 			}else{
-				this.focusChild(cell);
+				child = cell;
 			}
+			this.focusChild(child);
 		},
 
 		_getFocusedCell: function(){
-			return this._getParentCell(this.focusedChild.domNode);
+			return this.focusedChild ? this._getParentCell(this.focusedChild.domNode) : null;
 		},
 
 		_topOfNodeIsBelowTopOfViewport: function(node){
@@ -655,12 +661,10 @@ define(["dojo/_base/declare",
 		},
 
 		/////////////////////////////////
-		// Event handlers
+		// Other event handlers
 		/////////////////////////////////
 
 		_registerEventHandlers: function(){
-//			this.on('keydown', lang.hitch(this, '_onKeydown'));
-//			this.on('focus', lang.hitch(this, '_onFocus'));
 			if(this.selectionMode !== 'none'){
 				this.on('click', lang.hitch(this, '_handleSelection'));
 			}
@@ -675,128 +679,6 @@ define(["dojo/_base/declare",
 				this.setSelected(entryIndex, entrySelected);
 				this.emit(entrySelected ? 'entrySelected' : 'entryDeselected', {entryIndex: entryIndex});
 			}
-		},
-
-//		_onKeydown: function(event){
-//			console.log("DEBUG");
-//			var cell;
-//			switch (event.keyCode) {
-//				case keys.UP_ARROW:
-//					event.preventDefault();
-//					this._focusNextNode(false);
-//					break;
-//				case keys.DOWN_ARROW:
-//					event.preventDefault();
-//					this._focusNextNode(true);
-//					break;
-//				case keys.RIGHT_ARROW:
-//					if(this._focusedNode){
-//						event.preventDefault();
-//						this._focusCellContent(true);
-//					}
-//					break;
-//				case keys.LEFT_ARROW:
-//					if(this._focusedNode){
-//						event.preventDefault();
-//						this._focusCellContent(false);
-//					}
-//					break;
-//				case keys.ENTER:
-//				case keys.SPACE:
-//					if(!this._cellManagedFocus){
-//						this._onActionKeydown(event);
-//						break;
-//					}
-//				default:
-//					if(this._cellManagedFocus){
-//						cell = registry.byNode(this._focusedNode);
-//						if(cell.onKeydown){
-//							cell.onKeydown(event);
-//						}
-//					}
-//			};
-//		},
-
-
-//		_focusNextNode: function(down){
-//			var node, cell;
-//			var distanceToEdgeOfViewport;
-//			if(this._focusedNode){
-//				if(!this._cellManagedFocus){
-//					node = down?this._focusedNode.nextElementSibling:this._focusedNode.previousElementSibling;
-//					if(node != null){
-//						///////////////////////////////////////////////
-//						// TODO: THIS SHOULD BE DONE IN THE RENDERED WIDGET
-//						///////////////////////////////////////////////
-//						cell = registry.byNode(this._focusedNode);
-//						domClass.remove(this._focusedNode, this.baseClass + '-focusedCell');
-//						if(cell && cell.onBlur){
-//							cell.onBlur();
-//						}
-//						this._focusedNode = node;
-//					}else{
-//						return;
-//					}
-//				}else{
-//					cell = registry.byNode(this._focusedNode);
-//					if(cell && cell.blurCurrentElement){
-//						cell.blurCurrentElement();
-//					}
-//				}
-//			}else{
-//				// Focus the first visible cell node
-//				node = this._getFirstCellNode();
-//				while(node){
-//					if(this._topOfNodeIsBelowTopOfViewport(node)){
-//						this._focusedNode = node;
-//						break;
-//					}
-//					node = node.nextElementSibling;
-//				}
-//			}
-//			this._focusedNode.focus();
-//			domClass.add(this._focusedNode, this.baseClass + '-focusedCell');
-//			this.domNode.setAttribute('aria-activedescendant', this._focusedNode.id);
-//			cell = registry.byNode(this._focusedNode);
-//			if(cell && !this._cellManagedFocus && cell.onFocus){
-//				cell.onFocus();
-//			}
-//			this._cellManagedFocus = false;
-//			this.defer(function(){
-//				// scroll has been updated: verify that the focused cell is visible, if not scroll to make it appear
-//				if(this._browserScroll == 0){
-//					// the browser won't scroll with negative values: if the focused cell is not entirely visible,
-//					// scroll it to make it visible.
-//					distanceToEdgeOfViewport = this._topOfNodeDistanceToTopOfViewport(this._focusedNode);
-//					if(distanceToEdgeOfViewport < 0){
-//						this.scrollBy(-distanceToEdgeOfViewport);
-//					}
-//				}else{
-//					distanceToEdgeOfViewport = this._bottomOfNodeDistanceToBottomOfViewport(this._focusedNode);
-//					if(distanceToEdgeOfViewport > 0){
-//						this.scrollBy(-distanceToEdgeOfViewport);
-//					}
-//				}
-//			}, 10);
-//		},
-
-//		_focusCellContent: function(next){
-//			var cell, cellFocusedNodeId;
-//			if(!this._nodeRendersCategoryHeader(this._focusedNode)){				
-//				cell = registry.byNode(this._focusedNode);
-//				if(cell.focusNextElement){
-//					cellFocusedNodeId = cell.focusNextElement(next);
-//					if(cellFocusedNodeId){
-//						this.domNode.setAttribute('aria-activedescendant', cellFocusedNodeId);
-//					}
-//					this._cellManagedFocus = true;
-//				}
-//			}
-//		},
-
-		_captureEvent: function(event){
-			event.preventDefault();
-			event.stopPropagation();
 		}
 
 	});

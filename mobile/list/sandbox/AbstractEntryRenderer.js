@@ -8,8 +8,8 @@ define(["dojo/_base/declare",
 
 	return declare([_WidgetBase], {
 
-		_focusableNodes: null,
-		_focusedNodeIndex: null,
+		_focusableChildren: null,
+		_focusedChild: null,
 
 		// The index of the entry to render
 		entryIndex: null,
@@ -44,35 +44,35 @@ define(["dojo/_base/declare",
 		},
 
 		focus: function(param){
+			this._focusedChild = null;
 			this.domNode.focus();
 		},
 
-		_getNextFocusableNode: function(dir){
-			if(this._focusableNodes){
-				var maxIndex = this._focusableNodes.length - 1;
-				if(this._focusedNodeIndex == null){
-					this._focusedNodeIndex = (dir == 1) ? 0 : maxIndex;
-				}else{
-					if(dir == 1){
-						this._focusedNodeIndex++;
-						if(this._focusedNodeIndex > maxIndex){
-							this._focusedNodeIndex = 0;
-						}
-					}else{
-						this._focusedNodeIndex--;
-						if(this._focusedNodeIndex < 0){
-							this._focusedNodeIndex = maxIndex;
-						}
-					}
+		_getNextFocusableChild: function(fromChild, dir){
+			if(this._focusableChildren){
+				// retrieve the position of the from node
+				var nextChildIndex, fromChildIndex = -1, refNode = fromChild || this._focusedChild;
+				if(refNode){
+					fromChildIndex = this._focusableChildren.indexOf(refNode);
 				}
-				return this._focusableNodes[this._focusedNodeIndex];
+				if(dir == 1){
+					nextChildIndex = fromChildIndex + 1;
+				}else{
+					nextChildIndex = fromChildIndex - 1;
+				}
+				if(nextChildIndex >= this._focusableChildren.length){
+					nextChildIndex = 0;
+				}else if(nextChildIndex < 0){
+					nextChildIndex = this._focusableChildren.length - 1;
+				}
+				return this._focusableChildren[nextChildIndex];
 			}
 		},
 
-		_setFocusableNodes: function(nodeNames) {
-			var i=0, node;
-			this._focusableNodes = [];
-			this._focusedNodeIndex = null;
+		_setFocusableChildren: function(nodeNames) {
+			var i=0, node, that = this;
+			this._focusableChildren = [];
+			this._focusedChild = null;
 			for(i=0; i < nodeNames.length; i++){
 				node = this[nodeNames[i]];
 				if(node){
@@ -80,7 +80,7 @@ define(["dojo/_base/declare",
 					// FIXME: WILL THE NEXT VERSION ALLOW TO WORK WITH DOM NODES ???
 					// Create a widget so that it can be focused using _KeyNavMixin
 					////////////////////
-					this._focusableNodes.push(new _WidgetBase({focus: function(){this.domNode.focus();}}, node));
+					this._focusableChildren.push(new _WidgetBase({focus: function(){that._focusedChild = this; this.domNode.focus();}}, node));
 				}
 			}
 		}
