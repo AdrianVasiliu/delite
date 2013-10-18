@@ -8,6 +8,10 @@
 
 	<link rel="stylesheet" type="text/css" href="./List.css">
 	<link rel="stylesheet" type="text/css" href="../mixins/Scrollable.css">
+	<link rel="stylesheet" type="text/css" href="../mixins/Editable.css">
+	<!--  following needed by Editable -->
+	<link rel="stylesheet" type="text/css" href="../../themes/common/domButtons/DomButtonRedCircleMinus.css">
+	<link rel="stylesheet" type="text/css" href="../../themes/common/domButtons/DomButtonGrayKnob.css">
 	<script type="text/javascript" src="../../deviceTheme.js"></script>
 	<script type="text/javascript" src="../../../../dojo/dojo.js"
 		data-dojo-config="packages: [{name: 'dojox', location:'../dui'}, {name: 'dijit', location:'../dui'}], async: true, parseOnLoad: true"></script>
@@ -21,12 +25,13 @@
 			"dojo/on",
 			"dui/mobile/list/sandbox/List",
 			"dui/mobile/list/mixins/Scrollable",
+			"dui/mobile/list/mixins/Editable",
 			"dui/mobile/list/mixins/StoreModel",
 			"dojo/dom",
 			"dojo/request",
 			"dojo/store/util/QueryResults",
 			"dui/mobile/common"
-		], function(declare, lang, win, registry, on, List, Scrollable, StoreModel, dom, request, QueryResults){
+		], function(declare, lang, win, registry, on, List, Scrollable, Editable, StoreModel, dom, request, QueryResults){
 			// List model
 			var useIcon, useRightText, useRightIcon, useRightIcon2;
 			var entriesStore = {
@@ -99,9 +104,17 @@
 				};
 				entriesStore.entriesCount = parseInt(dom.byId("entriesCount").value);
 				if(dom.byId("scrollable").value){
-					list = new declare([List, StoreModel, Scrollable], {})(listParams);
+					if(dom.byId("editable").value){
+						list = new declare([List, StoreModel, Scrollable, Editable], {})(listParams);
+					}else{
+						list = new declare([List, StoreModel, Scrollable], {})(listParams);
+					}
 				}else{
-					list = new declare([List, StoreModel], {})(listParams);
+					if(dom.byId("editable").value){
+						list = new declare([List, Editable, StoreModel], {})(listParams);
+					}else{
+						list = new declare([List, StoreModel], {})(listParams);
+					}
 				}
 				list.store = entriesStore;
 				list.placeAt(win.body());
@@ -127,6 +140,12 @@
 		</select>
 		<label for="height">Height in px:</label>
 		<input id="height" type="number" value="200"></input>
+		<br>
+		<label for="editable">Editable:</label>
+		<select id="editable">
+			<option value="">No</option>
+			<option value="true">Yes</option>
+		</select>
 		<br>
 		<label for="renderIcon">Render icon:</label>
 		<select id="renderIcon">

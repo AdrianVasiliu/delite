@@ -3,10 +3,11 @@ define(["dojo/_base/declare",
         "dojo/dom-construct",
         "dui/_WidgetBase",
         "dui/_Container",
-        "dui/_KeyNavMixin"
-], function(declare, domClass, domConstruct, _WidgetBase, _Container, _KeyNavMixin){
+        "dui/_KeyNavMixin",
+        "dui/mobile/list/mixins/Measurable"
+], function(declare, domClass, domConstruct, _WidgetBase, _Container, _KeyNavMixin, Measurable){
 
-	return declare([_WidgetBase], {
+	return declare([_WidgetBase, Measurable], {
 
 		_focusableChildren: null,
 		_focusedChild: null,
@@ -29,6 +30,7 @@ define(["dojo/_base/declare",
 			if(!this.domNode){
 				this.domNode = domConstruct.create('div');
 			}
+			this.containerNode = domConstruct.create('div', {className: 'duiEntryNode'}, this.domNode);
 			this.inherited(arguments);
 		},
 

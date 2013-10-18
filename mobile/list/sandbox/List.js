@@ -18,6 +18,18 @@ define(["dojo/_base/declare",
 
 	return declare([_WidgetBase, _Container, Selection, _KeyNavMixin], {
 
+		// Architecture of the list:
+		// - the domNode is a div
+		// - it contains three children:
+		//   - _topNode, a div that itself contains a spacer node which height is set to maintain the display when recycling cells
+		//   - containerNode, a div that contains:
+		//     - at the top, 0 or more pooled cells (they have the css class baseClass + '-pooledElement', which means display: 'none')
+		//     - the cells (div) that renders category headers and list entries. _firstEntryIndex is the index of the first entry displayed,
+		//       _lastEntryIndex is the index of the last entry displayed.
+		//   - _footerNode, which is currently an empty div
+		// if the list is scrollable AND cellPages > 0, a fixed number of cells is used to display list entries. Cells are recycled when scrolling
+		// the list or removing entries.
+		
 		/////////////////////////////////
 		// Public attributes
 		/////////////////////////////////
@@ -42,19 +54,25 @@ define(["dojo/_base/declare",
 		// Private attributes
 		/////////////////////////////////
 
+		_cssSuffixes: {entry: '-entry',
+					   category: '-category',
+					   pooled: '-pooledElement',
+					   selected: '-selectedEntry',
+					   loading: '-loading',
+					   container: '-container',
+					   header: '-header',
+					   footer: '-footer'},
 		_initialized: false,
 		_spacerHeight: 0, // the height of the spacer element on top of the list
 		_cellsHeight: 0, // the total height of the cells
-		_nextCellIndex: 0, // the _createCells method use this to retrieve the index of the next cell to create
 		_firstEntryIndex: 0, // index of the entry in the first cell
 		_lastEntryIndex: null, // index of the entry in the last cell
 		_focusedNode: null,
 		_renderedEntriesPool: null,
 		_renderedCategoriesPool: null,
 		_hiddenCellsOnTop: 0,
-		_cellEntryIndexes: null,
+		_cellEntryIds: null,
 		_cellCategoryHeaders: null,
-		_cellManagedFocus: false,
 		_topNode: null,
 		_bottomNode: null,
 
@@ -66,7 +84,7 @@ define(["dojo/_base/declare",
 			this.inherited(arguments);
 			this._renderedEntriesPool = [];
 			this._renderedCategoriesPool = [];
-			this._cellEntryIndexes = {};
+			this._cellEntryIds = [];
 			this._cellCategoryHeaders = {};
 		},
 
@@ -79,9 +97,9 @@ define(["dojo/_base/declare",
 			}else{
 				this.domNode = domConstruct.create('div', {className: this.baseClass, tabIndex: -1});
 			}
-			this._topNode = domConstruct.create('div', {className: this.baseClass + '-header', tabIndex: -1}, this.domNode);
-			this.containerNode = domConstruct.create('div', {className: this.baseClass + '-container', tabIndex: -1}, this.domNode);
-			this._bottomNode = domConstruct.create('div', {className: this.baseClass + '-footer', tabIndex: -1}, this.domNode);
+			this._topNode = domConstruct.create('div', {className: this.baseClass + this._cssSuffixes.header, tabIndex: -1}, this.domNode);
+			this.containerNode = domConstruct.create('div', {className: this.baseClass + this._cssSuffixes.container, tabIndex: -1}, this.domNode);
+			this._bottomNode = domConstruct.create('div', {className: this.baseClass + this._cssSuffixes.footer, tabIndex: -1}, this.domNode);
 			// Create the spacer node, as a child of the top node. It is dynamically resized when moving list cells
 			// in the _recycleCells method, to avoid flickering on iOS (if scrolling on iOS to
 			// compensate the fact that nodes are moved in the list, there is flickering).
@@ -93,7 +111,7 @@ define(["dojo/_base/declare",
 					// make sure tabIndex is -1 for keyboard navigation
 					node.tabIndex = -1;
 					// TODO: CAN WE HAVE CATEGORIES HERE ???
-					domClass.add(node, this.baseClass + '-cell');
+					domClass.add(node, this.baseClass + this._cssSuffixes.entry);
 					this.containerNode.appendChild(node);
 					// TODO: IGNORE this.entries attribute in startup if entries are added using markup
 				}
@@ -143,17 +161,188 @@ define(["dojo/_base/declare",
 		onCellEvent: function(event, handler){
 			var that = this;
 			return this.on(event, function(e){
+				var parentCell;
 				if(domClass.contains(e.target, this.baseClass)){
 					return;
 				}else{
-					return handler(e, that._getCellEntryIndex(that._getParentCell(e.target)));
+					parentCell = that._getParentCell(e.target);
+					if(parentCell){
+						// TODO: Pass the parentCell too ? Or run the handler in the parentCell context and pass the list ?
+						return handler.call(that, e, that._getCellEntryIndex(parentCell));
+					}
 				}
 			});
 		},
 
+		//////////////////////////////////////////////////////
+		// TODO: rename as 'geometryUpdated' ?
+		//////////////////////////////////////////////////////
 		renderingUpdated: function(){ // Notify the list widget that cells rendering has been updated.
 			if(this._isScrollable){ // we only care about _cellsHeight when the list is scrollable
 				this._cellsHeight = this._getNodeHeight(this.domNode) - this._spacerHeight;
+			}
+		},
+
+		addEntry: function(entry, entryIndex){
+			/////////////////////////////////
+			// TODO: IMPLEMENT THIS
+			/////////////////////////////////
+		},
+
+		deleteEntry: function(entryIndex){
+			var cell, node = this._getCellNodeByEntryIndex(entryIndex);
+			// remove the entry from the entries array
+			this.entries.splice(entryIndex, 1);
+			// update the cell indexes
+			this._cellEntryIds.splice(entryIndex, 1);
+			// update first and last entry index references
+			if(entryIndex < this._firstEntryIndex){
+				this._firstEntryIndex--;
+			}
+			if(entryIndex <= this._lastEntryIndex){
+				this._lastEntryIndex--;
+			}
+			if(node){
+				cell = registry.byNode(node);
+				if(this._isScrollable){
+					if(this.cellPages > 0){
+						if(this._lastEntryIndex < this.entries.length - 1){
+							// move cell to the bottom
+							this._recycleCell(cell, 'bottom');
+						}else if(this._firstEntryIndex > 0){
+							// move cell to the top
+							this._recycleCell(cell, 'top', true);
+						}else{
+							// move cell to the pool
+							this._removeCell(cell);
+						}
+					}else{
+						this._removeCell(cell);
+					}
+					this._endScroll();
+				}else{
+					this._removeCell(cell);
+				}
+			}
+			/////////////////////////////////////////////////////////////////////
+			// TODO: IF DELETED CELL HAD FOCUS, MOVE THE FOCUS
+			// TODO: REMOVE DESTROYED CELL FROM SELECTION IF IT WAS SELECTED
+			/////////////////////////////////////////////////////////////////////
+		},
+
+		moveEntry: function(entryIndex){
+			/////////////////////////////////
+			// TODO: IMPLEMENT THIS
+			/////////////////////////////////
+		},
+
+		_recycleCell: function(cell, newPos, updateSpacerHeight){
+			var nextNode, previousNode;
+			var firstDisplayedEntryCategory, lastDisplayedEntryCategory, newEntryCategory, lastCellNode, firstCellNode, lastCellIsCategoryHeader, firstCellIsCategoryHeader;
+			var updatedHeight = -this._getCellHeight(cell);
+			if(newPos === 'bottom'){
+				/////////////////////////////
+				// move cell to the bottom
+				/////////////////////////////
+				if(this.categoryAttribute){
+					lastDisplayedEntryCategory = this.entries[this._lastEntryIndex][this.categoryAttribute];
+					newEntryCategory = this.entries[this._lastEntryIndex + 1][this.categoryAttribute];
+					previousNode = this._getPreviousCellNode(cell.domNode);
+					nextNode = this._getNextCellNode(cell.domNode);
+					lastCellNode = this._getLastCellNode();
+					lastCellIsCategoryHeader = this._nodeRendersCategoryHeader(lastCellNode);
+					if(newEntryCategory == lastDisplayedEntryCategory && lastCellIsCategoryHeader){
+						// move the category node to the pool
+						this._moveCellToPool(registry.byNode(lastCellNode));
+					}else if(newEntryCategory != lastDisplayedEntryCategory){
+						if(lastCellIsCategoryHeader && newEntryCategory != this._getNodeCategoryHeader(lastCellNode)){
+							/////////////////////////////////
+							// TODO: IS THIS CASE POSSIBLE ?
+							/////////////////////////////////
+							console.log("TODO: UPDATE THE CATEGORY OF THE CATEGORY HEADER");
+						}else if (!lastCellIsCategoryHeader){
+							this._renderCategory(newEntryCategory, 'bottom');
+						}
+					}
+					// Move the previous category header to the pool if necessary
+					if(previousNode && this._nodeRendersCategoryHeader(previousNode) && nextNode && this._nodeRendersCategoryHeader(nextNode)){
+						this._moveCellToPool(registry.byNode(previousNode));
+					}
+				}
+				this._placeCellNode(cell.domNode, 'bottom');
+				if(updateSpacerHeight){
+					this._updateSpacerHeight(-updatedHeight);
+				}
+				this._lastEntryIndex++;
+				this._updateCellWithEntry(cell, this._getEntry(this._lastEntryIndex), this._lastEntryIndex);
+				updatedHeight += this._getCellHeight(cell);
+			}else if(newPos === 'top'){
+				/////////////////////////////
+				// move cell to the top
+				/////////////////////////////
+				if(this.categoryAttribute){
+					firstDisplayedEntryCategory = this.entries[this._firstEntryIndex][this.categoryAttribute];
+					newEntryCategory = this.entries[this._firstEntryIndex - 1][this.categoryAttribute];
+					previousNode = this._getPreviousCellNode(cell.domNode);
+					nextNode = this._getNextCellNode(cell.domNode);
+					firstCellNode = this._getFirstCellNode();
+					firstCellIsCategoryHeader = this._nodeRendersCategoryHeader(firstCellNode);
+					if(newEntryCategory == firstDisplayedEntryCategory && firstCellIsCategoryHeader){
+						/////////////////////////////////////
+						// TODO: IS IT EVEN POSSIBLE ???
+						/////////////////////////////////////
+						console.log("TODO: THE CELL MUST BE MOVED BEFORE THE FIRST DISPLAYED ENTRY NODE, NOT DIRECTLY AT THE TOP");
+					}else if(newEntryCategory != firstDisplayedEntryCategory){
+						if(!firstCellIsCategoryHeader){
+							this._renderCategory(firstDisplayedEntryCategory, 'top');
+						}
+					}
+					// Move the previous category header to the pool if necessary
+					if(previousNode && this._nodeRendersCategoryHeader(previousNode) && (!nextNode || (nextNode && this._nodeRendersCategoryHeader(nextNode)))){
+						this._moveCellToPool(registry.byNode(previousNode));
+					}
+				}
+				this._placeCellNode(cell.domNode, 'top');
+				if(updateSpacerHeight){
+					this._updateSpacerHeight(updatedHeight);
+				}
+				this._firstEntryIndex--;
+				this._updateCellWithEntry(cell, this._getEntry(this._firstEntryIndex), this._firstEntryIndex);
+				updatedHeight += this._getCellHeight(cell);
+				// TODO: IF IT WAS THE FIRST CELL, ALSO ADD A CATEGORY !?
+			}else{
+				throw 'unsupported recycling position';
+			}
+			this._cellsHeight += updatedHeight;
+		},
+
+		_removeCell: function(cell){
+			var nextNode, previousNode, firstCellNode;
+			var cellHeight = this._getCellHeight(cell);
+			if(this.categoryAttribute){
+				previousNode = this._getPreviousCellNode(cell.domNode);
+				nextNode = this._getNextCellNode(cell.domNode);
+				// Move the previous category header to the pool if necessary
+				if(previousNode && this._nodeRendersCategoryHeader(previousNode)){
+					if(!nextNode || (nextNode && this._nodeRendersCategoryHeader(nextNode))){
+						this._moveCellToPool(registry.byNode(previousNode));
+					}
+				}
+			}
+			if(this._isScrollable && this.cellPages > 0){
+				// move the cell to the pool
+				this._moveCellToPool(cell);
+			}else{
+				// destroy the cell
+				cell.destroyRecursive();
+			}
+			this._cellsHeight -= cellHeight;
+			// make sure that the first entry always has its category header displayed
+			if(this.categoryAttribute && this._firstEntryIndex == 0){
+				firstCellNode = this._getFirstCellNode();
+				if(firstCellNode && !this._nodeRendersCategoryHeader(firstCellNode)){
+					this._renderCategory(this.entries[0][this.categoryAttribute], 'top');
+				}
 			}
 		},
 
@@ -203,7 +392,7 @@ define(["dojo/_base/declare",
 		},
 
 		_toggleListLoadingStyle: function(){
-			domClass.toggle(this.domNode, this.baseClass + '-loading');
+			domClass.toggle(this.domNode, this.baseClass + this._cssSuffixes.loading);
 		},
 
 		_getEntriesCount: function(){
@@ -214,9 +403,8 @@ define(["dojo/_base/declare",
 			return this.entries[index];
 		},
 
-		_getCellHeight: function(cell, isEntryCell){
-			// TODO: CACHE CELL HEIGHT
-			return this._getNodeHeight(cell.domNode);
+		_getCellHeight: function(cell){
+			return cell.getHeight();
 		},
 
 		_getNodeHeight: function(node){
@@ -229,7 +417,7 @@ define(["dojo/_base/declare",
 		/////////////////////////////////
 
 		_createCells: function(){
-			var entryIndex = this._lastEntryIndex != null ? this._lastEntryIndex + 1 : 0;
+			var entryIndex = this._lastEntryIndex != null ? this._lastEntryIndex + 1 : this._firstEntryIndex;
 			var currentEntry;
 			var lastCategory = this.categoryAttribute && this._lastEntryIndex ? this._getEntry(this._lastEntryIndex - 1)[this.categoryAttribute] : null;
 			// Create cells using renderers
@@ -241,27 +429,15 @@ define(["dojo/_base/declare",
 				if(this.categoryAttribute && currentEntry[this.categoryAttribute] != lastCategory){
 					// create a category header
 					lastCategory = currentEntry[this.categoryAttribute];
-					/////////////////////////////////////////
-					//
-					// FIXME: cells height calculation is not correct in some cases here (example: list3 in test page !!!)
-					//
-					/////////////////////////////////////////
 					this._renderCategory(currentEntry[this.categoryAttribute], 'bottom');
 				}
-				/////////////////////////////////////////
-				//
-				// FIXME: cells height calculation is not correct in some cases here (example: list3 in test page !!!)
-				//
-				/////////////////////////////////////////
 				this._renderEntry(currentEntry, entryIndex, 'bottom');
 				this._lastEntryIndex = entryIndex;
 			}
 		},
 
 		_recycleCells: function(fromBottomToTop){
-			// TODO: the height calculations may cause bad performances on slower devices ?
-			// FIXME: THE FOLLOWING IS A HACK: IT APPEARS THAT THE VALUE CALCULATED FOR this._cellsHeight when creating the cells is not always ok (see example List3 in the test page)
-			this._cellsHeight = this._getNodeHeight(this.domNode) - this._spacerHeight;
+            // TODO: IF THEY ARE POOLED CELLS, USE THEM TO CREATE ENTRIES NOW
 			if(fromBottomToTop){
 				while(!this._centerOfListAboveCenterOfViewport()){
 					if(this._firstEntryIndex > 0){
@@ -275,8 +451,8 @@ define(["dojo/_base/declare",
 							this._moveBottomCellToPool();
 						}
 						// render the new entry at the top
+						this._renderEntry(this._getEntry(this._firstEntryIndex - 1), this._firstEntryIndex - 1, 'top');
 						--this._firstEntryIndex;
-						this._renderEntry(this._getEntry(this._firstEntryIndex), this._firstEntryIndex, 'top');
 					}else{
 						if(this.categoryAttribute && this._firstEntryIndex == 0 && !this._nodeRendersCategoryHeader(this._getFirstCellNode())){
 							// move the bottom cell to a pool
@@ -299,8 +475,8 @@ define(["dojo/_base/declare",
 							this._moveTopCellToPool();
 						}
 						// render the new entry at the bottom
+						this._renderEntry(this._getEntry(this._lastEntryIndex + 1), this._lastEntryIndex + 1, 'bottom');
 						++this._lastEntryIndex;
-						this._renderEntry(this._getEntry(this._lastEntryIndex), this._lastEntryIndex, 'bottom');
 					}else{
 						break;
 					}
@@ -308,39 +484,72 @@ define(["dojo/_base/declare",
 			}
 		},
 
+//		_recycleCells: function(fromBottomToTop){
+//          // TODO: IF THEY ARE POOLED CELLS, USE THEM TO CREATE ENTRIES NOW
+//			if(fromBottomToTop){
+//				while(!this._centerOfListAboveCenterOfViewport()){
+//					if(this._firstEntryIndex > 0){
+//						// recycle the bottom cell to the top
+//						this._lastEntryIndex--;
+//						this._firstEntryIndex--;
+//						this._recycleCell(registry.byNode(this._getLastCellNode()), 'top', true);
+//					}else{
+//						console.log("DEBUG RECYCLING");
+//						if(this.categoryAttribute && this._firstEntryIndex == 0 && !this._nodeRendersCategoryHeader(this._getFirstCellNode())){
+//							// move the bottom cell to a pool
+//							this._moveBottomCellToPool();
+//							// render a category header at the top
+//							this._renderCategory(this._getEntry(this._firstEntryIndex)[this.categoryAttribute], 'top');
+//						}
+//						break;
+//					}
+//				}
+//			}else{ // from top to bottom
+//				while(this._centerOfListAboveCenterOfViewport()){
+//					if(this._lastEntryIndex < this._getEntriesCount() - 1){
+//						// recycle the top cell to the bottom
+//						this._firstEntryIndex++;
+//						this._lastEntryIndex++;
+//						this._recycleCell(registry.byNode(this._getFirstCellNode()), 'bottom', true);						
+//					}else{
+//						break;
+//					}
+//				}
+//			}
+//		},
+
 		_moveTopCellToPool: function(){
-			var topCellNode = this._getFirstCellNode();
-			var topCell = registry.byNode(topCellNode);
-			var topCellIsCategoryHeader = this._nodeRendersCategoryHeader(topCell.domNode);
-			var removedHeight = this._getCellHeight(topCell, !topCellIsCategoryHeader);
-			// update spacer height with the height of the cell and hide the cell
-			this._updateSpacerHeight(removedHeight);
-			domClass.add(topCell.domNode, this.baseClass + '-pooledElement');
-			this._cellsHeight -= removedHeight;
-			this._hiddenCellsOnTop += 1;
-			if(topCellIsCategoryHeader){
-				this._renderedCategoriesPool.push(topCell);
-			}else{
-				this._renderedEntriesPool.push(topCell);
-				this._firstEntryIndex++;
-			}
+			this._moveCellToPool(registry.byNode(this._getFirstCellNode()), true, true, false);
 		},
 
 		_moveBottomCellToPool: function(){
-			var bottomCellNode = this._getLastCellNode();
-			var bottomCell = registry.byNode(bottomCellNode);
-			var bottomCellIsCategoryHeader = this._nodeRendersCategoryHeader(bottomCellNode);
-			var removedHeight = this._getCellHeight(bottomCell, !bottomCellIsCategoryHeader);
-			domClass.add(bottomCell.domNode, this.baseClass + '-pooledElement');
-			this._cellsHeight -= removedHeight;
-			domConstruct.place(bottomCellNode, this.containerNode, 0);
-			this._hiddenCellsOnTop += 1;
-			if(bottomCellIsCategoryHeader){
-				this._renderedCategoriesPool.push(bottomCell);
-			}else{
-				this._renderedEntriesPool.push(bottomCell);
-				this._lastEntryIndex--;
+			this._moveCellToPool(registry.byNode(this._getLastCellNode()), false, false, true);
+		},
+
+		_moveCellToPool: function(cell, resizeSpacer, isFirstCell, isLastCell){
+			var cellIsCategoryHeader = this._nodeRendersCategoryHeader(cell.domNode);
+			var removedHeight = this._getCellHeight(cell);
+			var cellIsFirstCell = (isFirstCell != null) ? isFirstCell : (cell.domNode === this._getFirstCellNode());
+			var cellIsLastCell = (isLastCell != null) ? isLastCell : (cell.domNode === this._getLastCellNode());
+			if(resizeSpacer){
+				this._updateSpacerHeight(removedHeight);
 			}
+			// hide the cell
+			domClass.add(cell.domNode, this.baseClass + this._cssSuffixes.pooled);
+			this._cellsHeight -= removedHeight;
+			domConstruct.place(cell.domNode, this.containerNode, 0);
+			this._hiddenCellsOnTop += 1;
+			if(cellIsCategoryHeader){
+				this._renderedCategoriesPool.push(cell);
+			}else{
+				this._renderedEntriesPool.push(cell);
+				if(cellIsFirstCell){
+					this._firstEntryIndex++;
+				}else if(cellIsLastCell){
+					this._lastEntryIndex--;
+				}
+			}
+			return removedHeight;
 		},
 
 		_updateSpacerHeight: function(addedValue){
@@ -356,76 +565,67 @@ define(["dojo/_base/declare",
 		},
 
 		_renderEntry: function(entry, entryIndex, pos){
-			var addedHeight = 0, fromCache = false;
+			this._placeCell(this._getCellForEntry(entry, entryIndex), pos);
+		},
+
+		_getCellForEntry: function(entry, entryIndex){
 			var renderedEntry = this._renderedEntriesPool.shift();
-			if(renderedEntry){
-				fromCache = true;
-				renderedEntry._setEntryIndexAttr(entryIndex);
-				renderedEntry._setEntryAttr(entry);
-//				renderedEntry.set('entryIndex', entryIndex);
-//				renderedEntry.set('entry', entry);
-			}else{
-				renderedEntry = new this.entriesRenderer({entry: entry, entryIndex: entryIndex, tabindex: "-1"});
-				domClass.add(renderedEntry.domNode, this.baseClass + '-cell');
+			if(!renderedEntry){
+				renderedEntry = new this.entriesRenderer({tabindex: "-1"});
+				domClass.add(renderedEntry.domNode, this.baseClass + this._cssSuffixes.entry);
 				renderedEntry.startup();
 			}
+			this._updateCellWithEntry(renderedEntry, entry, entryIndex);
+			return renderedEntry;
+		},
+
+		_updateCellWithEntry: function(cell, entry, entryIndex){
+			cell._setEntryIndexAttr(entryIndex);
+			cell._setEntryAttr(entry);
+//			cell.set('entryIndex', entryIndex);
+//			cell.set('entry', entry);
 			//////////////////////////////////
 			// TODO: UPDATE OR REMOVE THIS ? (NOTIFY RENDERER OF ITS SELECTION STATUS ?)
 			//////////////////////////////////
-			this._setSelectionStyle(renderedEntry.domNode, entryIndex);
-			this._setCellEntryIndex(renderedEntry, entryIndex);
-			this._setCellCategoryHeader(renderedEntry, null);
-			if(fromCache){
-				this._hiddenCellsOnTop -= 1;
-				// move the node to the bottom before displaying it and getting its height, to avoid flickering
-				this._placeCellNode(renderedEntry.domNode, 'bottom');
-				domClass.remove(renderedEntry.domNode, this.baseClass + '-pooledElement');
-				addedHeight = this._getCellHeight(renderedEntry, true);
-			}
-			this._placeCellNode(renderedEntry.domNode, pos);
-			if(!fromCache){
-				addedHeight = this._getCellHeight(renderedEntry, true);
-			}
-			this._cellsHeight += addedHeight;
-			if(pos == 'top'){
-				this._updateSpacerHeight(-addedHeight);
-			}
-		},
-
-		_setSelectionStyle: function(cellNode, entryIndex){
-			if(this.selectionMode !== 'none'){
-				if (this.isItemSelected(entryIndex)){
-					domClass.add(cellNode, this.baseClass + '-selectedCell');
-				}else{
-					domClass.remove(cellNode, this.baseClass + '-selectedCell');
-				}
-			}
+			this._setSelectionStyle(cell.domNode, entryIndex);
+			this._setCellEntryIndex(cell, entryIndex);
+			this._setCellCategoryHeader(cell, null);
 		},
 
 		_renderCategory: function(category, pos){
-			var addedHeight = 0, fromCache = false;
+			this._placeCell(this._getCellForCategory(category), pos);
+		},
+
+		_getCellForCategory: function(category){
 			var renderedCategory = this._renderedCategoriesPool.shift();
 			if(renderedCategory){
-				fromCache = true;
 				renderedCategory._setCategoryAttr(category);
 //				renderedCategory.set('category', category);
 			}else{
 				renderedCategory = new this.categoriesRenderer({category: category, tabindex: "-1"});
-				domClass.add(renderedCategory.domNode, this.baseClass + '-category');
+				domClass.add(renderedCategory.domNode, this.baseClass + this._cssSuffixes.category);
 				renderedCategory.startup();
 			}
 			this._setCellEntryIndex(renderedCategory, null);
 			this._setCellCategoryHeader(renderedCategory, category);
+			return renderedCategory;
+		},
+
+		_placeCell: function(cell, pos){
+			var addedHeight = 0;
+			var fromCache = domClass.contains(cell.domNode, this.baseClass + this._cssSuffixes.pooled);
 			if(fromCache){
 				this._hiddenCellsOnTop -= 1;
 				// move the node to the bottom before displaying it and getting its height, to avoid flickering
-				this._placeCellNode(renderedCategory.domNode, 'bottom');
-				domClass.remove(renderedCategory.domNode, this.baseClass + '-pooledElement');
-				addedHeight = this._getCellHeight(renderedCategory, false);
-			}
-			this._placeCellNode(renderedCategory.domNode, pos);
-			if(!fromCache){
-				addedHeight = this._getCellHeight(renderedCategory, false);
+				this._placeCellNode(cell.domNode, 'bottom');
+				domClass.remove(cell.domNode, this.baseClass + this._cssSuffixes.pooled);
+				addedHeight = this._getCellHeight(cell);
+				if(pos != 'bottom'){
+					this._placeCellNode(cell.domNode, pos);
+				}
+			}else{
+				this._placeCellNode(cell.domNode, pos);
+				addedHeight = this._getCellHeight(cell);
 			}
 			this._cellsHeight += addedHeight;
 			if(pos == 'top'){
@@ -434,60 +634,94 @@ define(["dojo/_base/declare",
 		},
 
 		_placeCellNode: function(node, pos){
-			var position;
+			var refNode = null, position = null;
 			if(pos === 'bottom'){
-				position = this._getLastCellNodePosition();
+				refNode = this._getLastCellNode();
+				position = 'after';
 			}else if(pos === 'top'){
-				position = this._getFirstCellNodePosition();
-			}else{
-				// TODO: THROW EXCEPTION ?
-				return;
+				refNode = this._getFirstCellNode();
+				position = 'before';
 			}
-			domConstruct.place(node, this.containerNode, position);
+			if(refNode){
+				domConstruct.place(node, refNode, position);
+			}else{
+				domConstruct.place(node, this.containerNode);
+			}
+		},
+
+		/////////////////////////////////////////////////
+		// TODO: MOVE THIS TO THE ENTRY RENDERER ???
+		/////////////////////////////////////////////////
+		_setSelectionStyle: function(cellNode, entryIndex){
+			if(this.selectionMode !== 'none'){
+				if (this.isItemSelected(entryIndex)){
+					domClass.add(cellNode, this.baseClass + this._cssSuffixes.selected);
+				}else{
+					domClass.remove(cellNode, this.baseClass + this._cssSuffixes.selected);
+				}
+			}
 		},
 
 		_getSpacerNode: function(){
 			return this._topNode.children[0];
 		},
 
+		_getNextCellNode: function(cellNode){
+			return cellNode.nextElementSibling;
+		},
+
+		_getPreviousCellNode: function(cellNode){
+			return cellNode.previousElementSibling;
+		},
+
 		_getFirstCellNode: function(){
-			return this.containerNode.children[this._getFirstCellNodePosition()];
+			var firstCellNode = this._getCellNodeByEntryIndex(this._firstEntryIndex);
+			if(this.categoryAttribute){
+				var previousNode = null;
+				if(firstCellNode){
+					previousNode = firstCellNode.previousElementSibling;
+					if(previousNode && domClass.contains(previousNode, this.baseClass + this._cssSuffixes.category) && !domClass.contains(previousNode, this.baseClass + this._cssSuffixes.pooled)){
+						firstCellNode = previousNode;
+					}
+				}
+			}
+			return firstCellNode;
 		},
 
 		_getLastCellNode: function(){
-			return this.containerNode.children[this._getLastCellNodePosition() - 1];
-		},
-
-		_getFirstCellNodePosition: function(){
-			return this._hiddenCellsOnTop;
-		},
-
-		_getLastCellNodePosition: function(){
-			return this.containerNode.children.length;
+			var lastCellNode = this._getCellNodeByEntryIndex(this._lastEntryIndex);
+			if(this.categoryAttribute){
+				var nextNode = null;
+				if(lastCellNode){
+					nextNode = lastCellNode.nextElementSibling;
+					if(nextNode && domClass.contains(nextNode, this.baseClass + this._cssSuffixes.category)){
+						lastCellNode = nextNode;
+					}
+				}
+			}
+			return lastCellNode;
 		},
 
 		_getCellNodeByEntryIndex: function(entryIndex){
-			var node = null;
-			if(entryIndex >= this._firstEntryIndex && entryIndex <= this._lastEntryIndex){
-				for(var id in this._cellEntryIndexes){
-					if(this._cellEntryIndexes[id] == entryIndex){
-						node = dom.byId(id);
-						break;
-					}
-				}
+			var node = null, nodeId = this._cellEntryIds[entryIndex];
+			if(nodeId){
+				node = dom.byId(nodeId);
 			}
 			return node;
 		},
 
 		_getCellEntryIndex: function(cell){
-			return this._cellEntryIndexes[cell.id];
+			var index = this._cellEntryIds.indexOf(cell.id);
+			return index < 0 ? null : index;
 		},
 
 		_setCellEntryIndex: function(cell, entryIndex){
-			if(entryIndex == null){
-				delete this._cellEntryIndexes[cell.id];
-			}else{
-				this._cellEntryIndexes[cell.id] = entryIndex;
+				var index = this._cellEntryIds.indexOf(cell.id);
+				if(index >= 0){
+					this._cellEntryIds[index] = null;
+				}
+			if(entryIndex != null){
+				this._cellEntryIds[entryIndex] = cell.id;
 			}
 		},
 
@@ -506,12 +740,16 @@ define(["dojo/_base/declare",
 		_getParentCell: function(node){
 			var currentNode = dom.byId(node);
 			while(currentNode){
-				if(currentNode.parentNode && domClass.contains(currentNode.parentNode, this.baseClass + '-container')){
+				if(currentNode.parentNode && domClass.contains(currentNode.parentNode, this.baseClass + this._cssSuffixes.container)){
 					break;
 				}
 				currentNode = currentNode.parentNode;
 			}
-			return registry.byNode(currentNode);
+			if(currentNode){
+				return registry.byNode(currentNode);
+			}else{
+				return null;
+			}
 		},
 
 		_centerOfListAboveCenterOfViewport: function(){
@@ -560,7 +798,11 @@ define(["dojo/_base/declare",
 				}
 				node = node.nextElementSibling;
 			}
-			return registry.byNode(node);
+			if(node){
+				return registry.byNode(node);
+			}else{
+				return null;
+			}
 		},
 
 		_getLast: function(){
@@ -571,7 +813,11 @@ define(["dojo/_base/declare",
 				}
 				node = node.previousElementSibling;
 			}
-			return registry.byNode(node);
+			if(node){
+				return registry.byNode(node);
+			}else{
+				return null;
+			}
 		},
 
 		_getNext: function(child, dir){
@@ -582,7 +828,7 @@ define(["dojo/_base/declare",
 					// The cell itself has the focus
 					refChild = child || this.focusedChild;
 					if(refChild){
-						nextChild = refChild.domNode[(dir == 1)?'nextElementSibling':'previousElementSibling'];
+						nextChild = refChild.domNode[(dir == 1)?'nextElementSibling':'previousElementSibling']; // do not use _nextCellNode and _previousCellNode as we want to include the pageloader if it exists
 						if(nextChild){
 							return registry.byNode(nextChild);
 						}

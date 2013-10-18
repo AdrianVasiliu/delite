@@ -40,7 +40,7 @@
 }
 
 .duiRoundRectList2-pooledElement {
-	display: none;
+	display: none !important;
 }
 
 /* This one is for List3 implementation, that "store" pool entries at the top of the list, with style display: none set */
@@ -51,7 +51,7 @@
 }
 
  
-.duiRoundRectList2-cell {
+.duiRoundRectList2-entry {
   overflow: hidden;
   /* for focus frame */
   padding: 0 8px;
@@ -61,7 +61,7 @@
   background-color: #ffffff;
 }
 
-.duiRoundRectList2-selectedCell {
+.duiRoundRectList2-selectedEntry {
   color: #ffffff;
   background-image: -webkit-gradient(linear, left top, left bottom, from(#048bf4), to(#005ce5));
   background-image: linear-gradient(to bottom, #048bf4 0%, #005ce5 100%);

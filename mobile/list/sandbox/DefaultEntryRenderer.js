@@ -6,8 +6,6 @@ define(["dojo/_base/declare",
 	
 	return declare([AbstractEntryRenderer], {
 
-		variableHeight: false,
-
 		renderEntry: function(entry){
 			this._renderTextNode("labelNode", entry ? entry.label : null, "duiListEntryLabel");
 			this._renderImageNode("iconNode", entry ? entry.icon : null, "duiListEntryIcon");
@@ -22,7 +20,7 @@ define(["dojo/_base/declare",
 				if(this[nodeName]){
 					this[nodeName].innerHTML = text;
 				}else{
-					this[nodeName] = domConstruct.create('DIV', {id: this.id + nodeName, innerHTML: text, class: nodeClass, tabindex: -1}, this.domNode, 0);
+					this[nodeName] = domConstruct.create('DIV', {id: this.id + nodeName, innerHTML: text, class: nodeClass, tabindex: -1}, this.containerNode, 0);
 				}
 			}else{
 				if(this[nodeName]){
@@ -39,7 +37,7 @@ define(["dojo/_base/declare",
 						this[nodeName].src = image;
 					}
 				}else{
-					this[nodeName] = domConstruct.create('IMG', {id: this.id + nodeName, src: image, class: nodeClass, tabindex: -1}, this.domNode, 0);
+					this[nodeName] = domConstruct.create('IMG', {id: this.id + nodeName, src: image, class: nodeClass, tabindex: -1}, this.containerNode, 0);
 				}
 			}else{
 				if(this[nodeName]){

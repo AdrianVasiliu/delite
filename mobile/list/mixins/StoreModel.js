@@ -46,6 +46,20 @@ define(["dojo/_base/declare",
 		},
 
 		/////////////////////////////////
+		// Public methods from List
+		/////////////////////////////////
+
+		deleteEntry: function(entryIndex, deleteFromStore){
+			this.inherited(arguments);
+			if(deleteFromStore){
+				/////////////////////////////////////////////////
+				// TODO: REMOVE FROM STORE (NEED THE ENTRY ID)
+				/////////////////////////////////////////////////
+				console.log("TODO: remove entry from store");
+			}
+		},
+
+		/////////////////////////////////
 		// Private methods
 		/////////////////////////////////
 
@@ -102,6 +116,11 @@ define(["dojo/_base/declare",
 				}
 			}
 			this._loadingPage = false;
+		},
+
+		_getNextCellNode: function(cellNode){
+			var value = this.inherited(arguments);
+			return value === this._getLoaderNode() ? null : value;
 		},
 
 		/////////////////////////////////
@@ -161,11 +180,6 @@ define(["dojo/_base/declare",
 				this.containerNode.removeChild(loaderNode);
 				this._isLoaderNodeDisplayed = false;
 			}
-		},
-
-		_getLastCellNodePosition: function(){
-			var value = this.inherited(arguments);
-			return (this._isLoaderNodeDisplayed ? value - 1 : value);
 		},
 
 		_getLoaderNode: function(){
