@@ -33,8 +33,8 @@ define(["dojo/_base/declare",
 		_loaderNodeClickHandlerRef: null,
 		_hasNextPage: false,
 		_queryOptions: null,
+		_loaderNode: null,
 		_loadingPage: false,
-		_isLoaderNodeDisplayed: false,
 
 		/////////////////////////////////
 		// Widget lifecycle
@@ -93,9 +93,8 @@ define(["dojo/_base/declare",
 		},
 
 		_onNextPageReady: function(){
-			var loaderNode = this._getLoaderNode();
 			var focusedCell = this._getFocusedCell();
-			var loaderNodeHasFocus = loaderNode && focusedCell && loaderNode === focusedCell.domNode;
+			var loaderNodeHasFocus = this._loaderNode && focusedCell && this._loaderNode === focusedCell.domNode;
 			if(loaderNodeHasFocus){
 				this._focusNextChild(-1);
 			}
@@ -104,7 +103,7 @@ define(["dojo/_base/declare",
 			}else{
 				this._createCells();
 			}
-			if(loaderNode){
+			if(this._loaderNode){
 				if(this._hasNextPage){
 					if(loaderNodeHasFocus){
 						this._focusNextChild(1);
@@ -120,7 +119,7 @@ define(["dojo/_base/declare",
 
 		_getNextCellNode: function(cellNode){
 			var value = this.inherited(arguments);
-			return value === this._getLoaderNode() ? null : value;
+			return value === this._loaderNode ? null : value;
 		},
 
 		/////////////////////////////////
@@ -129,77 +128,71 @@ define(["dojo/_base/declare",
 
 		_createCells: function(){
 			this.inherited(arguments);
-			var loaderNode = this._getLoaderNode();
-			if(loaderNode){
+			if(this._loaderNode){
 				// move it to the end of the list
-				domConstruct.place(loaderNode, this.containerNode);
+				domConstruct.place(this._loaderNode, this.containerNode);
 			}if(this._hasNextPage){
-				loaderNode = this._renderPageLoader(false);
-				domConstruct.place(loaderNode, this.containerNode);
-				this._isLoaderNodeDisplayed = true;
+				this._renderPageLoader(false);
+				domConstruct.place(this._loaderNode, this.containerNode);
 				// FIXME: cells height calculation is not correct in some cases here (example: list3 in test page !!!)
-				this._cellsHeight += this._getNodeHeight(loaderNode);
+				this._cellsHeight += this._getNodeHeight(this._loaderNode);
 				////////////////////////////////////////////////////
 				// TODO: Move this handler in the Renderer itself ?
 				////////////////////////////////////////////////////
-				this._loaderNodeClickHandlerRef = this.own(on(loaderNode, 'click', lang.hitch(this, '_onLoaderNodeClick')))[0];
+				this._loaderNodeClickHandlerRef = this.own(on(this._loaderNode, 'click', lang.hitch(this, '_onLoaderNodeClick')))[0];
+			}
+		},
+
+		_placeCellNode: function(node, pos){
+			if(this._loaderNode && pos === 'bottom'){
+				domConstruct.place(node, this._loaderNode, 'before');
+			}else{
+				this.inherited(arguments);
 			}
 		},
 
 		_renderPageLoader: function(loading){
-			var loaderNode = this._getLoaderNode();
 			var message = string.substitute(loading ? this.pageLoadingMessage : this.pageToLoadMessage, this);
-			if(!loaderNode){
-				loaderNode = domConstruct.create("div", {tabindex: "-1"});
+			if(!this._loaderNode){
+				this._loaderNode = domConstruct.create("div", {tabindex: "-1"});
 				////////////////////
 				// FIXME: WILL THE NEXT VERSION ALLOW TO WORK WITH DOM NODES ???
 				// Create a widget so that it can be focused using _KeyNavMixin
 				////////////////////
-				new _WidgetBase({focus: function(){this.domNode.focus();}}, loaderNode);
+				new _WidgetBase({focus: function(){this.domNode.focus();}}, this._loaderNode);
 			}
-			loaderNode.innerHTML = message;
+			this._loaderNode.innerHTML = message;
 			if(loading){
-				domClass.remove(loaderNode, this.baseClass + '-loaderNode');
-				domClass.add(loaderNode, this.baseClass + '-loaderNodeLoading');
+				domClass.remove(this._loaderNode, this.baseClass + '-loaderNode');
+				domClass.add(this._loaderNode, this.baseClass + '-loaderNodeLoading');
 			}else{
-				domClass.remove(loaderNode, this.baseClass + '-loaderNodeLoading');
-				domClass.add(loaderNode, this.baseClass + '-loaderNode');
+				domClass.remove(this._loaderNode, this.baseClass + '-loaderNodeLoading');
+				domClass.add(this._loaderNode, this.baseClass + '-loaderNode');
 			}
-			return loaderNode;
 		},
 
 		_destroyPageLoader: function(){
-			var loaderNode = this._getLoaderNode();
-			if(loaderNode){
+			if(this._loaderNode){
 				////////////////////////////
 				// FIXME: IF WE CREATE A WIDGET TO WRAP THE NODE, WE NEED TO DESTROY IT !!!
 				////////////////////////////
 				this._loaderNodeClickHandlerRef.remove();
 				this._loaderNodeClickHandlerRef = null;
-				this._cellsHeight -= this._getNodeHeight(loaderNode);
-				this.containerNode.removeChild(loaderNode);
-				this._isLoaderNodeDisplayed = false;
-			}
-		},
-
-		_getLoaderNode: function(){
-			if(this._isLoaderNodeDisplayed){
-				var children = this.containerNode.children;
-				return children[children.length - 1];
-			}else{
-				return null;
+				this._cellsHeight -= this._getNodeHeight(this._loaderNode);
+				if(this._loaderNode.parentNode){
+					this.containerNode.removeChild(this._loaderNode);
+				}
+				this._loaderNode = null;
 			}
 		},
 
 		_onLoaderNodeClick: function(event){
-			if(this._getLoaderNode){
-				if(this._dy || this._loadingPage){
-					return;
-				}
-				this._loadingPage = true;
-				this._renderPageLoader(true);
-				this._load(this._onNextPageReady);
+			if(this._dy || this._loadingPage){
+				return;
 			}
+			this._loadingPage = true;
+			this._renderPageLoader(true);
+			this._load(this._onNextPageReady);
 		},
 
 		_onActionKeydown: function(event){

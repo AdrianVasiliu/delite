@@ -206,22 +206,22 @@ define(["dojo/_base/declare",
 				cell = registry.byNode(node);
 				if(this._isScrollable){
 					if(this.cellPages > 0){
-						if(this._lastEntryIndex < this.entries.length - 1){
+						if(this._lastEntryIndex < this._getEntriesCount() - 1){
 							// move cell to the bottom
-							this._recycleCell(cell, 'bottom');
+							this._recycleEntryCell(cell, 'bottom');
 						}else if(this._firstEntryIndex > 0){
 							// move cell to the top
-							this._recycleCell(cell, 'top', true);
+							this._recycleEntryCell(cell, 'top', true);
 						}else{
 							// move cell to the pool
-							this._removeCell(cell);
+							this._removeEntryCell(cell);
 						}
 					}else{
-						this._removeCell(cell);
+						this._removeEntryCell(cell);
 					}
 					this._endScroll();
 				}else{
-					this._removeCell(cell);
+					this._removeEntryCell(cell);
 				}
 			}
 			/////////////////////////////////////////////////////////////////////
@@ -234,116 +234,6 @@ define(["dojo/_base/declare",
 			/////////////////////////////////
 			// TODO: IMPLEMENT THIS
 			/////////////////////////////////
-		},
-
-		_recycleCell: function(cell, newPos, updateSpacerHeight){
-			var nextNode, previousNode;
-			var firstDisplayedEntryCategory, lastDisplayedEntryCategory, newEntryCategory, lastCellNode, firstCellNode, lastCellIsCategoryHeader, firstCellIsCategoryHeader;
-			var updatedHeight = -this._getCellHeight(cell);
-			if(newPos === 'bottom'){
-				/////////////////////////////
-				// move cell to the bottom
-				/////////////////////////////
-				if(this.categoryAttribute){
-					lastDisplayedEntryCategory = this.entries[this._lastEntryIndex][this.categoryAttribute];
-					newEntryCategory = this.entries[this._lastEntryIndex + 1][this.categoryAttribute];
-					previousNode = this._getPreviousCellNode(cell.domNode);
-					nextNode = this._getNextCellNode(cell.domNode);
-					lastCellNode = this._getLastCellNode();
-					lastCellIsCategoryHeader = this._nodeRendersCategoryHeader(lastCellNode);
-					if(newEntryCategory == lastDisplayedEntryCategory && lastCellIsCategoryHeader){
-						// move the category node to the pool
-						this._moveCellToPool(registry.byNode(lastCellNode));
-					}else if(newEntryCategory != lastDisplayedEntryCategory){
-						if(lastCellIsCategoryHeader && newEntryCategory != this._getNodeCategoryHeader(lastCellNode)){
-							/////////////////////////////////
-							// TODO: IS THIS CASE POSSIBLE ?
-							/////////////////////////////////
-							console.log("TODO: UPDATE THE CATEGORY OF THE CATEGORY HEADER");
-						}else if (!lastCellIsCategoryHeader){
-							this._renderCategory(newEntryCategory, 'bottom');
-						}
-					}
-					// Move the previous category header to the pool if necessary
-					if(previousNode && this._nodeRendersCategoryHeader(previousNode) && nextNode && this._nodeRendersCategoryHeader(nextNode)){
-						this._moveCellToPool(registry.byNode(previousNode));
-					}
-				}
-				this._placeCellNode(cell.domNode, 'bottom');
-				if(updateSpacerHeight){
-					this._updateSpacerHeight(-updatedHeight);
-				}
-				this._lastEntryIndex++;
-				this._updateCellWithEntry(cell, this._getEntry(this._lastEntryIndex), this._lastEntryIndex);
-				updatedHeight += this._getCellHeight(cell);
-			}else if(newPos === 'top'){
-				/////////////////////////////
-				// move cell to the top
-				/////////////////////////////
-				if(this.categoryAttribute){
-					firstDisplayedEntryCategory = this.entries[this._firstEntryIndex][this.categoryAttribute];
-					newEntryCategory = this.entries[this._firstEntryIndex - 1][this.categoryAttribute];
-					previousNode = this._getPreviousCellNode(cell.domNode);
-					nextNode = this._getNextCellNode(cell.domNode);
-					firstCellNode = this._getFirstCellNode();
-					firstCellIsCategoryHeader = this._nodeRendersCategoryHeader(firstCellNode);
-					if(newEntryCategory == firstDisplayedEntryCategory && firstCellIsCategoryHeader){
-						/////////////////////////////////////
-						// TODO: IS IT EVEN POSSIBLE ???
-						/////////////////////////////////////
-						console.log("TODO: THE CELL MUST BE MOVED BEFORE THE FIRST DISPLAYED ENTRY NODE, NOT DIRECTLY AT THE TOP");
-					}else if(newEntryCategory != firstDisplayedEntryCategory){
-						if(!firstCellIsCategoryHeader){
-							this._renderCategory(firstDisplayedEntryCategory, 'top');
-						}
-					}
-					// Move the previous category header to the pool if necessary
-					if(previousNode && this._nodeRendersCategoryHeader(previousNode) && (!nextNode || (nextNode && this._nodeRendersCategoryHeader(nextNode)))){
-						this._moveCellToPool(registry.byNode(previousNode));
-					}
-				}
-				this._placeCellNode(cell.domNode, 'top');
-				if(updateSpacerHeight){
-					this._updateSpacerHeight(updatedHeight);
-				}
-				this._firstEntryIndex--;
-				this._updateCellWithEntry(cell, this._getEntry(this._firstEntryIndex), this._firstEntryIndex);
-				updatedHeight += this._getCellHeight(cell);
-				// TODO: IF IT WAS THE FIRST CELL, ALSO ADD A CATEGORY !?
-			}else{
-				throw 'unsupported recycling position';
-			}
-			this._cellsHeight += updatedHeight;
-		},
-
-		_removeCell: function(cell){
-			var nextNode, previousNode, firstCellNode;
-			var cellHeight = this._getCellHeight(cell);
-			if(this.categoryAttribute){
-				previousNode = this._getPreviousCellNode(cell.domNode);
-				nextNode = this._getNextCellNode(cell.domNode);
-				// Move the previous category header to the pool if necessary
-				if(previousNode && this._nodeRendersCategoryHeader(previousNode)){
-					if(!nextNode || (nextNode && this._nodeRendersCategoryHeader(nextNode))){
-						this._moveCellToPool(registry.byNode(previousNode));
-					}
-				}
-			}
-			if(this._isScrollable && this.cellPages > 0){
-				// move the cell to the pool
-				this._moveCellToPool(cell);
-			}else{
-				// destroy the cell
-				cell.destroyRecursive();
-			}
-			this._cellsHeight -= cellHeight;
-			// make sure that the first entry always has its category header displayed
-			if(this.categoryAttribute && this._firstEntryIndex == 0){
-				firstCellNode = this._getFirstCellNode();
-				if(firstCellNode && !this._nodeRendersCategoryHeader(firstCellNode)){
-					this._renderCategory(this.entries[0][this.categoryAttribute], 'top');
-				}
-			}
 		},
 
 		/////////////////////////////////
@@ -419,64 +309,68 @@ define(["dojo/_base/declare",
 		_createCells: function(){
 			var entryIndex = this._lastEntryIndex != null ? this._lastEntryIndex + 1 : this._firstEntryIndex;
 			var currentEntry;
-			var lastCategory = this.categoryAttribute && this._lastEntryIndex ? this._getEntry(this._lastEntryIndex - 1)[this.categoryAttribute] : null;
+//			var lastCategory = this.categoryAttribute && this._lastEntryIndex ? this._getEntry(this._lastEntryIndex - 1)[this.categoryAttribute] : null;
 			// Create cells using renderers
 			for (entryIndex; entryIndex < this._getEntriesCount(); entryIndex++){
 				if(this._isScrollable && (this.cellPages > 0) && (this._cellsHeight > (this.cellPages * this._visibleHeight))){
 					break;
 				}
 				currentEntry = this._getEntry(entryIndex);
-				if(this.categoryAttribute && currentEntry[this.categoryAttribute] != lastCategory){
-					// create a category header
-					lastCategory = currentEntry[this.categoryAttribute];
-					this._renderCategory(currentEntry[this.categoryAttribute], 'bottom');
-				}
-				this._renderEntry(currentEntry, entryIndex, 'bottom');
+//				if(this.categoryAttribute && currentEntry[this.categoryAttribute] != lastCategory){
+//					// create a category header
+//					lastCategory = currentEntry[this.categoryAttribute];
+//					this._renderCategory(currentEntry[this.categoryAttribute], 'bottom');
+//				}
+				this._addEntryCell(currentEntry, entryIndex, 'bottom');
 				this._lastEntryIndex = entryIndex;
 			}
 		},
 
 		_recycleCells: function(fromBottomToTop){
-            // TODO: IF THEY ARE POOLED CELLS, USE THEM TO CREATE ENTRIES NOW
+			var node, cell;
+			// First recycle the entry cells that are currently in the pool
+			if(fromBottomToTop){
+				while(this._renderedEntriesPool.length > 0 && this._firstEntryIndex > 0){
+					this._addEntryCell(this._getEntry(this._firstEntryIndex - 1), this._firstEntryIndex - 1, 'top');
+					this._firstEntryIndex--;
+				}
+			}else{
+				while(this._renderedEntriesPool.length > 0 && this._lastEntryIndex < this._getEntriesCount() -1){
+					this._addEntryCell(this._getEntry(this._lastEntryIndex + 1), this._lastEntryIndex + 1, 'bottom');
+					this._lastEntryIndex++;
+				}
+			}
+			// Then recycle non visible cells
 			if(fromBottomToTop){
 				while(!this._centerOfListAboveCenterOfViewport()){
 					if(this._firstEntryIndex > 0){
-						// move the bottom cell to a pool
-						this._moveBottomCellToPool();
-						// move the bottom cell to the top while updating its content
-						if(this.categoryAttribute && (this._getEntry(this._firstEntryIndex - 1)[this.categoryAttribute] != this._getEntry(this._firstEntryIndex)[this.categoryAttribute]) && !this._nodeRendersCategoryHeader(this._getFirstCellNode())){
-							// render a category header at the top
-							this._renderCategory(this._getEntry(this._firstEntryIndex)[this.categoryAttribute], 'top');
-							// move the new bottom cell to the pool
-							this._moveBottomCellToPool();
+						if(this.categoryAttribute){
+							// If the last cell is a category header, move it to the pool
+							node = this._getLastCellNode();
+							if(this._nodeRendersCategoryHeader(node)){
+								this._moveCellToPool(registry.byNode(node));
+							}
 						}
-						// render the new entry at the top
-						this._renderEntry(this._getEntry(this._firstEntryIndex - 1), this._firstEntryIndex - 1, 'top');
-						--this._firstEntryIndex;
+						cell = registry.byNode(this._getLastCellNode());
+						this._lastEntryIndex--;
+						this._recycleEntryCell(cell, 'top', true);
 					}else{
-						if(this.categoryAttribute && this._firstEntryIndex == 0 && !this._nodeRendersCategoryHeader(this._getFirstCellNode())){
-							// move the bottom cell to a pool
-							this._moveBottomCellToPool();
-							// render a category header at the top
-							this._renderCategory(this._getEntry(this._firstEntryIndex)[this.categoryAttribute], 'top');
-						}
 						break;
 					}
 				}
 			}else{ // from top to bottom
 				while(this._centerOfListAboveCenterOfViewport()){
 					if(this._lastEntryIndex < this._getEntriesCount() - 1){
-						// move the top cell to a pool
-						this._moveTopCellToPool();
-						if(this.categoryAttribute && (this._getEntry(this._lastEntryIndex + 1)[this.categoryAttribute] != this._getEntry(this._lastEntryIndex)[this.categoryAttribute]) && !this._nodeRendersCategoryHeader(this._getLastCellNode())){
-							// render a category header at the bottom
-							this._renderCategory(this._getEntry(this._lastEntryIndex + 1)[this.categoryAttribute], 'bottom');
-							// move the new top cell to the pool
-							this._moveTopCellToPool();
+						if(this.categoryAttribute){
+							// If the first cell is a category header, move it to the pool
+							node = this._getFirstCellNode();
+							if(this._nodeRendersCategoryHeader(node)){
+								this._moveCellToPool(registry.byNode(node), true);
+							}
 						}
-						// render the new entry at the bottom
-						this._renderEntry(this._getEntry(this._lastEntryIndex + 1), this._lastEntryIndex + 1, 'bottom');
-						++this._lastEntryIndex;
+						cell = registry.byNode(this._getFirstCellNode());
+						this._firstEntryIndex++;
+						this._recycleEntryCell(cell, 'bottom', true);
 					}else{
 						break;
 					}
@@ -484,53 +378,126 @@ define(["dojo/_base/declare",
 			}
 		},
 
-//		_recycleCells: function(fromBottomToTop){
-//          // TODO: IF THEY ARE POOLED CELLS, USE THEM TO CREATE ENTRIES NOW
-//			if(fromBottomToTop){
-//				while(!this._centerOfListAboveCenterOfViewport()){
-//					if(this._firstEntryIndex > 0){
-//						// recycle the bottom cell to the top
-//						this._lastEntryIndex--;
-//						this._firstEntryIndex--;
-//						this._recycleCell(registry.byNode(this._getLastCellNode()), 'top', true);
-//					}else{
-//						console.log("DEBUG RECYCLING");
-//						if(this.categoryAttribute && this._firstEntryIndex == 0 && !this._nodeRendersCategoryHeader(this._getFirstCellNode())){
-//							// move the bottom cell to a pool
-//							this._moveBottomCellToPool();
-//							// render a category header at the top
-//							this._renderCategory(this._getEntry(this._firstEntryIndex)[this.categoryAttribute], 'top');
-//						}
-//						break;
-//					}
-//				}
-//			}else{ // from top to bottom
-//				while(this._centerOfListAboveCenterOfViewport()){
-//					if(this._lastEntryIndex < this._getEntriesCount() - 1){
-//						// recycle the top cell to the bottom
-//						this._firstEntryIndex++;
-//						this._lastEntryIndex++;
-//						this._recycleCell(registry.byNode(this._getFirstCellNode()), 'bottom', true);						
-//					}else{
-//						break;
-//					}
-//				}
-//			}
-//		},
-
-		_moveTopCellToPool: function(){
-			this._moveCellToPool(registry.byNode(this._getFirstCellNode()), true, true, false);
+		_recycleEntryCell: function(cell, newPos, updateSpacerHeight){
+			var nextNode, previousNode;
+			var firstDisplayedEntryCategory, lastDisplayedEntryCategory, newEntryCategory, lastCellNode, firstCellNode, lastCellIsCategoryHeader, firstCellIsCategoryHeader;
+			var position = newPos;
+			var updatedHeight = -this._getCellHeight(cell);
+			if(newPos === 'bottom'){
+				/////////////////////////////
+				// move cell to the bottom
+				/////////////////////////////
+				if(this.categoryAttribute){
+					lastDisplayedEntryCategory = this._getEntry(this._lastEntryIndex)[this.categoryAttribute];
+					newEntryCategory = this._getEntry(this._lastEntryIndex + 1)[this.categoryAttribute];
+					previousNode = this._getPreviousCellNode(cell.domNode);
+					nextNode = this._getNextCellNode(cell.domNode);
+					lastCellNode = this._getLastCellNode();
+					lastCellIsCategoryHeader = this._nodeRendersCategoryHeader(lastCellNode);
+					if(newEntryCategory == lastDisplayedEntryCategory && lastCellIsCategoryHeader){
+						// move the category node to the pool
+						this._moveCellToPool(registry.byNode(lastCellNode));
+					}else if(newEntryCategory != lastDisplayedEntryCategory){
+						if(lastCellIsCategoryHeader && newEntryCategory != this._getNodeCategoryHeader(lastCellNode)){
+							/////////////////////////////////
+							// TODO: IS THIS CASE POSSIBLE ?
+							/////////////////////////////////
+							console.log("TODO: UPDATE THE CATEGORY OF THE CATEGORY HEADER");
+						}else if (!lastCellIsCategoryHeader){
+							this._renderCategory(newEntryCategory, position);
+						}
+					}
+					// Move the previous category header to the pool if necessary
+					if(previousNode && this._nodeRendersCategoryHeader(previousNode) && nextNode && this._nodeRendersCategoryHeader(nextNode)){
+						this._moveCellToPool(registry.byNode(previousNode));
+					}
+				}
+				this._placeCellNode(cell.domNode, position);
+				if(updateSpacerHeight){
+					this._updateSpacerHeight(-updatedHeight);
+				}
+				this._lastEntryIndex++;
+				this._updateCellWithEntry(cell, this._getEntry(this._lastEntryIndex), this._lastEntryIndex);
+				updatedHeight += this._getCellHeight(cell);
+			}else if(newPos === 'top'){
+				/////////////////////////////
+				// move cell to the top
+				/////////////////////////////
+				if(this.categoryAttribute){
+					firstDisplayedEntryCategory = this._getEntry(this._firstEntryIndex)[this.categoryAttribute];
+					newEntryCategory = this._getEntry(this._firstEntryIndex - 1)[this.categoryAttribute];
+					previousNode = this._getPreviousCellNode(cell.domNode);
+					nextNode = this._getNextCellNode(cell.domNode);
+					firstCellNode = this._getFirstCellNode();
+					firstCellIsCategoryHeader = this._nodeRendersCategoryHeader(firstCellNode);
+					if(newEntryCategory == firstDisplayedEntryCategory && firstCellIsCategoryHeader){
+						console.log("TODO: PLACE THE CELL AFTER THE FIRST ONE, NOT DIRECTLY ON THE TOP");
+					}else if(newEntryCategory != firstDisplayedEntryCategory){
+						if(!firstCellIsCategoryHeader){
+							this._renderCategory(firstDisplayedEntryCategory, position);
+						}
+					}
+					// Move the previous category header to the pool if necessary
+					if(previousNode && this._nodeRendersCategoryHeader(previousNode) && (!nextNode || (nextNode && this._nodeRendersCategoryHeader(nextNode)))){
+						this._moveCellToPool(registry.byNode(previousNode));
+					}
+				}
+				this._placeCellNode(cell.domNode, position);
+				if(updateSpacerHeight){
+					this._updateSpacerHeight(updatedHeight);
+				}
+				this._firstEntryIndex--;
+				this._updateCellWithEntry(cell, this._getEntry(this._firstEntryIndex), this._firstEntryIndex);
+				updatedHeight += this._getCellHeight(cell);
+				// TODO: IF IT WAS THE FIRST CELL, ALSO ADD A CATEGORY !?
+				// make sure that the first entry always has its category header displayed
+				if(this.categoryAttribute && this._firstEntryIndex == 0){
+					firstCellNode = this._getFirstCellNode();
+					if(firstCellNode && !this._nodeRendersCategoryHeader(firstCellNode)){
+						this._renderCategory(this._getEntry(0)[this.categoryAttribute], 'top');
+					}
+				}
+			}else{
+				throw 'unsupported recycling position';
+			}
+			this._cellsHeight += updatedHeight;
 		},
 
-		_moveBottomCellToPool: function(){
-			this._moveCellToPool(registry.byNode(this._getLastCellNode()), false, false, true);
+		_removeEntryCell: function(cell){
+			var nextNode, previousNode, firstCellNode;
+			var cellHeight = this._getCellHeight(cell);
+			if(this.categoryAttribute){
+				previousNode = this._getPreviousCellNode(cell.domNode);
+				nextNode = this._getNextCellNode(cell.domNode);
+				// Move the previous category header to the pool if necessary
+				if(previousNode && this._nodeRendersCategoryHeader(previousNode)){
+					if(!nextNode || (nextNode && this._nodeRendersCategoryHeader(nextNode))){
+						this._moveCellToPool(registry.byNode(previousNode));
+					}
+				}
+			}
+			if(this._isScrollable && this.cellPages > 0){
+				// move the cell to the pool
+				this._moveCellToPool(cell);
+			}else{
+				// destroy the cell
+				cell.destroyRecursive();
+				this._cellsHeight -= cellHeight;
+			}
+			// make sure that the first entry always has its category header displayed
+			if(this.categoryAttribute && this._firstEntryIndex == 0){
+				firstCellNode = this._getFirstCellNode();
+				if(firstCellNode && !this._nodeRendersCategoryHeader(firstCellNode)){
+					this._renderCategory(this._getEntry(0)[this.categoryAttribute], 'top');
+				}
+			}
 		},
 
-		_moveCellToPool: function(cell, resizeSpacer, isFirstCell, isLastCell){
+		_moveCellToPool: function(cell, resizeSpacer, isFirstEntryCell, isLastEntryCell){
 			var cellIsCategoryHeader = this._nodeRendersCategoryHeader(cell.domNode);
 			var removedHeight = this._getCellHeight(cell);
-			var cellIsFirstCell = (isFirstCell != null) ? isFirstCell : (cell.domNode === this._getFirstCellNode());
-			var cellIsLastCell = (isLastCell != null) ? isLastCell : (cell.domNode === this._getLastCellNode());
+			var cellIsFirstEntryCell = (isFirstEntryCell != null) ? isFirstEntryCell : !cellIsCategoryHeader && (cell.domNode === this._getFirstCellNode());
+			var cellIsLastEntryCell = (isLastEntryCell != null) ? isLastEntryCell : !cellIsCategoryHeader && (cell.domNode === this._getLastCellNode());
 			if(resizeSpacer){
 				this._updateSpacerHeight(removedHeight);
 			}
@@ -543,9 +510,9 @@ define(["dojo/_base/declare",
 				this._renderedCategoriesPool.push(cell);
 			}else{
 				this._renderedEntriesPool.push(cell);
-				if(cellIsFirstCell){
+				if(cellIsFirstEntryCell){
 					this._firstEntryIndex++;
-				}else if(cellIsLastCell){
+				}else if(cellIsLastEntryCell){
 					this._lastEntryIndex--;
 				}
 			}
@@ -564,7 +531,22 @@ define(["dojo/_base/declare",
 			this._getSpacerNode().style.height = this._spacerHeight + 'px';
 		},
 
-		_renderEntry: function(entry, entryIndex, pos){
+		_addEntryCell: function(entry, entryIndex, pos){
+			if(pos === 'bottom'){
+				var lastCategory = this.categoryAttribute && (this._lastEntryIndex != null && this._lastEntryIndex >= 0) ? this._getEntry(this._lastEntryIndex)[this.categoryAttribute] : null;
+				if(this.categoryAttribute && entry[this.categoryAttribute] != lastCategory){
+					// TODO: CHECK THAT THE FIRST CELL IS NOT ALREADY DISPLAYING THIS CATEGORY HEADER
+					// create a category header
+					this._renderCategory(entry[this.categoryAttribute], 'bottom');
+				}
+			}else if(pos === 'top'){
+				var firstCategory = this.categoryAttribute && (this._firstEntryIndex != null && this._firstEntryIndex >= 0) ? this._getEntry(this._firstEntryIndex)[this.categoryAttribute] : null;
+				if(this.categoryAttribute && entry[this.categoryAttribute] != firstCategory){
+					// TODO: CHECK THAT THE LAST CELL IS NOT ALREADY DISPLAYING THIS CATEGORY HEADER
+					// create a category header
+					this._renderCategory(firstCategory, 'top');
+				}
+			}
 			this._placeCell(this._getCellForEntry(entry, entryIndex), pos);
 		},
 
@@ -634,6 +616,7 @@ define(["dojo/_base/declare",
 		},
 
 		_placeCellNode: function(node, pos){
+			// TODO: USE INDEX POSITION FOR BETTER PERFORMANCES
 			var refNode = null, position = null;
 			if(pos === 'bottom'){
 				refNode = this._getLastCellNode();

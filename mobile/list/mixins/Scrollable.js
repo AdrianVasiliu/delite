@@ -164,7 +164,9 @@ define(["dojo/_base/declare",
 		},
 
 		_endScroll: function(velocity){
-			if(this.getCurrentScroll() > 0){
+			if(this._getContentHeight() <= this._visibleHeight){
+				this._scrollBy(-(this.getCurrentScroll()), true);
+			}else if(this.getCurrentScroll() > 0){
 				this._scrollBy(-(this.getCurrentScroll()), true);
 			}else if(this._visibleHeight - this._getContentHeight() > this.getCurrentScroll()){
 				this._scrollBy((this._visibleHeight - this._getContentHeight() - this.getCurrentScroll()), true);
