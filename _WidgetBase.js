@@ -331,7 +331,7 @@ define([
 
 				try {
 					/* jshint evil:true */
-					// This is only called 	when complex parameters are used in markup, ex: constraints="max: 3, min: 2"
+					// This is only called when complex parameters are used in markup, ex: constraints="max: 3, min: 2"
 					// TODO: remove this code if it isn't being used, so we don't scare people that are afraid of eval.
 					obj = eval("(" + (value[0] === "{" ? "" : "{") + value + (value[0] === "{" ? "" : "}") + ")");
 				}
@@ -395,7 +395,6 @@ define([
 			// baseClass is a single class name or occasionally a space-separated list of names.
 			// Add those classes to the DOMNode.  If RTL mode then also add with Rtl suffix.
 			// TODO: baseClass no longer needed?   just use tag name itself, right?
-
 			if (this.baseClass) {
 				var classes = this.baseClass.split(" ");
 				if (!this.isLeftToRight()) {
