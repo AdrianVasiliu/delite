@@ -56,7 +56,7 @@
 					this.description.innerHTML = description;
 					// notify the list that we have externaly updated its rendering, so that it
 					// performs internal sizing calculations if it needs to.
-					registry.byId('list3').renderingUpdated();
+					registry.byId('list3').geometryUpdated();
 				},
 				toggleDetail: function(event){
 					if(this.catalogController.detailed[this.entryIndex]){
@@ -89,7 +89,7 @@
 						this.invalidateHeight();
 						// notify the list that we have externaly updated its rendering, so that it
 						// performs internal sizing calculations if it needs to.
-						registry.byId('list3').renderingUpdated();
+						registry.byId('list3').geometryUpdated();
 					}
 				},
 				_updateAddToCartLinkRendering: function(){

@@ -37,6 +37,10 @@ define(["dojo/_base/declare",
 			// TODO: EVENT HANDLERS, RENDERING, ETC...
 		},
 
+		// Called before the deletion of an entry through the UI delete action.
+		// If it returns false, the entry is not deleted. The entry is deleted
+		// if it returns any other value.
+		// TODO: RENAME "beforeEntryDelete" or "beforeEntryDeletion" ?
 		onEntryDelete: function(entry, entryIndex){
 			// to be implemented
 		},

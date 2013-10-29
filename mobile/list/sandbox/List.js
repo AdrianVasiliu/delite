@@ -83,8 +83,8 @@ define(["dojo/_base/declare",
 		_initialized: false,
 		_spacerHeight: 0, // the height of the spacer element on top of the list
 		_cellsHeight: 0, // the total height of the cells
-		_firstEntryIndex: 0, // index of the entry in the first cell
-		_lastEntryIndex: null, // index of the entry in the last cell
+		_firstEntryIndex: 0, // index of the entry in the first entry cell
+		_lastEntryIndex: null, // index of the entry in the last entry cell
 		_renderedEntriesPool: null,
 		_renderedCategoriesPool: null,
 		_hiddenCellsOnTop: 0,
@@ -175,6 +175,13 @@ define(["dojo/_base/declare",
 		// Public methods
 		/////////////////////////////////
 
+		// Register a handler for a type of events generated in any of the list cells.
+		// Parameters:
+		//		event: the type of events ("click", ...)
+		//		handler: the event handler
+		// When the event handler is called, it receive the list as its first parameter, the event
+		// as its second and the index of the list entry displayed in the cell.
+		// TODO: WHAT IF THE CELL IS A CATEGORY HEADER ???
 		onCellEvent: function (event, handler) {
 			var that = this;
 			return this.on(event, function (e) {
@@ -185,16 +192,15 @@ define(["dojo/_base/declare",
 					parentCell = that._getParentCell(e.target);
 					if (parentCell) {
 						// TODO: Pass the parentCell too ? Or run the handler in the parentCell context and pass the list ?
+						// TODO: Pass the parentCell INSTEAD of the entry index, as it contains itself the entry index and the entry ?
 						return handler.call(that, e, that._getCellEntryIndex(parentCell));
 					}
 				}
 			});
 		},
 
-		//////////////////////////////////////////////////////
-		// TODO: rename as "geometryUpdated" ?
-		//////////////////////////////////////////////////////
-		renderingUpdated: function () { // Notify the list widget that cells rendering has been updated.
+		// Notify the list widget that cells geometry has been updated.
+		geometryUpdated: function () {
 			if (this._isScrollable) { // we only care about _cellsHeight when the list is scrollable
 				this._cellsHeight = this._getNodeHeight(this.domNode) - this._spacerHeight;
 			}
@@ -208,29 +214,25 @@ define(["dojo/_base/declare",
 
 		deleteEntry: function (entryIndex) {
 			var cell, node = this._getCellNodeByEntryIndex(entryIndex);
-			// remove the entry from the entries array
+			// First, update the model
 			this.entries.splice(entryIndex, 1);
-			// update the cell indexes
 			this._cellEntryIds.splice(entryIndex, 1);
-			// update first and last entry index references
 			if (entryIndex < this._firstEntryIndex) {
 				this._firstEntryIndex--;
 			}
 			if (entryIndex <= this._lastEntryIndex) {
 				this._lastEntryIndex--;
 			}
+			// Then update the rendering
 			if (node) {
 				cell = registry.byNode(node);
 				if (this._isScrollable) {
 					if (this.cellPages > 0) {
 						if (this._lastEntryIndex < this._getEntriesCount() - 1) {
-							// move cell to the bottom
 							this._recycleEntryCell(cell, "bottom");
 						} else if (this._firstEntryIndex > 0) {
-							// move cell to the top
 							this._recycleEntryCell(cell, "top", true);
 						} else {
-							// move cell to the pool
 							this._removeEntryCell(cell);
 						}
 					} else {
@@ -264,7 +266,7 @@ define(["dojo/_base/declare",
 		updateRenderers: function (entryIndexes) {
 			var entryIndex, node;
 			if (this.selectionMode !== "none") {
-				for(var i=0; i < entryIndexes.length; i++) {
+				for (var i = 0; i < entryIndexes.length; i++) {
 					entryIndex = entryIndexes[i];
 					node = this._getCellNodeByEntryIndex(entryIndex);
 					if (node) {
@@ -275,19 +277,11 @@ define(["dojo/_base/declare",
 		},
 
 		/////////////////////////////////
-		// Methods for Scrollable support
-		/////////////////////////////////
-
-		getCurrentScroll: function () {
-			return 0;
-		},
-
-		/////////////////////////////////
 		// Private methods
 		/////////////////////////////////
 
 		_renderEntries: function () {
-			this._createCells();
+			this._appendNewCells();
 			if (!this._initialized) {
 				this._toggleListLoadingStyle();
 				this._registerEventHandlers();
@@ -323,21 +317,15 @@ define(["dojo/_base/declare",
 		// Private methods for cell life cycle
 		/////////////////////////////////
 
-		_createCells: function () {
+		_appendNewCells: function () {
 			var entryIndex = this._lastEntryIndex != null ? this._lastEntryIndex + 1 : this._firstEntryIndex;
 			var currentEntry;
-//			var lastCategory = this.categoryAttribute && this._lastEntryIndex ? this._getEntry(this._lastEntryIndex - 1)[this.categoryAttribute] : null;
 			// Create cells using renderers
-			for (entryIndex; entryIndex < this._getEntriesCount(); entryIndex++) {
+			for (; entryIndex < this._getEntriesCount(); entryIndex++) {
 				if (this._isScrollable && (this.cellPages > 0) && (this._cellsHeight > (this.cellPages * this._visibleHeight))) {
 					break;
 				}
 				currentEntry = this._getEntry(entryIndex);
-//				if (this.categoryAttribute && currentEntry[this.categoryAttribute] !== lastCategory) {
-//					// create a category header
-//					lastCategory = currentEntry[this.categoryAttribute];
-//					this._renderCategory(currentEntry[this.categoryAttribute], "bottom");
-//				}
 				this._addEntryCell(currentEntry, entryIndex, "bottom");
 				this._lastEntryIndex = entryIndex;
 			}
@@ -744,7 +732,7 @@ define(["dojo/_base/declare",
 
 		_getParentCell: function (node) {
 			var currentNode = dom.byId(node);
-			while(currentNode) {
+			while (currentNode) {
 				if (currentNode.parentNode && domClass.contains(currentNode.parentNode, this.baseClass + this._cssSuffixes.container)) {
 					break;
 				}
@@ -758,7 +746,7 @@ define(["dojo/_base/declare",
 		},
 
 		_centerOfListAboveCenterOfViewport: function () {
-			return (this._visibleHeight / 2) - this.getCurrentScroll() - this._spacerHeight > (this._cellsHeight / 2);
+			return (this._visibleHeight / 2) - (this._isScrollable ? this.getCurrentScroll() : 0) - this._spacerHeight > (this._cellsHeight / 2);
 		},
 
 		_nodeRendersCategoryHeader: function (node) {
@@ -900,7 +888,7 @@ define(["dojo/_base/declare",
 		},
 
 		_topOfNodeDistanceToTopOfViewport: function (node) {
-			return node.offsetTop + this.getCurrentScroll();
+			return node.offsetTop + (this._isScrollable ? this.getCurrentScroll() : 0);
 		},
 
 		_bottomOfNodeIsBeforeTopOfViewport: function (node) {
@@ -908,7 +896,7 @@ define(["dojo/_base/declare",
 		},
 
 		_bottomOfNodeDistanceToBottomOfViewport: function (node) {
-			return node.offsetTop + node.offsetHeight + this.getCurrentScroll() - this._visibleHeight;
+			return node.offsetTop + node.offsetHeight + (this._isScrollable ? this.getCurrentScroll() : 0) - this._visibleHeight;
 		},
 
 		/////////////////////////////////
