@@ -30,22 +30,27 @@ define(["dojo/_base/declare",
 		//     - the cells (div) that renders category headers and list entries. _firstEntryIndex is the index
 		//		of the first entry displayed, _lastEntryIndex is the index of the last entry displayed.
 		//   - _footerNode, which is currently an empty div
-		// If the list is scrollable AND cellPages > 0, a fixed number of cells is used to display list entries.
-		// Cells are recycled when scrolling the list or removing entries.
+		// If the list is scrollable AND cellPages > 0, a fixed number of cells is used to display list entries:
+		// cells are recycled when scrolling the list or removing entries.
 		
 		/////////////////////////////////
 		// Public attributes
 		/////////////////////////////////
 
+		// The ordered entries to render in the list. You can also use the dui/list/StoreModel mixin to
+		// populate this list of entries using a dojo object store, in which case there is no need to
+		// define a value for this attribute.
 		entries: [],
 
-		 // Define the list entry attribute that define the category of a list entry.
-		//  If null, the list is not categorized.
+		 // Name of the list entry attribute that define the category of a list entry.
+		//  If falsy, the list is not categorized.
 		categoryAttribute: null,
 
+		// The widget class to use to render list entries. It MUST extend the dui/list/AbstractEntryRenderer class.
 		entriesRenderer: DefaultEntryRenderer,
 
-		// Renders the category headers when the list entries are categorized.
+		// The widget class to use to render category headers when the list entries are categorized.
+		// It MUST extend the dui/list/AbstractEntryRenderer class.
 		categoriesRenderer: DefaultCategoryRenderer,
 
 		// TODO: FIND A BETTER NAME ? (SEEMS RELATED TO PAGELENGTH WHILE IT'S NOT !!!!)
@@ -54,8 +59,13 @@ define(["dojo/_base/declare",
 		// If <= 0, all the list entries are rendered as once.
 		cellPages: 0,
 
+		// The base class that defines the style of the list.
+		// Available values are:
+		// - "duiRoundRectList" (default), that render a list with rounded corners and left and right margins;
+		// - "duiEdgeToEdgeList", that render a list with no rounded corners and no left and right margins.
 		baseClass: "duiRoundRectList2",
 
+		// The selection mode for list entries (see dui/mixins/Selection).
 		selectionMode: "none",
 
 		/////////////////////////////////
@@ -75,7 +85,6 @@ define(["dojo/_base/declare",
 		_cellsHeight: 0, // the total height of the cells
 		_firstEntryIndex: 0, // index of the entry in the first cell
 		_lastEntryIndex: null, // index of the entry in the last cell
-		_focusedNode: null,
 		_renderedEntriesPool: null,
 		_renderedCategoriesPool: null,
 		_hiddenCellsOnTop: 0,
