@@ -79,6 +79,8 @@
 					cellPages: parseInt(dom.byId("cellPages").value),
 					height: parseInt(dom.byId("height").value)
 				}
+				var editable = dom.byId("editable").value;
+				var editButton = dom.byId("editButton");
 				if(dom.byId("useCategory").value){
 					listParams.categoryAttribute = "category";
 				};
@@ -104,13 +106,13 @@
 				};
 				entriesStore.entriesCount = parseInt(dom.byId("entriesCount").value);
 				if(dom.byId("scrollable").value){
-					if(dom.byId("editable").value){
+					if(editable){
 						list = new declare([List, StoreModel, Scrollable, Editable], {})(listParams);
 					}else{
 						list = new declare([List, StoreModel, Scrollable], {})(listParams);
 					}
 				}else{
-					if(dom.byId("editable").value){
+					if(editable){
 						list = new declare([List, Editable, StoreModel], {})(listParams);
 					}else{
 						list = new declare([List, StoreModel], {})(listParams);
@@ -123,6 +125,16 @@
 					autoScrollHandler = on(dom.byId('autoscroll'), 'click', function(){
 						list._animateScroll(dom.byId('duration').valueAsNumber, dom.byId('length').valueAsNumber);
 					});
+				}
+				if(editable){
+					editButton.innerHTML = list.deleteable ? "Stop editing" : "Edit";
+					editButton.style.display = "";
+					editButton.onclick = function () {
+						list.deleteable = !list.deleteable;
+						editButton.innerHTML = list.deleteable ? "Stop editing" : "Edit";
+					}
+				}else{
+					editButton.style.display = "none";
 				}
 			}
 			var handler = on(dom.byId("buildButton"), 'click', lang.hitch(this, buildList));
@@ -194,6 +206,7 @@
 	</div>
 	<p>
 	<div id='autoScroller' style='display: none'>duration (s): <input id='duration' type='number' value='3'/> length (px): <input id='length' type='number' value='-50000'/><button id='autoscroll'>auto scroll</button></div>
+	<button id="editButton" style='display: none; margin-bottom: 15px;' disabled="disabled";></button>
 	<br>
 </body>
 </html>

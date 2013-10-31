@@ -214,7 +214,11 @@ define(["dojo/_base/declare",
 
 		deleteEntry: function (entryIndex) {
 			var cell, node = this._getCellNodeByEntryIndex(entryIndex);
-			// First, update the model
+			// Make sure that the cell is not selected before removing it
+			if(this.isItemSelected(entryIndex)){
+				this.setSelected(entryIndex, false);
+			}
+			// Update the model
 			this.entries.splice(entryIndex, 1);
 			this._cellEntryIds.splice(entryIndex, 1);
 			if (entryIndex < this._firstEntryIndex) {
@@ -245,7 +249,6 @@ define(["dojo/_base/declare",
 			}
 			/////////////////////////////////////////////////////////////////////
 			// TODO: IF DELETED CELL HAD FOCUS, MOVE THE FOCUS
-			// TODO: REMOVE DESTROYED CELL FROM SELECTION IF IT WAS SELECTED
 			/////////////////////////////////////////////////////////////////////
 		},
 
