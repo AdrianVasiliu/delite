@@ -746,7 +746,7 @@ define(["dojo/_base/declare",
 		_getLast: function () {
 			var node = this._getLastCellNode();
 			while (node) {
-				if (this._bottomOfNodeIsBeforeTopOfViewport(node)) {
+				if (this._bottomOfNodeIsBeforeBottomOfViewport(node)) {
 					break;
 				}
 				node = node.previousElementSibling;
@@ -759,7 +759,7 @@ define(["dojo/_base/declare",
 		},
 
 		_getNext: function (child, dir) {
-			var focusedCell, refChild, nextChild;
+			var focusedCell, refChild, nextChild, returned = null;
 			if (this.focusedChild) {
 				focusedCell = this._getFocusedCell();
 				if (focusedCell === this.focusedChild) {
@@ -768,18 +768,25 @@ define(["dojo/_base/declare",
 					if (refChild) {
 						nextChild = refChild.domNode[(dir === 1) ? "nextElementSibling" : "previousElementSibling"]; // do not use _nextCellNode and _previousCellNode as we want to include the pageloader if it exists
 						if (nextChild) {
-							return registry.byNode(nextChild);
+							returned = registry.byNode(nextChild);
 						}
 					}
-					return null;
 				} else {
 					// A descendant of the cell has the focus
 					// FIXME: can it be a category header, with no _getNextFocusableChild method ?
-					return focusedCell._getNextFocusableChild(child, dir);
+					returned = focusedCell._getNextFocusableChild(child, dir);
 				}
 			} else {
-				return dir === 1 ? this._getFirst() : this._getLast();
+				returned = (dir === 1 ? this._getFirst() : this._getLast());
 			}
+			if (returned && this._isScrollable && dir === -1 && !this._browserScroll){
+				// The browser won't scroll itself, do it if necessary !
+				var distanceToTop = this._topOfNodeDistanceToTopOfViewport(returned.domNode);
+				if (distanceToTop < 0) {
+					this.scrollBy(-distanceToTop);
+				}
+			}
+			return returned;
 		},
 
 		_onLeftArrow: function () {
@@ -836,7 +843,7 @@ define(["dojo/_base/declare",
 			return node.offsetTop + (this._isScrollable ? this.getCurrentScroll() : 0);
 		},
 
-		_bottomOfNodeIsBeforeTopOfViewport: function (node) {
+		_bottomOfNodeIsBeforeBottomOfViewport: function (node) {
 			return this._bottomOfNodeDistanceToBottomOfViewport(node) <= 0;
 		},
 
