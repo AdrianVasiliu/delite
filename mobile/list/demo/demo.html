@@ -6,7 +6,7 @@
 	<meta name="apple-mobile-web-app-capable" content="yes"/>
 	<title>Lists for dojo 2 (version that use widgets as renderers)</title>
 
-	<link rel="stylesheet" type="text/css" href="./List.css">
+	<link rel="stylesheet" type="text/css" href="../css/List.css">
 	<link rel="stylesheet" type="text/css" href="../../../../dui/mobile/list/mixins/Scrollable.css">
 	<script type="text/javascript" src="../../deviceTheme.js"></script>
 	<script type="text/javascript" src="../../../../dojo/dojo.js"
@@ -20,7 +20,7 @@
 			"dojo/parser",
 			"dui/registry",
 			"dojo/on",
-			"dui/mobile/list/sandbox/List",
+			"dui/mobile/list/List",
 			"dui/mobile/list/mixins/Scrollable",
 			"dui/mobile/list/mixins/StoreModel",
 			"dojo/dom",
@@ -29,9 +29,9 @@
 			"dojo/request",
 			"dojo/when",
 			"dojo/store/util/QueryResults",
-	        "dui/mobile/list/sandbox/AbstractEntryRenderer",
+	        "dui/mobile/list/AbstractEntryRenderer",
 	        "dui/_TemplatedMixin",
-	        "dui/mobile/list/sandbox/DefaultEntryRenderer",
+	        "dui/mobile/list/DefaultEntryRenderer",
 	        "dojox/mobile/common"
 		], function(declare, lang, array, parser, registry, on, List, Scrollable, StoreModel, dom, domConstruct, domClass, request, when, QueryResults, _EntryRendererBase, _TemplateMixin){
 			
@@ -393,55 +393,55 @@
 	<!-- markup example -->
 	<a id="l1"></a>
 	<h2>Demo 1:</h2>
- 	<div id="list1" data-dojo-type="dui/mobile/list/sandbox/List" data-dojo-props="height: 200, entries: [{label: 'entry001'},
+ 	<div id="list1" data-dojo-type="dui/mobile/list/List" data-dojo-props="height: 200, entries: [{label: 'entry001'},
 	                                                                         {label: 'entry002'},
 	                                                                         {label: 'entry003'},
 	                                                                         {label: 'entry004'}]"></div>
 	<p>
- 	<ol id="list1b" data-dojo-type="dui/mobile/list/sandbox/List" data-dojo-mixins="dui/mobile/list/mixins/Scrollable" data-dojo-props="height: 200">
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry001'}"></li>
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry002'}"></li>
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry003'}"></li>
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry004'}"></li>
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry005'}"></li>
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry006'}"></li>
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry007'}"></li>
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry008'}"></li>
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry009'}"></li>
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry010'}"></li>
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry011'}"></li>
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry012'}"></li>
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry013'}"></li>
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry014'}"></li>
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry015'}"></li>
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry016'}"></li>
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry017'}"></li>
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry018'}"></li>
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry019'}"></li>
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry020'}"></li>
+ 	<ol id="list1b" data-dojo-type="dui/mobile/list/List" data-dojo-mixins="dui/mobile/list/mixins/Scrollable" data-dojo-props="height: 200">
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry001'}"></li>
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry002'}"></li>
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry003'}"></li>
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry004'}"></li>
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry005'}"></li>
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry006'}"></li>
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry007'}"></li>
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry008'}"></li>
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry009'}"></li>
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry010'}"></li>
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry011'}"></li>
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry012'}"></li>
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry013'}"></li>
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry014'}"></li>
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry015'}"></li>
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry016'}"></li>
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry017'}"></li>
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry018'}"></li>
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry019'}"></li>
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry020'}"></li>
 	</ol>
 	<p>
- 	<ol id="list1c" data-dojo-type="dui/mobile/list/sandbox/List" data-dojo-mixins="dui/mobile/list/mixins/Scrollable" data-dojo-props="height: 200, cellPages: 2">
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry001'}"></li>
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry002'}"></li>
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry003'}"></li>
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry004'}"></li>
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry005'}"></li>
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry006'}"></li>
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry007'}"></li>
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry008'}"></li>
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry009'}"></li>
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry010'}"></li>
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry011'}"></li>
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry012'}"></li>
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry013'}"></li>
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry014'}"></li>
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry015'}"></li>
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry016'}"></li>
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry017'}"></li>
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry018'}"></li>
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry019'}"></li>
-		<li data-dojo-type="dui/mobile/list/sandbox/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry020'}"></li>
+ 	<ol id="list1c" data-dojo-type="dui/mobile/list/List" data-dojo-mixins="dui/mobile/list/mixins/Scrollable" data-dojo-props="height: 200, cellPages: 2">
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry001'}"></li>
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry002'}"></li>
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry003'}"></li>
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry004'}"></li>
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry005'}"></li>
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry006'}"></li>
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry007'}"></li>
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry008'}"></li>
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry009'}"></li>
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry010'}"></li>
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry011'}"></li>
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry012'}"></li>
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry013'}"></li>
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry014'}"></li>
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry015'}"></li>
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry016'}"></li>
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry017'}"></li>
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry018'}"></li>
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry019'}"></li>
+		<li data-dojo-type="dui/mobile/list/DefaultEntryRenderer" data-dojo-props="entry: {label: 'entry020'}"></li>
 	</ol>
 
 	<!-- a really basic list with a lot of entries -->
@@ -451,7 +451,7 @@
 	<br>
 	<div id="list2"></div>
 	<p>
- 	<ol id="list2a" data-dojo-type="dui/mobile/list/sandbox/List" data-dojo-mixins="dui/mobile/list/mixins/Scrollable" data-dojo-props="entries: list2Model, height: 200, cellPages: 2">
+ 	<ol id="list2a" data-dojo-type="dui/mobile/list/List" data-dojo-mixins="dui/mobile/list/mixins/Scrollable" data-dojo-props="entries: list2Model, height: 200, cellPages: 2">
 	</ol>
 
 	<!-- a sample shopping catalog using a custom renderer for the catalog entries -->

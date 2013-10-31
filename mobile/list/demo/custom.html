@@ -6,7 +6,7 @@
 	<meta name="apple-mobile-web-app-capable" content="yes"/>
 	<title>Lists for dojo 2 (version that use widgets as renderers)</title>
 
-	<link rel="stylesheet" type="text/css" href="./List.css">
+	<link rel="stylesheet" type="text/css" href="../css/List.css">
 	<link rel="stylesheet" type="text/css" href="../../../../dui/mobile/list/mixins/Scrollable.css">
 	<script type="text/javascript" src="../../deviceTheme.js"></script>
 	<script type="text/javascript" src="../../../../dojo/dojo.js"
@@ -16,11 +16,11 @@
 		require([
 			"dojo/_base/declare",
 			"dui/registry",
-			"dui/mobile/list/sandbox/List",
+			"dui/mobile/list/List",
 			"dui/mobile/list/mixins/Scrollable",
 			"dui/mobile/list/mixins/StoreModel",
 			"dojo/dom-class",
-	        "dui/mobile/list/sandbox/AbstractEntryRenderer",
+	        "dui/mobile/list/AbstractEntryRenderer",
 	        "dui/_TemplatedMixin",
 	        "dojox/mobile/common"
 		], function(declare, registry, List, Scrollable, StoreModel, domClass, _EntryRendererBase, _TemplatedMixin){
