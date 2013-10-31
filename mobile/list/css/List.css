@@ -1,113 +1,11 @@
-/* The following two are only temporary */
-.duiRoundRectList2-loading{
-	padding-top: 50px;
-	text-align: center;
-}
-.duiRoundRectList2-loading:after{
-	content: 'Loading...';
-	font-size: large;
-	font-style: italic;
-	color: gray;
-}
- 
-/*******************************/
-/* iOS theme for RoundRectList */
-/*                             */
-/* IMPORTANT: a cell MUST      */
-/* have the same height (inc.  */
-/* borders) whatever its index */
-/* in the list !               */
-/*******************************/
-
-.duiRoundRectList2 {
-    margin: 0px 9px;
-	-webkit-transform: translate3d(0,0,0);
-	transform: translate3d(0,0,0);
-  	overflow: hidden;
-  	padding: 0;
-}
-
-.duiRoundRectList2-container > div:first-child {
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
-}
-
-.duiRoundRectList2-container > div:last-child {
-  border-bottom-width: 0;
-  padding-bottom: 1px; /* to compensate the fact that the bottom width is 0 instead of 1 */
-  border-bottom-left-radius: 8px;
-  border-bottom-right-radius: 8px;
-}
-
-.duiRoundRectList2-pooledElement {
-	display: none !important;
-}
-
-/* This one is for List3 implementation, that "store" pool entries at the top of the list, with style display: none set */
-/* TODO: REMOVE THIS, USE A CLASS FOR POOLED NODES INSTEAD */
-.duiRoundRectList2-pooledElement + div {
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
-}
-
- 
-.duiRoundRectList2-entry {
-  overflow: hidden;
-  /* for focus frame */
-  padding: 0 8px;
-  list-style-type: none;
-  -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
-  border-bottom: 1px solid #adaaad;
-  background-color: #ffffff;
-}
-
-.duiRoundRectList2-selectedEntry {
-  color: #ffffff;
-  background-image: -webkit-gradient(linear, left top, left bottom, from(#048bf4), to(#005ce5));
-  background-image: linear-gradient(to bottom, #048bf4 0%, #005ce5 100%);
-}
-
-.duiRoundRectList2-category {
-  position: relative;
-  margin: 0;
-  padding: 0 10px;
-  overflow: hidden;
-  font-family: Helvetica;
-  font-size: 16px;
-  font-weight: bold;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  height: 22px;
-  border-top: 1px solid #a4b0b9;
-  border-bottom: 1px solid #979da3;
-  background-image: -webkit-gradient(linear, left top, left bottom, from(#8f9ea9), to(#b7c0c7));
-  background-image: linear-gradient(to bottom, #8f9ea9 0%, #b7c0c7 100%);
-  color: white;
-  line-height: 22px;
-  text-shadow: rgba(0, 0, 0, 0.6) 0 -1px 0;
-}
-
-.duiRoundRectList2-loaderNode{
-    padding: 0 8px;
-	color: blue;
-	cursor: pointer;
-	height: 43px;
-	line-height: 43px;
-  	background-color: #ffffff;
- 	border-bottom-left-radius: 8px;
-    border-bottom-right-radius: 8px;
-}
-
-.duiRoundRectList2-loaderNodeLoading{
-    padding: 0 8px;
-	color: gray;
-	cursor: wait;
-	height: 43px;
-	line-height: 43px;
-  	background-color: #ffffff;
- 	border-bottom-left-radius: 8px;
-    border-bottom-right-radius: 8px;
-}
+/********************************/
+/* iOS theme for all Lists      */
+/*                              */
+/* IMPORTANT: a cell MUST       */
+/* have the same height (inc.   */
+/* borders) whatever its index  */
+/* in the list !                */
+/********************************/
 
 .duiListEntryLabel {
   position: relative;
@@ -146,4 +44,204 @@
   line-height: normal;
   margin-top: 7px;
   margin-bottom: -7px;
+}
+
+/*******************************/
+/* iOS theme for RoundRectList */
+/*                             */
+/* IMPORTANT: a cell MUST      */
+/* have the same height (inc.  */
+/* borders) whatever its index */
+/* in the list !               */
+/*******************************/
+
+.duiRoundRectList-loading{
+	padding-top: 50px;
+	text-align: center;
+}
+.duiRoundRectList-loading:after{
+	content: 'Loading...';
+	font-size: large;
+	font-style: italic;
+	color: gray;
+}
+
+.duiRoundRectList {
+    margin: 0px 9px;
+	-webkit-transform: translate3d(0,0,0);
+	transform: translate3d(0,0,0);
+  	overflow: hidden;
+  	padding: 0;
+}
+
+.duiRoundRectList-container > div:first-child {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+.duiRoundRectList-container > div:last-child {
+  border-bottom-width: 0;
+  padding-bottom: 1px; /* to compensate the fact that the bottom width is 0 instead of 1 */
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+.duiRoundRectList-pooledElement {
+	display: none !important;
+}
+
+/* This one is for List3 implementation, that "store" pool entries at the top of the list, with style display: none set */
+/* TODO: REMOVE THIS, USE A CLASS FOR POOLED NODES INSTEAD */
+.duiRoundRectList-pooledElement + div {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+ 
+.duiRoundRectList-entry {
+  overflow: hidden;
+  /* for focus frame */
+  padding: 0 8px;
+  list-style-type: none;
+  -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
+  border-bottom: 1px solid #adaaad;
+  background-color: #ffffff;
+}
+
+.duiRoundRectList-selectedEntry {
+  color: #ffffff;
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#048bf4), to(#005ce5));
+  background-image: linear-gradient(to bottom, #048bf4 0%, #005ce5 100%);
+}
+
+.duiRoundRectList-category {
+  position: relative;
+  margin: 0;
+  padding: 0 10px;
+  overflow: hidden;
+  font-family: Helvetica;
+  font-size: 16px;
+  font-weight: bold;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  height: 22px;
+  border-top: 1px solid #a4b0b9;
+  border-bottom: 1px solid #979da3;
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#8f9ea9), to(#b7c0c7));
+  background-image: linear-gradient(to bottom, #8f9ea9 0%, #b7c0c7 100%);
+  color: white;
+  line-height: 22px;
+  text-shadow: rgba(0, 0, 0, 0.6) 0 -1px 0;
+}
+
+.duiRoundRectList-loaderNode{
+    padding: 0 8px;
+	color: blue;
+	cursor: pointer;
+	height: 43px;
+	line-height: 43px;
+  	background-color: #ffffff;
+ 	border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+.duiRoundRectList-loaderNodeLoading{
+    padding: 0 8px;
+	color: gray;
+	cursor: wait;
+	height: 43px;
+	line-height: 43px;
+  	background-color: #ffffff;
+ 	border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+/********************************/
+/* iOS theme for EdgeToEdgeList */
+/*                              */
+/* IMPORTANT: a cell MUST       */
+/* have the same height (inc.   */
+/* borders) whatever its index  */
+/* in the list !                */
+/********************************/
+
+.duiEdgeToEdgeList-loading{
+	padding-top: 50px;
+	text-align: center;
+}
+.duiEdgeToEdgeList-loading:after{
+	content: 'Loading...';
+	font-size: large;
+	font-style: italic;
+	color: gray;
+}
+
+.duiEdgeToEdgeList {
+	-webkit-transform: translate3d(0,0,0);
+	transform: translate3d(0,0,0);
+  	overflow: hidden;
+  	padding: 0;
+}
+
+.duiEdgeToEdgeList-container > div:last-child {
+  border-bottom-width: 0;
+  padding-bottom: 1px; /* to compensate the fact that the bottom width is 0 instead of 1 */
+}
+
+.duiEdgeToEdgeList-pooledElement {
+	display: none !important;
+}
+
+.duiEdgeToEdgeList-entry {
+  overflow: hidden;
+  /* for focus frame */
+  padding: 0 8px;
+  list-style-type: none;
+  -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
+  border-bottom: 1px solid #adaaad;
+  background-color: #ffffff;
+}
+
+.duiEdgeToEdgeList-selectedEntry {
+  color: #ffffff;
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#048bf4), to(#005ce5));
+  background-image: linear-gradient(to bottom, #048bf4 0%, #005ce5 100%);
+}
+
+.duiEdgeToEdgeList-category {
+  position: relative;
+  margin: 0;
+  padding: 0 10px;
+  overflow: hidden;
+  font-family: Helvetica;
+  font-size: 16px;
+  font-weight: bold;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  height: 22px;
+  border-top: 1px solid #a4b0b9;
+  border-bottom: 1px solid #979da3;
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#8f9ea9), to(#b7c0c7));
+  background-image: linear-gradient(to bottom, #8f9ea9 0%, #b7c0c7 100%);
+  color: white;
+  line-height: 22px;
+  text-shadow: rgba(0, 0, 0, 0.6) 0 -1px 0;
+}
+
+.duiEdgeToEdgeList-loaderNode{
+    padding: 0 8px;
+	color: blue;
+	cursor: pointer;
+	height: 43px;
+	line-height: 43px;
+  	background-color: #ffffff;
+}
+
+.duiEdgeToEdgeList-loaderNodeLoading{
+    padding: 0 8px;
+	color: gray;
+	cursor: wait;
+	height: 43px;
+	line-height: 43px;
+  	background-color: #ffffff;
 }

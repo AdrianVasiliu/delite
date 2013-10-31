@@ -77,7 +77,8 @@
 					selectionMode: 	dom.byId("selectionMode").value,
 					pageLength: parseInt(dom.byId("pageLength").value),
 					cellPages: parseInt(dom.byId("cellPages").value),
-					height: parseInt(dom.byId("height").value)
+					height: parseInt(dom.byId("height").value),
+					baseClass: dom.byId("listStyle").value
 				}
 				var editable = dom.byId("editable").value;
 				var editButton = dom.byId("editButton");
@@ -152,6 +153,11 @@
 		</select>
 		<label for="height">Height in px:</label>
 		<input id="height" type="number" value="200"></input>
+		<label for="listStyle">Style:</label>
+		<select id="listStyle">
+			<option value="duiRoundRectList">Round rect</option>
+			<option value="duiEdgeToEdgeList">Edge to edge</option>
+		</select>
 		<br>
 		<label for="editable">Editable:</label>
 		<select id="editable">

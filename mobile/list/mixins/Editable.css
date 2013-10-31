@@ -15,14 +15,36 @@
 	padding-top: 6px;
 	padding-left: 8px;
 }
-.duiRoundRectList2-entry{
+.duiRoundRectList-entry{
   display: -webkit-box;
   display: -moz-box;
   display: -ms-flexbox;
   display: -webkit-flex;
   display: flex;
 }
-.duiRoundRectList2-deleteButton {
+.duiRoundRectList-deleteButton {
+	position: relative;
+	height: 29px;
+	line-height: 29px;
+	padding: 0px 8px;
+	color: white;
+	font-family: Helvetica;
+	font-size: 13px;
+	font-weight: bold;
+	border: 1px outset #9cacc0;
+	border-radius: 5px;
+	background: -webkit-gradient(linear, left top, left bottom, from(#d3656d), to(#bc1320), color-stop(0.5, #c9404b), color-stop(0.5, #bc1421));
+	background-color: #c9404b;
+	text-align: center;
+}
+.duiEdgeToEdgeList-entry{
+  display: -webkit-box;
+  display: -moz-box;
+  display: -ms-flexbox;
+  display: -webkit-flex;
+  display: flex;
+}
+.duiEdgeToEdgeList-deleteButton {
 	position: relative;
 	height: 29px;
 	line-height: 29px;

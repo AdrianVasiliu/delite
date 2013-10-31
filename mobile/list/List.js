@@ -63,7 +63,7 @@ define(["dojo/_base/declare",
 		// Available values are:
 		// - "duiRoundRectList" (default), that render a list with rounded corners and left and right margins;
 		// - "duiEdgeToEdgeList", that render a list with no rounded corners and no left and right margins.
-		baseClass: "duiRoundRectList2",
+		baseClass: "duiRoundRectList",
 
 		// The selection mode for list entries (see dui/mixins/Selection).
 		selectionMode: "none",
