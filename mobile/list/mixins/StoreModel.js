@@ -143,8 +143,8 @@ define(["dojo/_base/declare",
 			}
 		},
 
-		_placeCellNode: function (node, pos) {
-			if (this._loaderNode && pos === "bottom") {
+		_placeCellNode: function (node, refNode, pos) {
+			if (this._loaderNode && refNode === this.containerNode && (!pos || pos === "last")) {
 				domConstruct.place(node, this._loaderNode, "before");
 			} else {
 				this.inherited(arguments);
