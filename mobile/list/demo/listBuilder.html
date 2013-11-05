@@ -120,7 +120,7 @@
 					}
 				}
 				list.store = entriesStore;
-				list.placeAt(win.body());
+				list.placeAt(dom.byId("list"));
 				list.startup();
 				if(!autoScrollHandler){
 					autoScrollHandler = on(dom.byId('autoscroll'), 'click', function(){
@@ -214,5 +214,7 @@
 	<div id='autoScroller' style='display: none'>duration (s): <input id='duration' type='number' value='3'/> length (px): <input id='length' type='number' value='-50000'/><button id='autoscroll'>auto scroll</button></div>
 	<button id="editButton" style='display: none; margin-bottom: 15px;' disabled="disabled";></button>
 	<br>
+	<div id="list"></div>
+	<div style="height: 50px;"></div>
 </body>
 </html>

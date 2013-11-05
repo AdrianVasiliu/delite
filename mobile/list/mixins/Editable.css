@@ -15,6 +15,25 @@
 	padding-top: 6px;
 	padding-left: 8px;
 }
+.duiListEntryDragged {
+  position: absolute;
+  border: 1px solid gray;
+  opacity: 0.5;
+  -webkit-box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);
+  box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);
+  border-radius: 0px !important;
+  -moz-border-radius: 0px !important;
+}
+.duiListDropAreaAfter {
+	border-bottom-width: 3px !important;
+	border-bottom-style: dotted;
+	border-bottom-color: #a4b0b9;
+}
+.duiListDropAreaBefore {
+	border-top-width: 3px !important;
+	border-top-style: dotted;
+	border-top-color: #a4b0b9;
+}
 .duiRoundRectList-entry{
   display: -webkit-box;
   display: -moz-box;

@@ -30,6 +30,8 @@ define(["dojo/_base/declare",
 
 		height: 0, // the height of the scrollable viewport, in pixel
 
+		disableTouchScroll: false,
+
 		/////////////////////////////////
 		// Private attributes
 		/////////////////////////////////
@@ -264,6 +266,9 @@ define(["dojo/_base/declare",
 		},
 
 		_scrollableOnTouchPress: function(event){
+			if (this.disableTouchScroll) {
+				return;
+			}
 			this._scrollableCaptureEvent(event);
 			this._touchHandlersRefs.push(this.own(on(document, touch.move, lang.hitch(this, '_scrollableOnTouchMove')))[0]);
 			this._touchHandlersRefs.push(this.own(on(document, touch.cancel, lang.hitch(this, '_scrollableOnTouchRelease')))[0]);
@@ -305,6 +310,7 @@ define(["dojo/_base/declare",
 			var oldBrowserScroll = this._browserScroll;
 			this._browserScroll = this._viewportNode.scrollTop;
 			this.onScroll(oldBrowserScroll - this._browserScroll);
+			this._endScroll();
 		},
 
 		_scrollableOnClick: function(event){
