@@ -12,48 +12,21 @@ define([
 	"dojo/dom-style", // domStyle.set, domStyle.get
 	"dojo/has",
 	"dojo/_base/kernel",
-	"dojo/_base/lang", // mixin(), isArray(), etc.
+	"dojo/_base/lang", // mixin(), hitch(), etc.
 	"dojo/on",
 	"dojo/_base/window", // win.body()
 	"./Destroyable",
 	"./Stateful",
 	"./register",
-	"dojo/has!dojo-bidi?./_BidiMixin"
-], function (require, dcl, aspect, config, Deferred,
-			dom, domAttr, domClass, domConstruct, domGeometry, domStyle, has, kernel,
-			lang, on, win, Destroyable, Stateful, register, _BidiMixin) {
+	"dojo/has!dojo-bidi?./Bidi"
+], function (require, dcl, aspect, config, Deferred, dom, domAttr, domClass, domConstruct, domGeometry, domStyle,
+			 has, kernel, lang, on, win, Destroyable, Stateful, register, Bidi) {
 
 	// module:
-	//		dui/_WidgetBase
+	//		dui/Widget
 
 	// Flag to enable support for textdir attribute
 	has.add("dojo-bidi", false);
-
-
-	// Nested hash listing attributes for each tag, all strings in lowercase.
-	// ex: {"div": {"style": true, "tabindex" true}, "form": { ...
-	/*
-	var tagAttrs = {};
-
-	function getAttrs(obj) {
-		var ret = {};
-		for (var attr in obj) {
-			ret[attr.toLowerCase()] = true;
-		}
-		return ret;
-	}
-
-	function nonEmptyAttrToDom(attr) {
-		// summary:
-		//		Returns a setter function that sets the attribute on the root DOM node,
-		//		or removes the attribute, depending on whether the
-		//		value is defined or not.
-		return function (val) {
-			domAttr[val ? "set" : "remove"](this, attr, val);
-			this._set(attr, val);
-		};
-	}
-	*/
 
 	function genSetter(/*String*/ attr, /*Object*/ commands) {
 		// summary:
@@ -80,35 +53,39 @@ define([
 			// Setup mapNode(this) method that returns the node to map to.  Does late resolution, i.e. doesn't
 			// lookup this.focusNode until it's called.
 			var mapNodeName = command.node || (command && typeof command === "string" ? command : "domNode"),
-				mapNode = mapNodeName === "domNode" ? function (x) { return x; } :
-					function (x) { return x[mapNodeName]; };
+				mapNode = mapNodeName === "domNode" ? function (x) {
+					return x;
+				} :
+					function (x) {
+						return x[mapNodeName];
+					};
 			switch (command.type) {
-				case "innerText":
-					return function (value) {
-						mapNode(this).innerHTML = "";
-						mapNode(this).appendChild(this.ownerDocument.createTextNode(value));
-						this._set(attr, value);
-					};
-				case "innerHTML":
-					return function (value) {
-						mapNode(this).innerHTML = value;
-						this._set(attr, value);
-					};
-				case "class":
-					return function (value) {
-						domClass.replace(mapNode(this), value, this[attr]);
-						this._set(attr, value);
-					};
-				default:
-					// Map to DOMNode property.   DOMNode is possibly a widget.
-					var attrName = command.attribute || attr;
-					return function (value) {
-						if (typeof value === "function") { // functions execute in the context of the widget
-							value = lang.hitch(this, value);
-						}
-						mapNode(this)[attrName] = value;
-						this._set(attr, value);
-					};
+			case "innerText":
+				return function (value) {
+					mapNode(this).innerHTML = "";
+					mapNode(this).appendChild(this.ownerDocument.createTextNode(value));
+					this._set(attr, value);
+				};
+			case "innerHTML":
+				return function (value) {
+					mapNode(this).innerHTML = value;
+					this._set(attr, value);
+				};
+			case "class":
+				return function (value) {
+					domClass.replace(mapNode(this), value, this[attr]);
+					this._set(attr, value);
+				};
+			default:
+				// Map to DOMNode property.   DOMNode is possibly a widget.
+				var attrName = command.attribute || attr;
+				return function (value) {
+					if (typeof value === "function") { // functions execute in the context of the widget
+						value = lang.hitch(this, value);
+					}
+					mapNode(this)[attrName] = value;
+					this._set(attr, value);
+				};
 			}
 		}
 
@@ -126,6 +103,7 @@ define([
 	}
 
 	var _widgetTypeCtr = {};
+
 	function getUniqueId(/*String*/ tag) {
 		// summary:
 		//		Generates a unique id for a given widget type.
@@ -140,7 +118,7 @@ define([
 		return id; // String
 	}
 
-	var _WidgetBase = dcl([Stateful, Destroyable], {
+	var Widget = dcl([Stateful, Destroyable], {
 		// summary:
 		//		Base class for all widgets.
 		//
@@ -184,36 +162,36 @@ define([
 		//		it was recently clicked.
 		focused: false,
 
-/*=====
-		// containerNode: [readonly] DomNode
-		//		Designates where children of the source DOM node will be placed.
-		//		"Children" in this case refers to both DOM nodes and widgets.
-		//		For example, for myWidget:
-		//
-		//		|	<div data-dojo-type=myWidget>
-		//		|		<b> here's a plain DOM node
-		//		|		<span data-dojo-type=subWidget>and a widget</span>
-		//		|		<i> and another plain DOM node </i>
-		//		|	</div>
-		//
-		//		containerNode would point to:
-		//
-		//		|		<b> here's a plain DOM node
-		//		|		<span data-dojo-type=subWidget>and a widget</span>
-		//		|		<i> and another plain DOM node </i>
-		//
-		//		In templated widgets, "containerNode" is set via a
-		//		data-dojo-attach-point assignment.
-		//
-		//		containerNode must be defined for any widget that accepts innerHTML
-		//		(like ContentPane or BorderContainer or even Button), and conversely
-		//		is null for widgets that don't, like TextBox.
-		containerNode: null,
+		/*=====
+		 // containerNode: [readonly] DomNode
+		 //		Designates where children of the source DOM node will be placed.
+		 //		"Children" in this case refers to both DOM nodes and widgets.
+		 //		For example, for myWidget:
+		 //
+		 //		|	<div data-dojo-type=myWidget>
+		 //		|		<b> here's a plain DOM node
+		 //		|		<span data-dojo-type=subWidget>and a widget</span>
+		 //		|		<i> and another plain DOM node </i>
+		 //		|	</div>
+		 //
+		 //		containerNode would point to:
+		 //
+		 //		|		<b> here's a plain DOM node
+		 //		|		<span data-dojo-type=subWidget>and a widget</span>
+		 //		|		<i> and another plain DOM node </i>
+		 //
+		 //		In templated widgets, "containerNode" is set via a
+		 //		data-dojo-attach-point assignment.
+		 //
+		 //		containerNode must be defined for any widget that accepts innerHTML
+		 //		(like ContentPane or BorderContainer or even Button), and conversely
+		 //		is null for widgets that don't, like TextBox.
+		 containerNode: null,
 
-		// _started: [readonly] Boolean
-		//		startup() has completed.
-		_started: false,
-=====*/
+		 // _started: [readonly] Boolean
+		 //		startup() has completed.
+		 _started: false,
+		 =====*/
 
 		// _blankGif: [protected] String
 		//		Path to a blank 1x1 image.
@@ -231,15 +209,15 @@ define([
 			var list = [], proto = this, ctor;
 
 			do {
-				Object.keys(proto).forEach(function(prop){
-					if(typeof proto[prop] != "function" && !/^_/.test(prop)){
+				Object.keys(proto).forEach(function (prop) {
+					if (typeof proto[prop] !== "function" && !/^_/.test(prop)) {
 						list.push(prop);
 					}
 				});
 
 				proto = Object.getPrototypeOf(proto);
 				ctor = proto && proto.constructor;
-			} while(proto && !/HTML[a-zA-Z]*Element/.test(ctor.name || ctor.toString()));
+			} while (proto && !/HTML[a-zA-Z]*Element/.test(ctor.name || ctor.toString()));
 
 			return list;
 		},
@@ -256,19 +234,19 @@ define([
 			// This is the list of properties returned from getProp(); it intentionally doesn't
 			// include props like "style" that are merely inherited from HTMLElement.   You would need to
 			// explicitly declare style: "" in your widget to get it here.
-			props.forEach(function(key){
+			props.forEach(function (key) {
 				pcm[key.toLowerCase()] = key;
 			});
 
 			// Legacy stuff.  Revisit later to see if we really need this.
-			for(var key in this){
+			for (var key in this) {
 				// on mapping, ex: click --> onClick
 				if (/^on/.test(key)) {
 					onmap[key.substr(2).toLowerCase()] = key;
 				}
 
 				// Convert shorthand notations like _setAltAttr: "focusNode" into real functions.
-				if(/^_set[A-Z](.*)Attr$/.test(key) && typeof this[key] !== "function"){
+				if (/^_set[A-Z](.*)Attr$/.test(key) && typeof this[key] !== "function") {
 					this[key] = genSetter(key.charAt(4).toLowerCase() + key.substr(5, key.length - 9), this[key]);
 				}
 			}
@@ -282,7 +260,7 @@ define([
 			// description:
 			//		Create calls a number of widget methods (buildRendering, postCreate,
 			//		etc.), some of which of you'll want to override.
-			//		See http://dojotoolkit.org/reference-guide/dui/_WidgetBase.html
+			//		See http://dojotoolkit.org/reference-guide/dui/Widget.html
 			//		for a discussion of the widget creation lifecycle.
 			//
 			//		Of course, adventurous developers could override create entirely, but this should
@@ -296,6 +274,10 @@ define([
 
 			// Get parameters that were specified declaratively on the widget DOMNode.
 			var params = this.mapAttributes();
+
+			// this is needed for Chrome to delete the tabIndex=-1 default attribute from DIV elements,
+			// so that the custom setter in the prototype runs.
+			delete this.tabIndex;
 
 			this.preCreate();
 
@@ -336,33 +318,36 @@ define([
 					obj = eval("(" + (value[0] === "{" ? "" : "{") + value + (value[0] === "{" ? "" : "}") + ")");
 				}
 				catch (e) {
-					throw new SyntaxError('Error in attribute conversion to object: ' + e.message + '\nAttribute Value: "' +
-						value + '"');
+					throw new SyntaxError("Error in attribute conversion to object: " + e.message +
+						"\nAttribute Value: '" + value + "'");
 				}
 				return obj;
 			}
+
 			function setTypedValue(widget, name, value) {
 				switch (typeof widget[name]) {
-					case "string":
-						props[name] = value;
-						break;
-					case "number":
-						props[name] = value - 0;
-						break;
-					case "boolean":
-						props[name] = value !== "false";
-						break;
-					case "object":
-						props[name] = (widget[name] instanceof Array)
-							? (value
-								? value.split(/\s+/)
-								: [])
-							: stringToObject(value);
-						break;
-					case "function":
-						/* jshint evil:true */
-						props[name] = lang.getObject(value, false) || new Function(value);
+				case "string":
+					props[name] = value;
+					break;
+				case "number":
+					props[name] = value - 0;
+					break;
+				case "boolean":
+					props[name] = value !== "false";
+					break;
+				case "object":
+					props[name] = (widget[name] instanceof Array)
+						? (value
+						? value.split(/\s+/)
+						: [])
+						: stringToObject(value);
+					break;
+				case "function":
+					/* jshint evil:true */
+					props[name] = lang.getObject(value, false) || new Function(value);
 				}
+				delete widget[name]; // make sure custom setters fire
+				widget.removeAttribute(name.toLowerCase());	// when name==tabIndex, avoid tab stop on root node
 			}
 
 			while ((attr = this.attributes[idx++])) {
@@ -600,7 +585,7 @@ define([
 			return this.focus && (domStyle.get(this, "display") !== "none");
 		},
 
-		placeAt: function (/* String|DomNode|_WidgetBase */ reference, /* String|Int? */ position) {
+		placeAt: function (/* String|DomNode|Widget */ reference, /* String|Int? */ position) {
 			// summary:
 			//		Place this widget somewhere in the DOM based
 			//		on standard domConstruct.place() conventions.
@@ -618,7 +603,7 @@ define([
 			//		If reference is a DOMNode (or id matching a DOMNode but not a widget),
 			//		the position argument can be a numeric index or a string
 			//		"first", "last", "before", or "after", same as dojo/dom-construct::place().
-			// returns: dui/_WidgetBase
+			// returns: dui/Widget
 			//		Provides a useful return of the newly created dui._Widget instance so you
 			//		can "chain" this function by instantiating, placing, then saving the return value
 			//		to a variable.
@@ -733,8 +718,7 @@ define([
 			return null;
 		},
 
-		// Focus related methods.   Used by focus.js and _FocusMixin but listed here
-		// so they become part of every widget.
+		// Focus related methods.  Used by focus.js.
 		onFocus: function () {
 			// summary:
 			//		Called when the widget becomes "active" because
@@ -774,14 +758,14 @@ define([
 	});
 
 	if (has("dojo-bidi")) {
-		_WidgetBase = dcl(_WidgetBase, _BidiMixin);
+		Widget = dcl(Widget, Bidi);
 	}
 
 	// Setup automatic chaining for lifecycle methods, except for buildRendering()
-	dcl.chainAfter(_WidgetBase, "preCreate");
-	dcl.chainAfter(_WidgetBase, "postCreate");
-	dcl.chainAfter(_WidgetBase, "startup");
-	dcl.chainBefore(_WidgetBase, "destroy");
+	dcl.chainAfter(Widget, "preCreate");
+	dcl.chainAfter(Widget, "postCreate");
+	dcl.chainAfter(Widget, "startup");
+	dcl.chainBefore(Widget, "destroy");
 
-	return _WidgetBase;
+	return Widget;
 });

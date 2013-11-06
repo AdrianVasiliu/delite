@@ -1,20 +1,22 @@
 define([
 	"dcl/dcl",
-	"dojo/dom-attr" // domAttr.set
-], function(dcl, domAttr){
+	"dojo/dom-attr", // domAttr.set
+	"./FormWidget"
+], function (dcl, domAttr, FormWidget) {
 
 	// module:
-	//		dui/_FormValueMixin
+	//		dui/FormValueWidget
 
-	return dcl(null, {
+	return dcl(FormWidget, {
 		// summary:
 		//		Mixin for widgets corresponding to native HTML elements such as `<input>` or `<select>`
 		//		that have user changeable values.
 		// description:
 		//		Each _FormValueMixin represents a single input value, and has a (possibly hidden) `<input>` element,
-		//		to which it serializes it's input value, so that form submission (either normal submission or via FormBind?)
-		//		works as expected.
-		//		After an onBlur event, onChange fires if the serialized widget value has changed from value at the time of onFocus.
+		//		to which it serializes it's input value, so that form submission
+		//		(either normal submission or via FormBind?) works as expected.
+		//		After an onBlur event, onChange fires if the serialized widget value has changed from value
+		//		at the time of onFocus.
 
 		// readOnly: Boolean
 		//		Should this widget respond to user input?
@@ -26,8 +28,8 @@ define([
 		//		Fires onChange for each value change or only on demand
 		intermediateChanges: false,
 
-		_setReadOnlyAttr: function(/*Boolean*/ value){
-			domAttr.set(this.focusNode, 'readOnly', value);
+		_setReadOnlyAttr: function (/*Boolean*/ value) {
+			domAttr.set(this.focusNode, "readOnly", value);
 			this._set("readOnly", value);
 		},
 
@@ -35,30 +37,30 @@ define([
 		//		The last value fired to onChange.
 		previousOnChangeValue: undefined,
 
-		onChange: function(/*===== newValue =====*/){
+		onChange: function (/*===== newValue =====*/) {
 			// summary:
 			//		Callback when this widget's value is changed.
 			// tags:
 			//		callback
 		},
 
-		compare: function(/*anything*/ val1, /*anything*/ val2){
+		compare: function (/*anything*/ val1, /*anything*/ val2) {
 			// summary:
 			//		Compare 2 values (as returned by get('value') for this widget).
 			// tags:
 			//		protected
-			if(typeof val1 == "number" && typeof val2 == "number"){
+			if (typeof val1 === "number" && typeof val2 === "number") {
 				return (isNaN(val1) && isNaN(val2)) ? 0 : val1 - val2;
-			}else if(val1 > val2){
+			} else if (val1 > val2) {
 				return 1;
-			}else if(val1 < val2){
+			} else if (val1 < val2) {
 				return -1;
-			}else{
+			} else {
 				return 0;
 			}
 		},
 
-		_handleOnChange: function(/*anything*/ newValue, /*Boolean?*/ priorityChange){
+		_handleOnChange: function (/*anything*/ newValue, /*Boolean?*/ priorityChange) {
 			// summary:
 			//		Called when the value of the widget is set.  Calls onChange() if appropriate
 			// newValue:
@@ -70,18 +72,18 @@ define([
 			// tags:
 			//		private
 			this._pendingOnChange = this._pendingOnChange
-				|| (typeof newValue != typeof this.previousOnChangeValue)
-				|| (this.compare(newValue, this.previousOnChangeValue) != 0);
-			if((this.intermediateChanges || priorityChange || priorityChange === undefined) && this._pendingOnChange){
+				|| (typeof newValue !== typeof this.previousOnChangeValue)
+				|| (this.compare(newValue, this.previousOnChangeValue) !== 0);
+			if ((this.intermediateChanges || priorityChange || priorityChange === undefined) && this._pendingOnChange) {
 				this.previousOnChangeValue = newValue;
 				this._pendingOnChange = false;
-				if(this._onChangeHandle){
+				if (this._onChangeHandle) {
 					this._onChangeHandle.remove();
 				}
 				// defer allows hidden value processing to run and
 				// also the onChange handler can safely adjust focus, etc
 				this._onChangeHandle = this.defer(
-					function(){
+					function () {
 						this._onChangeHandle = null;
 						this.onChange(newValue);
 					}

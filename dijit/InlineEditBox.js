@@ -13,22 +13,23 @@ define([
 	"dojo/when",
 	"../a11yclick",
 	"../focus",
-	"../_WidgetBase",
+	"../Widget",
 	"../_TemplatedMixin",
 	"../_WidgetsInTemplateMixin",
-	"../_Container",
-	"../_FocusMixin",
+	"../Container",
 	"../form/Button",
 	"../form/_TextBoxMixin",
 	"../form/TextBox",
 	"dojo/text!./templates/InlineEditBox.html",
 	"dojo/i18n!../nls/common"
-], function(require, aspect, declare, domAttr, domClass, domConstruct, domStyle, keys, lang, on, has, when, a11yclick, fm, _WidgetBase, _TemplatedMixin, _WidgetsInTemplateMixin, _Container, _FocusMixin, Button, _TextBoxMixin, TextBox, template, nlsCommon){
+], function(require, aspect, declare, domAttr, domClass, domConstruct, domStyle, keys, lang, on, has, when,
+			a11yclick, fm, Widget, _TemplatedMixin, _WidgetsInTemplateMixin, Container,
+			Button, _TextBoxMixin, TextBox, template, nlsCommon){
 
 	// module:
 	//		dui/InlineEditBox
 
-	var InlineEditor = declare("dui._InlineEditor", [_WidgetBase, _TemplatedMixin, _WidgetsInTemplateMixin, _FocusMixin], {
+	var InlineEditor = declare("dui._InlineEditor", [Widget, _TemplatedMixin, _WidgetsInTemplateMixin], {
 		// summary:
 		//		Internal widget used by InlineEditBox, displayed when in editing mode
 		//		to display the editor and maybe save/cancel buttons.  Calling code should
@@ -247,7 +248,7 @@ define([
 	});
 
 
-	var InlineEditBox = declare("dui.InlineEditBox" + (has("dojo-bidi") ? "_NoBidi" : ""), _WidgetBase, {
+	var InlineEditBox = declare("dui.InlineEditBox" + (has("dojo-bidi") ? "_NoBidi" : ""), Widget, {
 		// summary:
 		//		An element with in-line edit capabilities
 		//
@@ -367,8 +368,8 @@ define([
 			}
 
 			if(!this.value && !("value" in this.params)){ // "" is a good value if specified directly so check params){
-				this.value = lang.trim(this.renderAsHtml ? this.displayNode.innerHTML :
-					(this.displayNode.innerText || this.displayNode.textContent || ""));
+				this.value = (this.renderAsHtml ? this.displayNode.innerHTML :
+					(this.displayNode.innerText || this.displayNode.textContent || "")).trim();
 			}
 			if(!this.value){
 				this.displayNode.innerHTML = this.noValueIndicator;
@@ -550,7 +551,7 @@ define([
 			//		Hook to make set("value", ...) work.
 			//		Inserts specified HTML value into this node, or an "input needed" character if node is blank.
 
-			val = lang.trim(val);
+			val = val.trim();
 			var renderVal = this.renderAsHtml ? val : val.replace(/&/gm, "&amp;").replace(/</gm, "&lt;").replace(/>/gm, "&gt;").replace(/"/gm, "&quot;").replace(/\n/g, "<br>");
 			this.displayNode.innerHTML = renderVal || this.noValueIndicator;
 			this._set("value", val);

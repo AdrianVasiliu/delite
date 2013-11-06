@@ -6,15 +6,35 @@ define([
 
 	var doc = document;
 
+	// Workaround problem using dcl() on native DOMNodes on FF and IE,
+	// see https://github.com/uhop/dcl/issues/9.
+	// Fixes case where tabIndex is declared in a mixin that's passed to register().
+	dcl.mix = function(a, b){
+		for(var n in b){
+			try {
+				a[n] = b[n];
+			} catch (e) {
+				Object.defineProperty(a, n, {
+					configurable: true,
+					writable: true,
+					enumerable: true,
+					value: b[n]
+				});
+			}
+		}
+	};
+
 	// Does platform have native support for document.register() or a polyfill to simulate it?
 	has.add('document-register', document.register);
 
 	// Can we use __proto__ to reset the prototype of DOMNodes?
 	// It's not available on IE<11, and even on IE11 it makes the node's attributes (ex: node.attributes, node.textContent)
 	// disappear, so disabling it on IE11 for now.
-	has.add('dom-proto-set', function(){
+	has.add('dom-proto-set', function () {
 		var node = document.createElement("div");
-		if(!node.__proto__){ return false; }
+		if (!node.__proto__) {
+			return false;
+		}
 		node.__proto__ = {};
 		return !!node.attributes;
 	});
@@ -41,7 +61,7 @@ define([
 	 * @param {String} tag
 	 * @returns {Element} The DOMNode
 	 */
-	function createElement(tag){
+	function createElement(tag) {
 		var base = registry[tag] ? registry[tag].extends : null,
 			element = doc.createElement(base || tag);
 		if (base) {
@@ -63,7 +83,7 @@ define([
 
 		do {
 			var keys = Object.getOwnPropertyNames(proto);	// better than Object.keys() because finds hidden props too
-			for (var i=0, k; k=keys[i]; i++) {
+			for (var i = 0, k; k = keys[i]; i++) {
 				if (!props[k]) {
 					props[k] = Object.getOwnPropertyDescriptor(proto, k);
 				}
@@ -80,7 +100,7 @@ define([
 	 * Roughly equivalent to dojo/parser::instantiate(), but for a single node, not an array
 	 * @param {Element} inElement The DOMNode
 	 */
-	function upgrade(element){
+	function upgrade(element) {
 		if (!element.__upgraded__) {
 			var widget = registry[element.getAttribute('is') || element.nodeName.toLowerCase()];
 			if (widget) {
@@ -179,7 +199,7 @@ define([
 	/**
 	 * For a constructor function, attempt to determine name of the "class"
 	 * @param  {Function} base The constructor function to identify
-	 * @return {String}	       The string name of the class
+	 * @return {String}           The string name of the class
 	 */
 	function getBaseName(base) {
 		// Try to use Function.name if available
@@ -220,34 +240,34 @@ define([
 		if (has("document-register")) {
 			tagConstructor = doc.register(tag, config);
 		} else {
-			if(!has("dom-proto-set")) {
+			if (!has("dom-proto-set")) {
 				// Get descriptors for all the properties in the prototype.  This is needed on IE<=10 in upgrade().
 				config.props = getPropDescriptors(proto);
 			}
 
 			// Register the selector to find this custom element
-			selectors.push( config.extends ? config.extends + '[is="' + tag + '"]' : tag);
+			selectors.push(config.extends ? config.extends + '[is="' + tag + '"]' : tag);
 
 			// Note: if we wanted to support registering new types after the parser was called, then here we should
 			// scan the document for the new type (selectors[length-1]) and upgrade any nodes found.
 
 			// Create a constructor method to return a DOMNode representing this widget.
-			tagConstructor = function(params, srcNodeRef){
+			tagConstructor = function (params, srcNodeRef) {
 				// Create new widget node or upgrade existing node to widget
 				var node;
-				if(srcNodeRef){
+				if (srcNodeRef) {
 					node = typeof srcNodeRef == "string" ? document.getElementById(srcNodeRef) : srcNodeRef;
 					upgrade(node);
-				}else{
+				} else {
 					node = createElement(tag);
 				}
 
 				// Set parameters on node
-				for(var name in params || {}){
-					if(!(name in node) && /^on[A-Z]/.test(name) && node.on){
+				for (var name in params || {}) {
+					if (!(name in node) && /^on[A-Z]/.test(name) && node.on) {
 						// convert parameters like onMouseMove to on() calls
 						node.on(name.substring(2).toLowerCase(), params[name]);
-					}else{
+					} else {
 						node[name] = params[name];
 					}
 				}
@@ -286,7 +306,7 @@ define([
 	 * @return {Function}                             A constructor function that will create an instance of the custom
 	 *                                                element
 	 */
-	function register (tag, superclasses, props) {
+	function register(tag, superclasses, props) {
 		// Create the widget class by extending specified superclasses and adding specified properties.
 
 		// Make sure all the bases have their proper constructors for being composited.
@@ -334,15 +354,15 @@ define([
 	 * Parse the given DOM tree for any DOMNodes that need to be upgraded to widgets.
 	 * @param {Element?} Root DOMNode to parse from
 	 */
-	function parse(root){
-		if(has("document-register")){
+	function parse(root) {
+		if (has("document-register")) {
 			// If there's native support for custom elements then they are parsed automatically
 			return;
 		}
 
 		// Otherwise, parse manually
 		var node, idx = 0, nodes = (root || doc).querySelectorAll(selectors);
-		while(node = nodes[idx++]){
+		while (node = nodes[idx++]) {
 			upgrade(node);
 		}
 
@@ -350,8 +370,8 @@ define([
 		// just call startup on all widget nodes.  Most of the calls will be ignored since the nodes
 		// have already been started.
 		idx = 0;
-		while(node = nodes[idx++]){
-			if(node.startup){
+		while (node = nodes[idx++]) {
+			if (node.startup) {
 				node.startup();
 			}
 		}
@@ -361,12 +381,13 @@ define([
 	// Setup return value as register() method, with other methods hung off it.
 	register.upgrade = upgrade;
 	register.createElement = createElement;
+	register.parse = parse;
 
 	// Add helpers from dcl for declaring classes.
+	register.dcl = dcl;
 	register.after = dcl.after;
 	register.before = dcl.before;
 	register.around = dcl.around;
-	register.parse = parse;
 
 	return register;
 });

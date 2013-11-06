@@ -1,13 +1,13 @@
 define([
 	"dcl/dcl",
 	"dojo/dom-class", // domClass.toggle
-	"./_WidgetBase"
-], function(dcl, domClass, _WidgetBase){
+	"./Widget"
+], function (dcl, domClass, Widget) {
 
 	// module:
-	//		dui/_CssStateMixin
+	//		dui/CssState
 
-	return dcl(_WidgetBase, {
+	return dcl(Widget, {
 		// summary:
 		//		Update the visual state of the widget by setting CSS classes on widget root node
 		//		by combining this.baseClass with various suffixes that represent the current widget state(s).
@@ -18,7 +18,8 @@ define([
 		//		this.disabled and this.readOnly:
 		//
 		//		- Error - ValidationTextBox sets this.state to "Error" if the current input value is invalid
-		//		- Incomplete - ValidationTextBox sets this.state to "Incomplete" if the current input value is not finished yet
+		//		- Incomplete - ValidationTextBox sets this.state to "Incomplete" if the current input value
+		//		  is not finished yet
 		//		- Checked - ex: a checkmark or a ToggleButton in a checked state, will have this.checked==true
 		//		- Selected - ex: currently selected tab will have this.selected==true
 		//		- Disabled - if the widget is disabled
@@ -29,29 +30,30 @@ define([
 		//		List of properties to watch
 		booleanCssProps: ["disabled", "readOnly", "selected", "focused", "opened"],
 
-		postCreate: function(){
+		postCreate: function () {
 			var self = this, baseClasses = this.baseClass.split(" ");
-			function toggleClasses(/*String*/ modifier, /*Boolean*/ condition){
-				if(!modifier){
+
+			function toggleClasses(/*String*/ modifier, /*Boolean*/ condition) {
+				if (!modifier) {
 					return;
 				}
-				var classes = baseClasses.map(function(c){
+				var classes = baseClasses.map(function (c) {
 					return c + modifier[0].toUpperCase() + modifier.substr(1);
 				});
 				domClass.toggle(self, classes, condition);
 			}
 
 			// Monitoring changes to disabled, readonly, etc. state, and update CSS class of root node
-			this.booleanCssProps.forEach(function(name){
-				this.watch(name, function(name, oval, nval){
+			this.booleanCssProps.forEach(function (name) {
+				this.watch(name, function (name, oval, nval) {
 					toggleClasses(name, nval);
 				});
 			}, this);
-			this.watch("checked",  function(name, oval, nval){
-				toggleClasses(oval == "mixed" ? "mixed" : "checked", false);
-				toggleClasses(nval == "mixed" ? "mixed" : "checked", nval);
+			this.watch("checked", function (name, oval, nval) {
+				toggleClasses(oval === "mixed" ? "mixed" : "checked", false);
+				toggleClasses(nval === "mixed" ? "mixed" : "checked", nval);
 			});
-			this.watch("state",  function(name, oval, nval){
+			this.watch("state", function (name, oval, nval) {
 				toggleClasses(oval, false);
 				toggleClasses(nval, true);
 			});

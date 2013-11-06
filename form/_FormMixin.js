@@ -1,6 +1,6 @@
 define([
 	"dojo/_base/declare", // declare
-	"dojo/_base/lang", // lang.hitch lang.isArray
+	"dojo/_base/lang", // lang.hitch lang.getObject lang.setObject
 	"dojo/on",
 	"dojo/window" // winUtils.scrollIntoView
 ], function(declare, lang, on, winUtils){
@@ -45,7 +45,7 @@ define([
 		//	* people[3].sex (for a list of people [{name: Bill, sex: M}, ...])
 
 
-		_getDescendantFormWidgets: function(/*dui/_WidgetBase[]?*/ children){
+		_getDescendantFormWidgets: function(/*dui/Widget[]?*/ children){
 			// summary:
 			//		Returns all form widget descendants, searching through non-form child widgets like BorderContainer
 			var res = [];
@@ -256,7 +256,7 @@ define([
 				}else{
 					var prev=lang.getObject(name, false, obj);
 					if(typeof prev != "undefined"){
-						if(lang.isArray(prev)){
+						if(Array.isArray(prev)){
 							prev.push(value);
 						}else{
 							lang.setObject(name, [prev, value], obj);

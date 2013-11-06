@@ -1,11 +1,19 @@
-define(["dcl/dcl", "dojo/_base/lang", "dojo/when", "./_Invalidating"], function (dcl, lang, when, _Invalidating) {
+define(["dcl/dcl", "dojo/_base/lang", "dojo/when", "./Invalidating"], function (dcl, lang, when, Invalidating) {
 
-	return dcl(_Invalidating, {
+	var isStoreInvalidated = function (props) {
+		return props.store || props.query || props.queryOptions;
+	};
+
+	var setStoreValidate = function (props) {
+		props.store = props.query = props.queryOptions = false;
+	};
+
+	return dcl(Invalidating, {
 
 		// summary:
 		//		Mixin for widgets for store management that creates widget render items from store items after
 		//		querying the store. The receiving class must extend dojo/Stateful and dojo/Evented or
-		//		dui/_WidgetBase.
+		//		dui/Widget.
 		// description:
 		//		Classes extending this mixin automatically create render items that are consumable by the widget
 		//		from store items after querying the store. This happens each time the widget store, query or
@@ -32,7 +40,12 @@ define(["dcl/dcl", "dojo/_base/lang", "dojo/when", "./_Invalidating"], function 
 		preCreate: function () {
 			// we want to be able to wait for potentially several of those properties to be set before
 			// actually firing the store request
-			this.addInvalidatingProperties("store", "query", "queryOptions");
+			this.addInvalidatingProperties({
+					"store": "invalidateProperty",
+					"query": "invalidateProperty",
+					"queryOptions": "invalidateProperty"
+				}
+			);
 		},
 
 		renderItemToItem: function (/*Object*/ renderItem) {
@@ -61,16 +74,17 @@ define(["dcl/dcl", "dojo/_base/lang", "dojo/when", "./_Invalidating"], function 
 			this.emit("query-success", { items: items, cancelable: false, bubbles: true });
 		},
 
-		refreshRendering: function () {
+		refreshProperties: function (props) {
 			// summary:
 			//		Actually refresh the rendering by querying the store.
 			// tags:
 			//		protected
-			if (this._isStoreInvalidated()) {
+			if (isStoreInvalidated(props)) {
 				if (this._observeHandler) {
 					this._observeHandler.remove();
 					this._observeHandler = null;
 				}
+				setStoreValidate(props);
 				var store = this.store;
 				if (store != null) {
 					var results = store.query(this.query, this.queryOptions);
@@ -87,11 +101,6 @@ define(["dcl/dcl", "dojo/_base/lang", "dojo/when", "./_Invalidating"], function 
 					this.initItems([]);
 				}
 			}
-		},
-
-		_isStoreInvalidated: function () {
-			return this.invalidatedProperties.store || this.invalidatedProperties.query ||
-				this.invalidatedProperties.queryOptions;
 		},
 
 		_queryError: function (error) {

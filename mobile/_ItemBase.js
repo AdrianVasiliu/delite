@@ -6,19 +6,19 @@ define([
 	"dojo/on",
 	"dojo/touch",
 	"dui/registry",
-	"dui/_Contained",
-	"dui/_Container",
-	"dui/_WidgetBase",
+	"../Contained",
+	"../Container",
+	"../Widget",
 	"./TransitionEvent",
 	"./iconUtils",
 	"dojo/sniff",
 	"dojo/has!dojo-bidi?dui/mobile/bidi/_ItemBase"
-], function(declare, lang, win, domClass, on, touch, registry, Contained, Container, WidgetBase, TransitionEvent, iconUtils, has, BidiItemBase){
+], function(declare, lang, win, domClass, on, touch, registry, Contained, Container, Widget, TransitionEvent, iconUtils, has, BidiItemBase){
 
 	// module:
 	//		dui/mobile/_ItemBase
 
-	var _ItemBase = declare(has("dojo-bidi") ? "dui.mobile._NonBidiItemBase" : "dui.mobile._ItemBase", [WidgetBase, Container, Contained], {
+	var _ItemBase = declare(has("dojo-bidi") ? "dui.mobile._NonBidiItemBase" : "dui.mobile._ItemBase", [Widget, Container, Contained], {
 		// summary:
 		//		A base class for item classes (e.g. ListItem, IconItem, etc.).
 		// description:

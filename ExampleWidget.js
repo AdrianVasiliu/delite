@@ -1,12 +1,11 @@
 define([
 	"./register",
-	"./_WidgetBase",
-	"./_CssStateMixin",
+	"./CssState",
 	"./handlebars!./templates/ExampleWidget.html",
 	"./themes/load!ExampleWidget"	// inserts the CSS for this widget for page's theme
-], function(register, _WidgetBase, _CssStateMixin, renderer){
+], function (register, CssState, renderer) {
 
-	return register("dui-example", [_WidgetBase, _CssStateMixin], {
+	return register("d-example", CssState, {
 		// summary:
 		//		Example widget for testing and as template for new widgets.
 

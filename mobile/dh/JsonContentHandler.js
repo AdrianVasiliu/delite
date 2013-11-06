@@ -3,9 +3,8 @@ define([
 	"dojo/_base/declare",
 	"dojo/_base/lang",
 	"dojo/_base/Deferred",
-	"dojo/json",
 	"dojo/dom-construct"
-], function(dojo, declare, lang, Deferred, json, domConstruct){
+], function(dojo, declare, lang, Deferred, domConstruct){
 
 	// module:
 	//		dui/mobile/dh/JsonContentHandler
@@ -118,7 +117,7 @@ define([
 			target.insertBefore(container, refNode);
 			this._ws = [];
 			this._req = [];
-			var root = json.parse(content);
+			var root = JSON.parse(content);
 			return Deferred.when(this._loadPrereqs(root), lang.hitch(this, function(){
 				view = this._instantiate(root, container);
 				view.style.visibility = "hidden";
@@ -165,7 +164,7 @@ define([
 				this._req.push(cls);
 				if(!cls){ continue; }
 				var objs = className ? [obj] :
-						(lang.isArray(obj[key]) ? obj[key] : [obj[key]]);
+						(Array.isArray(obj[key]) ? obj[key] : [obj[key]]);
 				for(var i = 0; i < objs.length; i++){
 					// process child widgets
 					if(!className){
@@ -194,7 +193,7 @@ define([
 				if(!cls){ continue; }
 				var proto = cls.prototype,
 					objs = className ? [obj] :
-						(lang.isArray(obj[key]) ? obj[key] : [obj[key]]);
+						(Array.isArray(obj[key]) ? obj[key] : [obj[key]]);
 				for(var i = 0; i < objs.length; i++){
 					var params = {};
 					for(var prop in objs[i]){
@@ -202,7 +201,7 @@ define([
 							var v = objs[i][prop];
 							prop = prop.substring(1);
 							var t = typeof proto[prop];
-							if(lang.isArray(proto[prop])){
+							if(Array.isArray(proto[prop])){
 								params[prop] = v.split(/\s*,\s*/);
 							}else if(t === "string"){
 								params[prop] = v;
@@ -211,7 +210,7 @@ define([
 							}else if(t === "boolean"){
 								params[prop] = (v !== "false");
 							}else if(t === "object"){
-								params[prop] = json.parse(v);
+								params[prop] = JSON.parse(v);
 							}else if(t === "function"){
 								params[prop] = lang.getObject(v, false) || new Function(v);
 							}

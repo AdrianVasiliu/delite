@@ -1,14 +1,14 @@
 define([
 	"dojo/_base/declare",
-	"dui/_Contained",
-	"dui/_Container",
-	"dui/_WidgetBase"
-], function(declare, Contained, Container, WidgetBase){
+	"../Contained",
+	"../Container",
+	"../Widget"
+], function(declare, Contained, Container, Widget){
 
 	// module:
 	//		dui/mobile/_PickerBase
 
-	return declare("dui.mobile._PickerBase", [WidgetBase, Container, Contained], {
+	return declare("dui.mobile._PickerBase", [Widget, Container, Contained], {
 		// summary:
 		//		A base class for picker classes (e.g. SpinWheel, ValuePicker).
 

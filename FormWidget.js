@@ -1,28 +1,22 @@
 define([
 	"dcl/dcl",
-	"dojo/_base/declare",
-	"dojo/dom-attr", // domAttr.set
-	"dojo/dom-style", // domStyle.get
-	"dojo/_base/lang", // lang.hitch lang.isArray
-	"dojo/mouse", // mouse.isLeft
-	"dojo/on",
-	"dojo/sniff", // has("webkit")
 	"dojo/window", // winUtils.scrollIntoView
-	"./a11y" // a11y.hasDefaultTabStop
-], function(dcl, domAttr, domStyle, lang, mouse, on, has, winUtils, a11y){
+	"./Widget"
+], function (dcl, winUtils, Widget) {
 
 	// module:
-	//		dui/_FormWidgetMixin
+	//		dui/FormWidget
 
-	return dcl(null, {
+	return dcl(Widget, {
 		// summary:
-		//		Mixin for widgets corresponding to native HTML elements such as `<checkbox>` or `<button>`,
+		//		Mixin for widgets that extend HTMLElement, but conceptually correspond
+		//		to native HTML elements such as `<checkbox>` or `<button>`,
 		//		which can be children of a `<form>` node or a `dui/form/Form` widget.
 		//
 		// description:
 		//		Represents a single HTML element.
 		//		All these widgets should have these attributes just like native HTML input elements.
-		//		You can set them during widget construction or afterwards, via `dui/_WidgetBase.set()`.
+		//		You can set them during widget construction or afterwards, via `dui/Widget.set()`.
 		//
 		//		They also share some common methods.
 
@@ -46,10 +40,13 @@ define([
 		//		Apply aria-label in markup to the widget's focusNode
 		"aria-label": "focusNode",
 
-		// tabIndex: String
-		//		Order fields are traversed when user hits the tab key
-		tabIndex: "0",
-		_setTabIndexAttr: "focusNode", // force copy even when tabIndex default value, needed since Button is <span>
+		/***
+		 TODO: commented out as it causes errors on FF
+		 // tabIndex: String
+		 //        Order fields are traversed when user hits the tab key
+		 tabIndex: "0",
+		 _setTabIndexAttr: "focusNode", // force copy even when tabIndex default value, needed since Button is <span>
+		 ***/
 
 		// disabled: Boolean
 		//		Should this widget respond to user input?
@@ -60,17 +57,17 @@ define([
 		//		On focus, should this widget scroll into view?
 		scrollOnFocus: true,
 
-/****
-TODO: the code below only makes sense when focusNode != the root node.
-Otherwise, we can't setup custom setters for DOMNode properties like "disabled" because then we can't control
-the domnode's disabled property.
+		/****
+		 TODO: the code below only makes sense when focusNode != the root node.
+		 Otherwise, we can't setup custom setters for DOMNode properties like "disabled" because then we can't control
+		 the domnode's disabled property.
 
-		// Override _WidgetBase mapping id to this.domNode, needs to be on focusNode so <label> etc.
-		// works with screen reader
-		_setIdAttr: "focusNode",
+		 // Override Widget mapping id to this.domNode, needs to be on focusNode so <label> etc.
+		 // works with screen reader
+		 _setIdAttr: "focusNode",
 
-		// TODO: trim or remove this function
-		_setDisabledAttr: function(/#Boolean#/ value){
+		 // TODO: trim or remove this function
+		 _setDisabledAttr: function(/#Boolean#/ value){
 			this._set("disabled", value);
 			domAttr.set(this.focusNode, 'disabled', value);
 			if(this.valueNode){
@@ -81,7 +78,8 @@ the domnode's disabled property.
 			if(value){
 				// clear tab stop(s) on this widget's focusable node(s)  (ComboBox has two focusable nodes)
 				var attachPointNames = this.focusNode ? ["focusNode"] : [];
-				(lang.isArray(attachPointNames) ? attachPointNames : [attachPointNames]).forEach(function(attachPointName){
+				(typeof attachPointNames === "array" ? attachPointNames : [attachPointNames]).forEach(
+						function(attachPointName){
 					var node = this[attachPointName];
 					// complex code because tabIndex=-1 on a <div> doesn't work on FF
 					if(has("webkit") || a11y.hasDefaultTabStop(node)){    // see #11064 about webkit bug
@@ -96,31 +94,31 @@ the domnode's disabled property.
 				}
 			}
 		},
-****/
+		 ****/
 
-		_onFocus: dcl.before(function(){
-			if(this.scrollOnFocus){
-				this.defer(function(){
+		_onFocus: dcl.before(function () {
+			if (this.scrollOnFocus) {
+				this.defer(function () {
 					winUtils.scrollIntoView(this);
 				}); // without defer, the input caret position can change on mouse click
 			}
 		}),
 
-		isFocusable: function(){
+		isFocusable: function () {
 			// summary:
 			//		Tells if this widget is focusable or not.  Used internally by dui.
 			// tags:
 			//		protected
-			return !this.disabled && this.focusNode && (domStyle.get(this, "display") != "none");
+			return !this.disabled && this.focusNode && (domStyle.get(this, "display") !== "none");
 		},
 
-		focus: function(){
+		focus: function () {
 			// summary:
 			//		Put focus on this widget
-			if(!this.disabled && this.focusNode.focus){
-				try{
+			if (!this.disabled && this.focusNode.focus) {
+				try {
 					this.focusNode.focus();
-				}catch(e){
+				} catch (e) {
 					// squelch errors from hidden nodes
 				}
 			}

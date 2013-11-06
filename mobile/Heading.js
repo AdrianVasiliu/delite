@@ -8,22 +8,22 @@ define([
 	"dojo/dom-style",
 	"dojo/dom-attr",
 	"dui/registry",
-	"dui/_Contained",
-	"dui/_Container",
-	"dui/_WidgetBase",
+	"../Contained",
+	"../Container",
+	"../Widget",
 	"./ProgressIndicator",
 	"./ToolBarButton",
 	"./View",
 	"dojo/has",
 	"dojo/has!dojo-bidi?dui/mobile/bidi/Heading"
-], function(declare, lang, win, dom, domClass, domConstruct, domStyle, domAttr, registry, Contained, Container, WidgetBase, ProgressIndicator, ToolBarButton, View, has, BidiHeading){
+], function(declare, lang, win, dom, domClass, domConstruct, domStyle, domAttr, registry, Contained, Container, Widget, ProgressIndicator, ToolBarButton, View, has, BidiHeading){
 
 	// module:
 	//		dui/mobile/Heading
 
 	var dm = lang.getObject("dui.mobile", true);
 
-	var Heading = declare(has("dojo-bidi") ? "dui.mobile.NonBidiHeading" : "dui.mobile.Heading", [WidgetBase, Container, Contained],{
+	var Heading = declare(has("dojo-bidi") ? "dui.mobile.NonBidiHeading" : "dui.mobile.Heading", [Widget, Container, Contained],{
 		// summary:
 		//		A widget that represents a navigation bar.
 		// description:
@@ -105,7 +105,7 @@ define([
 				if(!this.label){
 					this.domNode.childNodes.forEach(function(n){
 						if(n.nodeType == 3){
-							var v = lang.trim(n.nodeValue);
+							var v = n.nodeValue.trim();
 							if(v){
 								this.label = v;
 								this.labelNode = domConstruct.create("span", {innerHTML:v}, n, "replace");

@@ -13,21 +13,21 @@ define([
 	"dojo/on",
 	"dui/registry",
 	"dojo/topic",
-	"dui/_Contained",
-	"dui/_Container",
-	"dui/_WidgetBase",
+	"../Contained",
+	"../Container",
+	"../Widget",
 	"./ViewController", // to load ViewController for you (no direct references)
 	"./common",
 	"./viewRegistry",
 	"./_css3"
-], function(config, declare, lang, has, win, Deferred, dom, domClass, domConstruct, domGeometry, domStyle, on, registry, topic, Contained, Container, WidgetBase, ViewController, common, viewRegistry, css3){
+], function(config, declare, lang, has, win, Deferred, dom, domClass, domConstruct, domGeometry, domStyle, on, registry, topic, Contained, Container, Widget, ViewController, common, viewRegistry, css3){
 
 	// module:
 	//		dui/mobile/View
 
 	var dm = lang.getObject("dui.mobile", true);
 
-	return declare("dui.mobile.View", [WidgetBase, Container, Contained], {
+	return declare("dui.mobile.View", [Widget, Container, Contained], {
 		// summary:
 		//		A container widget for any HTML element and/or Dojo widgets
 		// description:
@@ -200,7 +200,7 @@ define([
 			//		Remove all the "dui" prefixed classes except dui*View.
 			if(!node){ return; }
 			var classes = [];
-			lang.trim(node.className||"").split(/\s+/).forEach(function(c){
+			(node.className || "").trim().split(/\s+/).forEach(function(c){
 				if(c.match(/^dui\w*View$/) || c.indexOf("dui") === -1){
 					classes.push(c);
 				}
@@ -375,7 +375,8 @@ define([
 			}
 
 			this.onBeforeTransitionOut.apply(this, this._arguments);
-			topic.publish.apply(topic, ["/dui/mobile/beforeTransitionOut", this].concat(lang._toArray(this._arguments)));
+			topic.publish.apply(topic, 
+				["/dui/mobile/beforeTransitionOut", this].concat([].concat(Array.prototype.slice.call(this._arguments, 0))));
 			if(toWidget){
 				// perform view transition keeping the scroll position
 				if(this.keepScrollPos && !this.getParent()){
@@ -390,7 +391,8 @@ define([
 					toNode.style.top = "0px";
 				}
 				toWidget.onBeforeTransitionIn.apply(toWidget, this._arguments);
-				topic.publish.apply(topic, ["/dui/mobile/beforeTransitionIn", toWidget].concat(lang._toArray(this._arguments)));
+				topic.publish.apply(topic, 
+					["/dui/mobile/beforeTransitionIn", toWidget].concat(Array.prototype.slice.call(this._arguments, 0)));
 			}
 			toNode.style.display = "none";
 			toNode.style.visibility = "visible";

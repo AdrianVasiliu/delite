@@ -7,13 +7,13 @@ define([
 	"dojo/dom-attr",
 	"dojo/on",
 	"dui/registry",
-	"dui/_WidgetBase",
+	"../Widget",
 	"./iconUtils",
 	"./_ItemBase",
 	"./ProgressIndicator",
 	"dojo/has",
 	"dojo/has!dojo-bidi?dui/mobile/bidi/ListItem"
-], function(declare, lang, domClass, domConstruct, domStyle, domAttr, on, registry, WidgetBase, iconUtils, ItemBase, ProgressIndicator, has,  BidiListItem){
+], function(declare, lang, domClass, domConstruct, domStyle, domAttr, on, registry, Widget, iconUtils, ItemBase, ProgressIndicator, has,  BidiListItem){
 
 	// module:
 	//		dui/mobile/ListItem

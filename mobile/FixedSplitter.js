@@ -3,16 +3,16 @@ define([
 	"dojo/_base/window",
 	"dojo/dom-class",
 	"dojo/dom-geometry",
-	"dui/_Contained",
-	"dui/_Container",
-	"dui/_WidgetBase",
+	"../Contained",
+	"../Container",
+	"../Widget",
 	"dojo/has"
-], function(declare, win, domClass, domGeometry, Contained, Container, WidgetBase, has){
+], function(declare, win, domClass, domGeometry, Contained, Container, Widget, has){
 
 	// module:
 	//		dui/mobile/FixedSplitter
 
-	return declare("dui.mobile.FixedSplitter", [WidgetBase, Container, Contained], {
+	return declare("dui.mobile.FixedSplitter", [Widget, Container, Contained], {
 		// summary:
 		//		A layout container that splits the window horizontally or
 		//		vertically.

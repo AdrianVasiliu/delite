@@ -243,7 +243,7 @@
 		tearDown = function(){
 			// summary:
 			//		Destroy all widgets, top down, and then check for any orphaned widgets
-			require("dui/_WidgetBase").prototype.findWidgets(document.body).forEach(function(w){
+			require("dui/Widget").prototype.findWidgets(document.body).forEach(function(w){
 				w.destroy();
 			});
 		};
@@ -650,7 +650,7 @@
 
 				<div data-dojo-type="dui/TooltipDialog" id="tooltipDlg" data-dojo-props='
 						title:"Enter Login information",
-						execute: function(){ alert("submitted w/args:\n" + dojo.toJson(arguments[0], true)); }
+						execute: function(){ alert("submitted w/args:\n" + JSON.stringify(arguments[0])); }
 					'>
 					<table>
 						<tr>

@@ -10,17 +10,17 @@ define([
 	"dojo/has!dojo-bidi?dui/mobile/bidi/SpinWheelSlot",
 	"dojo/touch",
 	"dojo/on",
-	"dui/_Contained",
-	"dui/_WidgetBase",
+	"../Contained",
+	"../Widget",
 	"./scrollable",
 	"./common"
 ], function(dojo, declare, lang, win, aspect, domClass, domConstruct, has, BidiSpinWheelSlot,
-	touch, on, Contained, WidgetBase, Scrollable){
+	touch, on, Contained, Widget, Scrollable){
 
 	// module:
 	//		dui/mobile/SpinWheelSlot
 
-	var SpinWheelSlot = declare(has("dojo-bidi") ? "dui.mobile.NonBidiSpinWheelSlot" : "dui.mobile.SpinWheelSlot", [WidgetBase, Contained, Scrollable], {
+	var SpinWheelSlot = declare(has("dojo-bidi") ? "dui.mobile.NonBidiSpinWheelSlot" : "dui.mobile.SpinWheelSlot", [Widget, Contained, Scrollable], {
 		// summary:
 		//		A slot of a SpinWheel.
 		// description:

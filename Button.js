@@ -1,17 +1,16 @@
 define([
+	"dcl/dcl",
 	"dojo/hccss",
 	"dojo/_base/lang",
-	"dojo/dom-class",
 	"dojo/dom-construct",
 	"./register",
-	"./_WidgetBase",
-	"./mixins/_Invalidating",
+	"./Widget",
+	"./mixins/Invalidating",
 	"dojo/has!dojo-bidi?./bidi/Button",
 	"./themes/load!common,Button"		// common for duiInline etc., Button for duiButton etc.
-], function(has, lang, domClass, domConstruct, register, WidgetBase, _Invalidating, BidiButton){
+], function (dcl, has, lang, domConstruct, register, Widget, Invalidating, BidiButton) {
 
-	var Button = register(has("dojo-bidi") ? "dui-nonbidibutton" : "dui-button",
-		[HTMLButtonElement, WidgetBase, _Invalidating], {
+	var Button = dcl(Invalidating, {
 		// summary:
 		//		Non-templated BUTTON widget.
 		//
@@ -43,13 +42,13 @@ define([
 		//		The name of the CSS class of this widget.
 		baseClass: "duiButton",
 
-		preCreate: function(){
+		preCreate: function () {
 			this.addInvalidatingProperties("label", "showLabel", "title", "iconClass", "textDir");
 		},
 
-		postCreate: function(){
+		postCreate: function () {
 			// Get label from innerHTML, and then clear it since we are to put the label in a <span>
-			if(!this.label){
+			if (!this.label) {
 				this.label = this.textContent.trim();
 				this.innerHTML = "";
 			}
@@ -57,38 +56,44 @@ define([
 			this.focusNode = this;
 		},
 
-		refreshRendering: function(){
+		refreshRendering: function (props) {
 			// summary:
 			//		Render or re-render the widget, based on property settings.
 			//		Note that this will always create sub-nodes to contain the icon and the label,
 			//		even though that's only really necessary when both are present.
 
 			// Add or remove icon, or change its class
-			if(this.iconClass && !has("highcontrast")){
-				this.iconNode = this.iconNode || domConstruct.create("span", null, this, "first");
-				this.iconNode.className = "duiReset duiInline duiIcon " + this.iconClass;
-			}else if(this.iconNode){
-				domClass.destroy(this.iconNode);
-				delete this.iconNode;
+			if (props.iconClass) {
+				if (this.iconClass && !has("highcontrast")) {
+					this.iconNode = this.iconNode || domConstruct.create("span", null, this, "first");
+					this.iconNode.className = "duiReset duiInline duiIcon " + this.iconClass;
+				} else if (this.iconNode) {
+					domConstruct.destroy(this.iconNode);
+					delete this.iconNode;
+				}
 			}
-
 			// Set or remove label
 			var showLabel = this.label && (this.showLabel || has("highcontrast"));
-			if(showLabel){
-				this.containerNode = this.containerNode ||
-					domConstruct.create("span", {className: "duiReset duiInline duiButtonText"}, this);
-				this.containerNode.textContent = this.label;
-			}else if(this.containerNode){
-				domConstruct.destroy(this.containerNode);
-				delete this.containerNode;
+			if (props.label || props.showLabel) {
+				if (showLabel) {
+					this.containerNode = this.containerNode ||
+						domConstruct.create("span", {className: "duiReset duiInline duiButtonText"}, this);
+					this.containerNode.textContent = this.label;
+				} else if (this.containerNode) {
+					domConstruct.destroy(this.containerNode);
+					delete this.containerNode;
+				}
 			}
 
 			// Set title.  If no label is shown and no title has been specified,
 			// label is also set as title attribute of icon.
 			// TODO: if label is later changed, title won't be changed.
-			this.title = this.title || (!showLabel && this.label) || "";
+			if (props.title || props.label) {
+				this.title = this.title || (!showLabel && this.label) || "";
+			}
 		}
 	});
 
-	return has("dojo-bidi") ? register("dui-button", [Button, BidiButton]) : Button;
+	return register("d-button", has("dojo-bidi") ? [HTMLButtonElement, Button, BidiButton] :
+		[HTMLButtonElement, Button]);
 });

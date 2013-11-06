@@ -13,11 +13,11 @@
 	<script type="text/javascript">
 		require([
 			"dojo/_base/declare",
-			"dui/_WidgetBase",
+			"dui/Widget",
 			"dojo/parser",
 			"dui/mobile/compat"
-		], function(declare, WidgetBase){
-			PlainWidget = declare("PlainWidget", WidgetBase, {
+		], function(declare, Widget){
+			PlainWidget = declare("PlainWidget", Widget, {
 				buildRendering: function(){
 					this.inherited(arguments);
 					this.domNode.style.backgroundColor = "gray";

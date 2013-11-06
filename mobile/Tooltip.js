@@ -7,12 +7,12 @@ define([
 	"dojo/dom-geometry",
 	"dojo/dom-style",
 	"dui/place",
-	"dui/_WidgetBase",
+	"../Widget",
 	"dojo/has",
 	"dojo/has!dojo-bidi?dui/mobile/bidi/Tooltip"
-], function(registry, declare, lang, domClass, domConstruct, domGeometry, domStyle, place, WidgetBase, has, BidiTooltip){
+], function(registry, declare, lang, domClass, domConstruct, domGeometry, domStyle, place, Widget, has, BidiTooltip){
 
-	var Tooltip = declare(has("dojo-bidi") ? "dui.mobile.NonBidiTooltip" : "dui.mobile.Tooltip", WidgetBase, {
+	var Tooltip = declare(has("dojo-bidi") ? "dui.mobile.NonBidiTooltip" : "dui.mobile.Tooltip", Widget, {
 		// summary:
 		//		A non-templated popup bubble widget
 

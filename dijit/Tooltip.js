@@ -5,17 +5,17 @@ define([
 	"dojo/dom-class", // domClass.add
 	"dojo/dom-geometry", // domGeometry.position
 	"dojo/dom-style", // domStyle.set, domStyle.get
-	"dojo/_base/lang", // lang.hitch lang.isArrayLike
+	"dojo/_base/lang", // lang.hitch
 	"dojo/mouse",
 	"dojo/on",
 	"dojo/sniff", // has("ie")
 	"../place",
-	"../_WidgetBase",
+	"../Widget",
 	"../_TemplatedMixin",
 	"../BackgroundIframe",
 	"dojo/text!./templates/Tooltip.html"
 ], function(declare, fx, dom, domClass, domGeometry, domStyle, lang, mouse, on, has,
-			place, _WidgetBase, _TemplatedMixin, BackgroundIframe, template){
+			place, Widget, _TemplatedMixin, BackgroundIframe, template){
 
 	// module:
 	//		dui/Tooltip
@@ -29,7 +29,7 @@ define([
 	// The problem is that Tooltip's implementation supplies it's own <iframe> and interacts directly
 	// with dui/place, rather than going through dui/popup like TooltipDialog and other popups (ex: Menu).
 
-	var MasterTooltip = declare("dui._MasterTooltip", [_WidgetBase, _TemplatedMixin], {
+	var MasterTooltip = declare("dui._MasterTooltip", [Widget, _TemplatedMixin], {
 		// summary:
 		//		Internal widget that holds the actual tooltip markup,
 		//		which occurs once per page.
@@ -65,10 +65,10 @@ define([
 			// position: String[]?
 			//		List of positions to try to position tooltip (ex: ["right", "above"])
 			// rtl: Boolean?
-			//		Corresponds to `WidgetBase.dir` attribute, where false means "ltr" and true
+			//		Corresponds to `Widget.dir` attribute, where false means "ltr" and true
 			//		means "rtl"; specifies GUI direction, not text direction.
 			// textDir: String?
-			//		Corresponds to `WidgetBase.textdir` attribute; specifies direction of text.
+			//		Corresponds to `Widget.textdir` attribute; specifies direction of text.
 
 
 			if(this.aroundNode && this.aroundNode === aroundNode && this.containerNode.innerHTML == innerHTML){
@@ -260,7 +260,7 @@ define([
 		});
 	}
 
-	var Tooltip = declare("dui.Tooltip", _WidgetBase, {
+	var Tooltip = declare("dui.Tooltip", Widget, {
 		// summary:
 		//		Pops up a tooltip (a help message) when you hover over a node.
 		//		Also provides static show() and hide() methods that can be used without instantiating a dui/Tooltip.
@@ -435,7 +435,7 @@ define([
 		destroy: function(){
 			this.close();
 
-			// Remove connections manually since they aren't registered to be removed by _WidgetBase
+			// Remove connections manually since they aren't registered to be removed by Widget
 			if(this._connections){
 				this._connections.forEach(function(handle){
 					handle.remove();
@@ -460,10 +460,10 @@ define([
 		// position: String[]?
 		//		List of positions to try to position tooltip (ex: ["right", "above"])
 		// rtl: Boolean?
-		//		Corresponds to `WidgetBase.dir` attribute, where false means "ltr" and true
+		//		Corresponds to `Widget.dir` attribute, where false means "ltr" and true
 		//		means "rtl"; specifies GUI direction, not text direction.
 		// textDir: String?
-		//		Corresponds to `WidgetBase.textdir` attribute; specifies direction of text.
+		//		Corresponds to `Widget.textdir` attribute; specifies direction of text.
 
 		// After/before don't work, but for back-compat convert them to the working after-centered, before-centered.
 		// Possibly remove this in 2.0.   Alternately, get before/after to work.

@@ -5,16 +5,16 @@ define([
 	"dojo/dom-construct",
 	"dojo/dom-style",
 	"dojo/dom-attr",
-	"dui/_Contained",
-	"dui/_Container",
-	"dui/_WidgetBase",
+	"../Contained",
+	"../Container",
+	"../Widget",
 	"dojo/has!dojo-bidi?dui/mobile/bidi/IconMenu",
 	"./IconMenuItem"
-], function(declare, has, domClass, domConstruct, domStyle, domAttr, Contained, Container, WidgetBase, BidiIconMenu){
+], function(declare, has, domClass, domConstruct, domStyle, domAttr, Contained, Container, Widget, BidiIconMenu){
 	// module:
 	//		dui/mobile/IconMenu
 
-	var IconMenu = declare(has("dojo-bidi") ? "dui.mobile.NonBidiIconMenu" : "dui.mobile.IconMenu", [WidgetBase, Container, Contained], {
+	var IconMenu = declare(has("dojo-bidi") ? "dui.mobile.NonBidiIconMenu" : "dui.mobile.IconMenu", [Widget, Container, Contained], {
 		// summary:
 		//		A pop-up menu.
 		// description:
