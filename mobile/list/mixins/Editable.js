@@ -281,7 +281,8 @@ define(["dojo/_base/declare",
 				if (this._dropPosition >= 0) {
 					var movedEntryIndex = this._draggedCell.entryIndex;
 					if (this._dropPosition !== movedEntryIndex) {
-						console.log("TODO: move entry " + movedEntryIndex + " to " + this._dropPosition);
+						// TODO: ADD A HANDLER THAT IS ABLE TO CANCEL THE MOVE !!!
+						this.moveEntry(movedEntryIndex, this._dropPosition);
 					}
 					this._dropPosition = -1;
 				}

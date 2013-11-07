@@ -252,10 +252,11 @@ define(["dojo/_base/declare",
 			/////////////////////////////////////////////////////////////////////
 		},
 
-		moveEntry: function (entryIndex) {
+		moveEntry: function (entryIndex, newIndex) {
 			/////////////////////////////////
 			// TODO: IMPLEMENT THIS
 			/////////////////////////////////
+			console.log("TODO: move entry " + entryIndex + " to " + newIndex);
 		},
 
 		/////////////////////////////////
