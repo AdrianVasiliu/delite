@@ -1,3 +1,7 @@
+/***********************************************************************/
+/* TODO: MOVE MANDATORY STYLES IN CLASSES 'NOT EDITABLE' BY END USER ? */ 
+/***********************************************************************/
+
 /********************************/
 /* iOS theme for all Lists      */
 /*                              */
@@ -67,6 +71,7 @@
 }
 
 .duiRoundRectList {
+	position: relative; /* needed for moving list items in editable mode */
     margin: 0px 9px;
 	-webkit-transform: translate3d(0,0,0);
 	transform: translate3d(0,0,0);
@@ -177,6 +182,7 @@
 }
 
 .duiEdgeToEdgeList {
+	position: relative; /* needed for moving list items in editable mode */
 	-webkit-transform: translate3d(0,0,0);
 	transform: translate3d(0,0,0);
   	overflow: hidden;
