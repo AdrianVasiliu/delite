@@ -1,6 +1,5 @@
 define([
 	"dojo/_base/kernel",
-	"dojo/_base/array",
 	"dojo/_base/declare",
 	"dojo/_base/lang",
 	"dojo/_base/window",
@@ -11,17 +10,17 @@ define([
 	"dojo/has!dojo-bidi?dui/mobile/bidi/SpinWheelSlot",
 	"dojo/touch",
 	"dojo/on",
-	"dui/_Contained",
-	"dui/_WidgetBase",
+	"../Contained",
+	"../Widget",
 	"./scrollable",
 	"./common"
-], function(dojo, array, declare, lang, win, aspect, domClass, domConstruct, has, BidiSpinWheelSlot,
-	touch, on, Contained, WidgetBase, Scrollable){
+], function(dojo, declare, lang, win, aspect, domClass, domConstruct, has, BidiSpinWheelSlot,
+	touch, on, Contained, Widget, Scrollable){
 
 	// module:
 	//		dui/mobile/SpinWheelSlot
 
-	var SpinWheelSlot = declare(has("dojo-bidi") ? "dui.mobile.NonBidiSpinWheelSlot" : "dui.mobile.SpinWheelSlot", [WidgetBase, Contained, Scrollable], {
+	var SpinWheelSlot = declare(has("dojo-bidi") ? "dui.mobile.NonBidiSpinWheelSlot" : "dui.mobile.SpinWheelSlot", [Widget, Contained, Scrollable], {
 		// summary:
 		//		A slot of a SpinWheel.
 		// description:
@@ -278,8 +277,8 @@ define([
 		setColor: function(/*String*/value, /*String?*/color){
 			// summary:
 			//		Sets the color of the specified item as blue.
-			array.forEach(this.panelNodes, function(panel){
-				array.forEach(panel.childNodes, function(node){
+			this.panelNodes.forEach(function(panel){
+				panel.childNodes.forEach(function(node){
 					domClass.toggle(node, color || "duiSpinWheelSlotLabelBlue", node.innerHTML === value);
 				}, this);
 			}, this);
@@ -288,7 +287,7 @@ define([
 		disableValues: function(/*Number*/n){
 			// summary:
 			//		Grays out the items with an index higher or equal to the specified number.
-			array.forEach(this.panelNodes, function(panel){
+			this.panelNodes.forEach(function(panel){
 				for(var i = 0; i < panel.childNodes.length; i++){
 					domClass.toggle(panel.childNodes[i], "duiSpinWheelSlotLabelGray", i >= n);
 				}

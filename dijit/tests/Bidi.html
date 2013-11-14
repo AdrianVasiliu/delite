@@ -9,11 +9,8 @@
 	<script type="text/javascript">
 		require([
 			"doh/runner",
-
-			"dojo/_base/array",
 			"dojo/dom",
 			"dojo/dom-geometry",
-			"dojo/json",
 			"dojo/on",
 			"dojo/parser",
 			"dojo/query",
@@ -46,7 +43,7 @@
 			"dui/layout/ContentPane",
 				
 			"dojo/domReady!"
-		], function(doh, array, dom, domGeom, json, on, parser, query, ItemFileReadStore, registry){
+		], function(doh, dom, domGeom, on, parser, query, ItemFileReadStore, registry){
 		
 
 			function checkLeft(/*Widget*/ left, /*Widget*/ right){
@@ -57,7 +54,7 @@
 					rp = domGeom.position(right, true);
 	
 				doh.t(lp.x+lp.w-0.1 <= rp.x,
-					left.id + " to left of " + right.id + json.stringify(lp) + json.stringify(rp)
+					left.id + " to left of " + right.id + JSON.stringify(lp) + JSON.stringify(rp)
 				);
 			}
 
@@ -212,7 +209,7 @@
 
 						var rowNodes = query(".duiTreeRow", dom.byId("ltr_tc_tree"));
 
-						array.forEach(rowNodes, function(rowNode){
+						rowNodes.forEach(function(rowNode){
 							var expando = query(".duiTreeExpando", rowNode)[0];
 							var label = query(".duiTreeContent", rowNode)[0];
 							checkLeft(expando, label);
@@ -226,7 +223,7 @@
 
 						var rowNodes = query(".duiTreeRow", dom.byId("rtl_tc_tree"));
 
-						array.forEach(rowNodes, function(rowNode){
+						rowNodes.forEach(function(rowNode){
 							var expando = query(".duiTreeExpando", rowNode)[0];
 							var label = query(".duiTreeContent", rowNode)[0];
 							checkLeft(label, expando);

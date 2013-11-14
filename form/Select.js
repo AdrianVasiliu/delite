@@ -1,5 +1,4 @@
 define([
-	"dojo/_base/array", // array.forEach
 	"dojo/_base/declare", // declare
 	"dojo/dom-attr", // domAttr.set
 	"dojo/dom-class", // domClass.add domClass.remove domClass.toggle
@@ -8,17 +7,17 @@ define([
 	"dojo/on",
 	"dojo/sniff", // has("ie")
 	"./_FormSelectWidget",
-	"../_HasDropDown",
+	"../HasDropDown",
 	"../dui/DropDownMenu",
 	"../dui/MenuItem",
 	"../dui/MenuSeparator",
 	"../dui/Tooltip",
-	"../_KeyNavMixin",
+	"../KeyNav",
 	"../registry", // registry.byNode
 	"dojo/text!./templates/Select.html",
 	"dojo/i18n!./nls/validate"
-], function(array, declare, domAttr, domClass, domGeometry, lang, on, has,
-			_FormSelectWidget, _HasDropDown, DropDownMenu, MenuItem, MenuSeparator, Tooltip, _KeyNavMixin, registry,
+], function(declare, domAttr, domClass, domGeometry, lang, on, has,
+			_FormSelectWidget, HasDropDown, DropDownMenu, MenuItem, MenuSeparator, Tooltip, _KeyNavMixin, registry,
 			template, nlsValidate){
 
 	// module:
@@ -28,8 +27,8 @@ define([
 		// summary:
 		//		An internally-used menu for dropdown that allows us a vertical scrollbar
 
-		// Override Menu.autoFocus setting so that opening a Select highlights the current value.
-		autoFocus: true,
+		// Override Menu.focusOnOpen setting so that opening a Select highlights the current value.
+		focusOnOpen: true,
 
 		buildRendering: function(){
 			this.inherited(arguments);
@@ -54,11 +53,11 @@ define([
 			//		Overridden so that the previously selected value will be focused instead of only the first item
 			var found = false,
 				val = this.parentWidget.value;
-			if(lang.isArray(val)){
+			if(Array.isArray(val)){
 				val = val[val.length - 1];
 			}
 			if(val){ // if focus selected
-				array.forEach(this.parentWidget._getChildren(), function(child){
+				this.parentWidget._getChildren().forEach(function(child){
 					if(child.option && (val === child.option.value)){ // find menu item widget with this value
 						found = true;
 						this.focusChild(child, false); // focus previous selection
@@ -71,7 +70,7 @@ define([
 		}
 	});
 
-	var Select = declare("dui.form.Select" + (has("dojo-bidi") ? "_NoBidi" : ""), [_FormSelectWidget, _HasDropDown, _KeyNavMixin], {
+	var Select = declare("dui.form.Select" + (has("dojo-bidi") ? "_NoBidi" : ""), [_FormSelectWidget, HasDropDown, KeyNav], {
 		// summary:
 		//		This is a "styleable" select box - it is basically a DropDownButton which
 		//		can take a `<select>` as its input.
@@ -179,7 +178,7 @@ define([
 			}
 		},
 
-		focusChild: function(/*dui/_WidgetBase*/ widget){
+		focusChild: function(/*dui/Widget*/ widget){
 			// summary:
 			//		Sets the value to the given option, used during search by letter.
 			// widget:
@@ -218,7 +217,7 @@ define([
 			return node && node.getParent() == this.dropDown;
 		},
 
-		onKeyboardSearch: function(/*dui/_WidgetBase*/ item, /*Event*/ evt, /*String*/ searchString, /*Number*/ numMatches){
+		onKeyboardSearch: function(/*dui/Widget*/ item, /*Event*/ evt, /*String*/ searchString, /*Number*/ numMatches){
 			// summary:
 			//		When a key is pressed that matches a child item,
 			//		this method is called so that a widget can take appropriate action is necessary.
@@ -250,7 +249,7 @@ define([
 				}else{
 					// Drop down menu is blank but add one blank entry just so something appears on the screen
 					// to let users know that they are no choices (mimicing native select behavior)
-					array.forEach(this._getChildren(), function(child){
+					this._getChildren().forEach(function(child){
 						child.destroyRecursive();
 					});
 					var item = new MenuItem({
@@ -415,7 +414,7 @@ define([
 
 		_onFocus: function(){
 			this.validate(true);	// show tooltip if second focus of required tooltip, but no selection
-			this.inherited(arguments);
+			// Note: not calling superclass _onFocus() to avoid _KeyNavMixin::_onFocus() setting tabIndex --> -1
 		},
 
 		_onBlur: function(){

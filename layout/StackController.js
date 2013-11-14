@@ -1,5 +1,4 @@
 define([
-	"dojo/_base/array", // array.forEach array.indexOf array.map
 	"dojo/_base/declare", // declare
 	"dojo/dom-class",
 	"dojo/dom-construct",
@@ -9,13 +8,13 @@ define([
 	"dojo/topic",
 	"../focus", // focus.focus()
 	"../registry", // registry.byId
-	"../_WidgetBase",
+	"../Widget",
 	"../_TemplatedMixin",
-	"../_Container",
+	"../Container",
 	"../form/ToggleButton",
 	"dojo/touch"	// for normalized click handling, see dojoClick property setting in postCreate()
-], function(array, declare, domClass, domConstruct, keys, lang, on, topic,
-		focus, registry, _WidgetBase, _TemplatedMixin, _Container, ToggleButton){
+], function(declare, domClass, domConstruct, keys, lang, on, topic,
+		focus, registry, Widget, _TemplatedMixin, Container, ToggleButton){
 
 	// module:
 	//		dui/layout/StackController
@@ -46,7 +45,7 @@ define([
 	});
 
 
-	var StackController = declare("dui.layout.StackController", [_WidgetBase, _TemplatedMixin, _Container], {
+	var StackController = declare("dui.layout.StackController", [Widget, _TemplatedMixin, Container], {
 		// summary:
 		//		Set of buttons to select a page in a `dui/layout/StackContainer`
 		// description:
@@ -119,7 +118,7 @@ define([
 			// tags:
 			//		private
 			this.textDir = info.textDir;
-			array.forEach(info.children, this.onAddChild, this);
+			info.children.forEach(this.onAddChild, this);
 			if(info.selected){
 				// Show button corresponding to selected pane (unless selected
 				// is null because there are no panes)
@@ -158,7 +157,7 @@ define([
 			this.inherited(arguments);
 		},
 
-		onAddChild: function(/*dui/_WidgetBase*/ page, /*Integer?*/ insertIndex){
+		onAddChild: function(/*dui/Widget*/ page, /*Integer?*/ insertIndex){
 			// summary:
 			//		Called whenever a page is added to the container.
 			//		Create button corresponding to the page.
@@ -200,7 +199,7 @@ define([
 			page._wrapper.setAttribute("aria-labelledby", labelledby);
 		},
 
-		onRemoveChild: function(/*dui/_WidgetBase*/ page){
+		onRemoveChild: function(/*dui/Widget*/ page){
 			// summary:
 			//		Called whenever a page is removed from the container.
 			//		Remove the button corresponding to the page.
@@ -219,7 +218,7 @@ define([
 			delete page.controlButton;
 		},
 
-		onSelectChild: function(/*dui/_WidgetBase*/ page){
+		onSelectChild: function(/*dui/Widget*/ page){
 			// summary:
 			//		Called when a page has been selected in the StackContainer, either by me or by another StackController
 			// tags:
@@ -242,7 +241,7 @@ define([
 			var container = registry.byId(this.containerId);
 		},
 
-		onButtonClick: function(/*dui/_WidgetBase*/ page){
+		onButtonClick: function(/*dui/Widget*/ page){
 			// summary:
 			//		Called whenever one of my child buttons is pressed in an attempt to select a page
 			// tags:
@@ -261,7 +260,7 @@ define([
 			container.selectChild(page);
 		},
 
-		onCloseButtonClick: function(/*dui/_WidgetBase*/ page){
+		onCloseButtonClick: function(/*dui/Widget*/ page){
 			// summary:
 			//		Called whenever one of my child buttons [X] is pressed in an attempt to close a page
 			// tags:
@@ -289,7 +288,7 @@ define([
 			}
 			// find currently focused button in children array
 			var children = this.getChildren();
-			var idx = array.indexOf(children, this.pane2button(this._currentChild.id)),
+			var idx = children.indexOf(this.pane2button(this._currentChild.id)),
 				current = children[idx];
 
 			// Pick next/previous non-disabled button to focus on.   If we get back to the original button it means
@@ -300,7 +299,7 @@ define([
 				child = children[idx];
 			}while(child.disabled && child != current);
 
-			return child; // dui/_WidgetBase
+			return child; // dui/Widget
 		},
 
 		onkeydown: function(/*Event*/ e, /*Boolean?*/ fromContainer){

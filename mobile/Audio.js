@@ -2,13 +2,13 @@ define([
 	"dojo/_base/declare",
 	"dojo/dom-construct",
 	"dojo/sniff",
-	"dui/_Contained",
-	"dui/_WidgetBase"
-], function(declare, domConstruct, has, Contained, WidgetBase){
+	"../Contained",
+	"../Widget"
+], function(declare, domConstruct, has, Contained, Widget){
 	// module:
 	//		dui/mobile/Audio
 
-	return declare("dui.mobile.Audio", [WidgetBase, Contained], {
+	return declare("dui.mobile.Audio", [Widget, Contained], {
 		// summary:
 		//		A thin wrapper around the HTML5 `<audio>` element.
 		// description:

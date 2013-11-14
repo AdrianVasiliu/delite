@@ -1,12 +1,11 @@
 define([
 	"dojo/_base/lang", // lang.mixin lang.delegate lang.hitch lang.isFunction lang.isObject
-	"../_WidgetBase",
-	"../_Container",
+	"../Widget",
+	"../Container",
 	"./_ContentPaneResizeMixin",
 	"dojo/string", // string.substitute
 	"dojo/html", // html._ContentSetter
 	"dojo/i18n!../nls/loading",
-	"dojo/_base/array", // array.forEach
 	"dojo/_base/declare", // declare
 	"dojo/Deferred", // Deferred
 	"dojo/dom", // dom.byId
@@ -14,13 +13,13 @@ define([
 	"dojo/dom-construct", // empty()
 	"dojo/request",
 	"dojo/when"
-], function(lang, _WidgetBase, _Container, _ContentPaneResizeMixin, string, html, nlsLoading, array, declare,
+], function(lang, Widget, Container, _ContentPaneResizeMixin, string, html, nlsLoading, declare,
 			Deferred, dom, domAttr, domConstruct, request, when){
 
 	// module:
 	//		dui/layout/ContentPane
 
-	return declare("dui.layout.ContentPane", [_WidgetBase, _Container, _ContentPaneResizeMixin], {
+	return declare("dui.layout.ContentPane", [Widget, Container, _ContentPaneResizeMixin], {
 		// summary:
 		//		A widget containing an HTML fragment, specified inline
 		//		or by uri.  Fragment may include widgets.
@@ -56,10 +55,10 @@ define([
 		//		Changing href after creation doesn't have any effect; Use set('href', ...);
 		href: "",
 
-		// content: String|DomNode|NodeList|dui/_WidgetBase
+		// content: String|DomNode|NodeList|dui/Widget
 		//		The innerHTML of the ContentPane.
 		//		Note that the initialization parameter / argument to set("content", ...)
-		//		can be a String, DomNode, Nodelist, or _WidgetBase.
+		//		can be a String, DomNode, Nodelist, or Widget.
 		content: "",
 
 		// extractContent: Boolean
@@ -121,7 +120,7 @@ define([
 		//		or content is loaded.
 		onLoadDeferred: null,
 
-		// Cancel _WidgetBase's _setTitleAttr because we don't want the title attribute (used to specify
+		// Cancel Widget's _setTitleAttr because we don't want the title attribute (used to specify
 		// tab labels) to be copied to ContentPane.domNode... otherwise a tooltip shows up over the
 		// entire pane.
 		_setTitleAttr: null,
@@ -185,14 +184,14 @@ define([
 
 		startup: function(){
 			// summary:
-			//		Call startup() on all children including non _WidgetBase ones like dojo/dnd/Source objects
+			//		Call startup() on all children including non Widget ones like dojo/dnd/Source objects
 
 			// This starts all the widgets
 			this.inherited(arguments);
 
 			// And this catches stuff like dojo/dnd/Source
 			if(this._contentSetter){
-				array.forEach(this._contentSetter.parseResults, function(obj){
+				this._contentSetter.parseResults.forEach(function(obj){
 					if(!obj._started && !obj._destroyed && lang.isFunction(obj.startup)){
 						obj.startup();
 						obj._started = true;
@@ -207,7 +206,7 @@ define([
 			//		itself, but avoids marking the ContentPane itself as "restarted" (see #15581).
 
 			// This starts all the widgets
-			array.forEach(this.getChildren(), function(obj){
+			this.getChildren().forEach(function(obj){
 				if(!obj._started && !obj._destroyed && lang.isFunction(obj.startup)){
 					obj.startup();
 					obj._started = true;
@@ -216,7 +215,7 @@ define([
 
 			// And this catches stuff like dojo/dnd/Source
 			if(this._contentSetter){
-				array.forEach(this._contentSetter.parseResults, function(obj){
+				this._contentSetter.parseResults.forEach(function(obj){
 					if(!obj._started && !obj._destroyed && lang.isFunction(obj.startup)){
 						obj.startup();
 						obj._started = true;
@@ -441,7 +440,7 @@ define([
 			// For historical reasons we need to delete all widgets under this.containerNode,
 			// even ones that the user has created manually.
 			var setter = this._contentSetter;
-			array.forEach(this.getChildren(), function(widget){
+			this.getChildren().forEach(function(widget){
 				if(widget.destroyRecursive){
 					// All widgets will hit this branch
 					widget.destroyRecursive(preserveDom);
@@ -454,7 +453,7 @@ define([
 			if(setter){
 				// Most of the widgets in setter.parseResults have already been destroyed, but
 				// things like Menu that have been moved to <body> haven't yet
-				array.forEach(setter.parseResults, function(widget){
+				setter.parseResults.forEach(function(widget){
 					if(!widget._destroyed){
 						if(widget.destroyRecursive){
 							// All widgets will hit this branch
@@ -521,6 +520,7 @@ define([
 				textDir: this.textDir
 			}, this._contentSetterParams || {});
 
+			//  TODO: call of lang.isObject to be addressed later
 			var p = setter.set((lang.isObject(cont) && cont.domNode) ? cont.domNode : cont, setterParams);
 
 			// dojox/layout/html/_base::_ContentSetter.set() returns a Promise that indicates when everything is completed.

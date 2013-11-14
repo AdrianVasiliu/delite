@@ -1,6 +1,5 @@
 define([
 	"require",
-	"dojo/_base/array", // array.forEach array.indexOf array.map
 	"dojo/aspect",
 	"dojo/_base/declare", // declare
 	"dojo/Deferred", // Deferred
@@ -16,9 +15,9 @@ define([
 	"dojo/window", // winUtils.getBox, winUtils.get
 	"dojo/dnd/Moveable", // Moveable
 	"../focus",
-	"../_WidgetBase",
+	"../Widget",
 	"../_TemplatedMixin",
-	"../_CssStateMixin",
+	"../CssState",
 	"../form/_FormMixin",
 	"./_DialogMixin",
 	"../DialogUnderlay",
@@ -26,9 +25,9 @@ define([
 	"../layout/utils",
 	"dojo/text!./templates/Dialog.html",
 	"dojo/i18n!../nls/common"
-], function(require, array, aspect, declare, Deferred,
+], function(require, aspect, declare, Deferred,
 			dom, domClass, domGeometry, domStyle, fx, keys, lang, on, has, winUtils,
-			Moveable, focus, _WidgetBase, _TemplatedMixin, _CssStateMixin, _FormMixin, _DialogMixin,
+			Moveable, focus, Widget, _TemplatedMixin, _CssStateMixin, _FormMixin, _DialogMixin,
 			DialogUnderlay, ContentPane, utils, template, nlsCommon){
 
 	// module:
@@ -37,7 +36,7 @@ define([
 	var resolvedDeferred = new Deferred();
 	resolvedDeferred.resolve(true);
 
-	var _DialogBase = declare("dui._DialogBase" + (has("dojo-bidi") ? "_NoBidi" : ""), [_TemplatedMixin, _FormMixin, _DialogMixin, _CssStateMixin], {
+	var _DialogBase = declare("dui._DialogBase" + (has("dojo-bidi") ? "_NoBidi" : ""), [_TemplatedMixin, _FormMixin, _DialogMixin, CssState], {
 		templateString: template,
 
 		baseClass: "duiDialog",
@@ -63,11 +62,11 @@ define([
 		//		False will disable refocusing. Default: true
 		refocus: true,
 
-		// autofocus: Boolean
+		// focusOnOpen: Boolean
 		//		A Toggle to modify the default focus behavior of a Dialog, which
 		//		is to focus on the first dialog element after opening the dialog.
 		//		False will disable autofocusing. Default: true
-		autofocus: true,
+		focusOnOpen: true,
 
 		// _firstFocusItem: [private readonly] DomNode
 		//		The pointer to the first focusable node in the dialog.
@@ -85,7 +84,7 @@ define([
 		//		in the viewport.
 		draggable: true,
 		_setDraggableAttr: function(/*Boolean*/ val){
-			// Avoid _WidgetBase behavior of copying draggable attribute to this.domNode,
+			// Avoid Widget behavior of copying draggable attribute to this.domNode,
 			// as that prevents text select on modern browsers (#14452)
 			this._set("draggable", val);
 		},
@@ -135,7 +134,7 @@ define([
 			this.resize();
 			this._position();
 
-			if(this.autofocus && DialogLevelManager.isTop(this)){
+			if(this.focusOnOpen && DialogLevelManager.isTop(this)){
 				this._getFocusItems(this.domNode);
 				focus.focus(this._firstFocusItem);
 			}
@@ -179,7 +178,7 @@ define([
 
 			this.underlayAttrs = {
 				dialogId: this.id,
-				"class": array.map(this["class"].split(/\s/),function(s){
+				"class": this["class"].split(/\s/).map(function(s){
 					return s + "_underlay";
 				}).join(" "),
 				_onKeyDown: lang.hitch(this, "_onKey"),
@@ -303,7 +302,7 @@ define([
 					DialogLevelManager.show(this, this.underlayAttrs);
 				}),
 				onEnd: lang.hitch(this, function(){
-					if(this.autofocus && DialogLevelManager.isTop(this)){
+					if(this.focusOnOpen && DialogLevelManager.isTop(this)){
 						// find focusable items each time dialog is shown since if dialog contains a widget the
 						// first focusable items can change
 						this._getFocusItems(this.domNode);
@@ -396,7 +395,7 @@ define([
 								delete this._singleChildOriginalStyle;
 							}
 						}
-						array.forEach([this.domNode, this.containerNode, this.titleBar], function(node){
+						[this.domNode, this.containerNode, this.titleBar].forEach(function(node){
 							domStyle.set(node, {
 								position: "static",
 								width: "auto",
@@ -464,7 +463,7 @@ define([
 			// Override _ContentPaneResizeMixin._layoutChildren because even when there's just a single layout child
 			// widget, sometimes we don't want to size it explicitly (i.e. to pass a dim argument to resize())
 
-			array.forEach(this.getChildren(), function(widget){
+			this.getChildren().forEach(function(widget){
 				if(widget.resize){
 					widget.resize();
 				}
@@ -533,7 +532,7 @@ define([
 
 		_beginZIndex: 950,
 
-		show: function(/*dui/_WidgetBase*/ dialog, /*Object*/ underlayAttrs){
+		show: function(/*dui/Widget*/ dialog, /*Object*/ underlayAttrs){
 			// summary:
 			//		Call right before fade-in animation for new dialog.
 			//		Saves current focus, displays/adjusts underlay for new dialog,
@@ -557,7 +556,7 @@ define([
 			ds.push({dialog: dialog, underlayAttrs: underlayAttrs, zIndex: zIndex});
 		},
 
-		hide: function(/*dui/_WidgetBase*/ dialog){
+		hide: function(/*dui/Widget*/ dialog){
 			// summary:
 			//		Called when the specified dialog is hidden/destroyed, after the fade-out
 			//		animation ends, in order to reset page focus, fix the underlay, etc.
@@ -611,16 +610,16 @@ define([
 			}else{
 				// Removing a dialog out of order (#9944, #10705).
 				// Don't need to mess with underlay or z-index or anything.
-				var idx = array.indexOf(array.map(ds, function(elem){
+				var idx = ds.map(function(elem){
 					return elem.dialog;
-				}), dialog);
+				}).indexOf(dialog);
 				if(idx != -1){
 					ds.splice(idx, 1);
 				}
 			}
 		},
 
-		isTop: function(/*dui/_WidgetBase*/ dialog){
+		isTop: function(/*dui/Widget*/ dialog){
 			// summary:
 			//		Returns true if specified Dialog is the top in the task
 			return ds[ds.length - 1].dialog == dialog;

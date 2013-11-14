@@ -1,24 +1,26 @@
-define(["doh", "dojo/_base/declare", "../../_WidgetBase", "../../mixins/Store",
+define(["doh/runner", "../../register", "../../Widget", "../../mixins/Store",
 	"dojo/store/Observable", "dojo/store/JsonRest", "dojo/store/Memory"],
-	function (doh, declare, _WidgetBase, Store, Observable, JsonRest, Memory){
+	function (doh, register, Widget, Store, Observable, JsonRest, Memory) {
 
-		var C = declare("MyWidget", [_WidgetBase, Store]);
+		var C = register("test-store", [HTMLElement, Widget, Store]);
+
+		/* jshint -W064 */
 
 		doh.register("mixins.Store", [
 			{
 				timeout: 2000,
 				name: "Error",
-				runTest: function (t){
+				runTest: function (t) {
 					var d = new doh.Deferred();
 					var store = new C();
 					var callbackCalled = false;
-					store.on("query-error", function (){
+					store.on("query-error", function () {
 						callbackCalled = true;
 					});
 					store.startup();
-					store.set("store", new JsonRest({ target: "/" }));
+					store.store = new JsonRest({ target: "/" });
 					// we need to check before the timeout that query-error was called
-					setTimeout(d.getTestCallback(function (){
+					setTimeout(d.getTestCallback(function () {
 						t.t(callbackCalled, "query-error callback");
 					}), 1000);
 					return d;
@@ -28,58 +30,51 @@ define(["doh", "dojo/_base/declare", "../../_WidgetBase", "../../mixins/Store",
 			{
 				name: "Updates",
 				timeout: 2000,
-				runTest: function (t){
+				runTest: function (t) {
 					var d = new doh.Deferred();
 					var store = new C();
 					var myData = [
 						{ id: "foo", name: "Foo" },
 						{ id: "bar", name: "Bar" }
 					];
-					var callbackCalled = false;
-					store.on("query-success", function (){
-						t.assertEqual(myData, store.get("items"));
+					store.on("query-success", d.getTestCallback(function () {
+						t.assertEqual(myData, store.items);
 						myStore.put({ id: "foo", name: "Foo2" });
 						// this works because put is synchronous & same for add etc...
 						t.assertEqual([
 							{ id: "foo", name: "Foo2" },
 							{ id: "bar", name: "Bar" }
-						], store.get("items"));
+						], store.items);
 						myStore.add({ id: "fb", name: "FB" });
 						t.assertEqual([
 							{ id: "foo", name: "Foo2" },
 							{ id: "bar", name: "Bar" },
 							{ id: "fb", name: "FB" }
-						], store.get("items"));
+						], store.items);
 						myStore.remove("bar");
 						t.assertEqual([
 							{ id: "foo", name: "Foo2" },
 							{ id: "fb", name: "FB" }
-						], store.get("items"));
-						callbackCalled = true;
-					});
+						], store.items);
+					}));
 					store.startup();
 					var myStore = Observable(new Memory({ data: myData }));
-					store.set("store", myStore);
-					// we need to check before the timeout that refresh-complete was called
-					setTimeout(d.getTestCallback(function (){
-						t.t(callbackCalled, "refresh-complete callback");
-					}), 1000);
+					store.store = myStore;
 					return d;
 				}
 			},
 			{
 				name: "Destroy",
 				timeout: 2000,
-				runTest: function (t){
+				runTest: function (t) {
 					var d = new doh.Deferred();
 					var store = new C();
 					var myData = [
 						{ id: "foo", name: "Foo" },
 						{ id: "bar", name: "Bar" }
 					];
-					var callbackCalled = false;
-					store.on("query-success", function (){
-						t.assertEqual(myData, store.get("items"));
+					store.on("query-success", d.getTestCallback(function () {
+						t.assertEqual(myData, store.items);
 						// we destroy the store, we should not get any notification after that
 						store.destroy();
 						myStore.put({ id: "foo", name: "Foo2" });
@@ -87,25 +82,21 @@ define(["doh", "dojo/_base/declare", "../../_WidgetBase", "../../mixins/Store",
 						t.assertEqual([
 							{ id: "foo", name: "Foo" },
 							{ id: "bar", name: "Bar" }
-						], store.get("items"));
+						], store.items);
 						myStore.add({ id: "fb", name: "FB" });
 						t.assertEqual([
 							{ id: "foo", name: "Foo" },
 							{ id: "bar", name: "Bar" }
-						], store.get("items"));
+						], store.items);
 						myStore.remove("bar");
 						t.assertEqual([
 							{ id: "foo", name: "Foo" },
 							{ id: "bar", name: "Bar" }
-						], store.get("items"));
-						callbackCalled = true;
-					});
+						], store.items);
+					}));
 					store.startup();
 					var myStore = Observable(new Memory({ data: myData }));
-					store.set("store", myStore);
-					setTimeout(d.getTestCallback(function (){
-						t.t(callbackCalled, "refresh-complete callback");
-					}), 1000);
+					store.store = myStore;
 					return d;
 				}
 			}

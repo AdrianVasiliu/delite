@@ -1,17 +1,16 @@
 define([
-	"dojo/_base/declare",
-	"./_WidgetBase",
-	"./_CssStateMixin",
-	"./_TemplatedMixin",
+	"./register",
+	"./CssState",
+	"./handlebars!./templates/ExampleWidget.html",
 	"./themes/load!ExampleWidget"	// inserts the CSS for this widget for page's theme
-], function(declare, _WidgetBase, _CssStateMixin, _TemplatedMixin){
+], function (register, CssState, renderer) {
 
-	return declare([_WidgetBase, _CssStateMixin, _TemplatedMixin], {
+	return register("d-example", CssState, {
 		// summary:
 		//		Example widget for testing and as template for new widgets.
 
-		baseClass: "duiExampleWidget",
+		buildRendering: renderer,
 
-		templateString: "<span>Example Widget</span>"
+		baseClass: "duiExampleWidget"
 	});
 });

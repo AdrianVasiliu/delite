@@ -1,5 +1,4 @@
 define([
-	"dojo/_base/array",
 	"dojo/_base/declare",
 	"dojo/_base/window",
 	"dojo/_base/lang",
@@ -9,18 +8,18 @@ define([
 	"dojo/dom-style",
 	"dojo/dom-attr",
 	"dojo/topic",
-	"dui/_Contained",
-	"dui/_Container",
-	"dui/_WidgetBase",
+	"../Contained",
+	"../Container",
+	"../Widget",
 	"./TabBarButton",// to load TabBarButton for you (no direct references)
 	"dojo/has",
 	"dojo/has!dojo-bidi?dui/mobile/bidi/TabBar"	
-], function(array, declare, win, lang, domClass, domConstruct, domGeometry, domStyle, domAttr, topic, Contained, Container, WidgetBase, TabBarButton, has, BidiTabBar){
+], function(declare, win, lang, domClass, domConstruct, domGeometry, domStyle, domAttr, topic, Contained, Container, Widget, TabBarButton, has, BidiTabBar){
 
 	// module:
 	//		dui/mobile/TabBar
 
-	var TabBar =  declare(has("dojo-bidi") ? "dui.mobile.NonBidiTabBar" : "dui.mobile.TabBar", [WidgetBase, Container, Contained],{
+	var TabBar =  declare(has("dojo-bidi") ? "dui.mobile.NonBidiTabBar" : "dui.mobile.TabBar", [Widget, Container, Contained],{
 		// summary:
 		//		A bar widget that has buttons to control visibility of views.
 		// description:
@@ -89,7 +88,7 @@ define([
 		postCreate: function(){
 			if(this.syncWithViews){ // see also RoundRect#postCreate
 				var f = function(view, moveTo, dir, transition, context, method){
-					var child = array.filter(this.getChildren(), function(w){
+					var child = this.getChildren().filter(function(w){
 						return w.moveTo === "#" + view.id || w.moveTo === view.id; })[0];
 					if(child){ child.set("selected", true); }
 				};
@@ -137,12 +136,12 @@ define([
 			}
 			var bw = this._fixedButtonWidth;
 			var bm = this._fixedButtonMargin;
-			var arr = array.map(this.getChildren(), function(w){ return w.domNode; });
+			var arr = this.getChildren().map(function(w){ return w.domNode; });
 
 			domClass.toggle(this.domNode, "duiTabBarNoIcons",
-							!array.some(this.getChildren(), function(w){ return w.iconNode1; }));
+							!this.getChildren().some(function(w){ return w.iconNode1; }));
 			domClass.toggle(this.domNode, "duiTabBarNoText",
-							!array.some(this.getChildren(), function(w){ return w.label; }));
+							!this.getChildren().some(function(w){ return w.label; }));
 
 			var margin = 0;
 			if(this._barType == "tabBar"){
@@ -206,7 +205,7 @@ define([
 		getSelectedTab: function(){
 			// summary:
 			//		Returns the first selected child.
-			return array.filter(this.getChildren(), function(w){ return w.selected; })[0];
+			return this.getChildren().filter(function(w){ return w.selected; })[0];
 		},
 
 		onCloseButtonClick: function(/*TabBarButton*/tab){

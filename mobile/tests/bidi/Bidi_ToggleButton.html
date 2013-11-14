@@ -14,7 +14,6 @@
 		require([
 			"dojo/_base/connect",
 			"dojo/domReady",
-			"dojo/_base/array",
 			"dojo/dom",
 			"dui/registry",
 			"dui/mobile/Heading",
@@ -24,7 +23,7 @@
 			"dui/mobile/ScrollableView",
 			"dui/mobile/TabBar",
 			"dui/mobile/ListItem"
-		], function(connect, ready, array, dom, registry, Heading, ToggleButton){
+		], function(connect, ready, dom, registry, Heading, ToggleButton){
 			ready(function(){
 				//create list programmaticaly
 				var view = registry.byId("view2");
@@ -35,19 +34,19 @@
 				//change textDir, text
 				var btnLtr = registry.byId("btn5");				
 				btnLtr.connect(btnLtr, "onClick", function(){
-					array.forEach(["ltrbtn1", "ltrbtn2", "ltrbtn3", "ltrbtn4"], function (btnId){
+					["ltrbtn1", "ltrbtn2", "ltrbtn3", "ltrbtn4"].forEach(function (btnId){
 						registry.byId(btnId).set("textDir", "ltr");
 					});							
 				});
 				var btnRtl = registry.byId("btn6");
 				btnLtr.connect(btnRtl, "onClick", function(){
-					array.forEach(["ltrbtn1", "ltrbtn2", "ltrbtn3", "ltrbtn4"], function (btnId) {
+					["ltrbtn1", "ltrbtn2", "ltrbtn3", "ltrbtn4"].forEach(function (btnId) {
 						registry.byId(btnId).set("textDir", "rtl");
 					});							
 				});	
 				var btnAuto = registry.byId("btn7");
 				btnAuto.connect(btnAuto, "onClick", function(){
-					array.forEach(["ltrbtn1", "ltrbtn2", "ltrbtn3", "ltrbtn4"], function (btnId) {
+					["ltrbtn1", "ltrbtn2", "ltrbtn3", "ltrbtn4"].forEach(function (btnId) {
 						registry.byId(btnId).set("textDir", "auto");
 					});							
 				});						
@@ -100,9 +99,9 @@
 	</div>	
 	<div id="view1" data-dojo-type="dui/mobile/ScrollableView">
 		<h1 data-dojo-type="dui/mobile/Heading" data-dojo-props='back:"Back", moveTo:"view0"'>textDir LTR</h1>
-		<button data-dojo-type="dui/mobile/Button" id="btn5" class="duiRedButton" data-dojo-props='label:"Set textDir ltr"'></button>
-		<button data-dojo-type="dui/mobile/Button" id="btn6" class="duiRedButton" data-dojo-props='label:"Set textDir rtl"'></button>
-		<button data-dojo-type="dui/mobile/Button" id="btn7" class="duiRedButton" data-dojo-props='label:"Set textDir auto"'></button>
+		<button data-dojo-type="dui/Button" id="btn5" class="duiRedButton" data-dojo-props='label:"Set textDir ltr"'></button>
+		<button data-dojo-type="dui/Button" id="btn6" class="duiRedButton" data-dojo-props='label:"Set textDir rtl"'></button>
+		<button data-dojo-type="dui/Button" id="btn7" class="duiRedButton" data-dojo-props='label:"Set textDir auto"'></button>
 		<br>
 			<button type="button" class="duiRedButton" checked id="ltrbtn1" data-dojo-type="dui/mobile/ToggleButton" data-dojo-props='textDir:"ltr"' label="&#1513;&#1500;&#1493;&#1501!"/>
 		  	  <button type="button" class="duiRedButton" checked id="ltrbtn2" data-dojo-type="dui/mobile/ToggleButton" data-dojo-props='textDir:"ltr"' label="Hello!"/>
@@ -126,7 +125,7 @@
 	</div>	
 	<div id="view3" data-dojo-type="dui/mobile/ScrollableView">
 		<h1 data-dojo-type="dui/mobile/Heading" data-dojo-props='back:"Back", moveTo:"view0"'>textDir AUTO</h1>
-		<button data-dojo-type="dui/mobile/Button" id="btnLbl" >Set new text to Button</button>
+		<button data-dojo-type="dui/Button" id="btnLbl" >Set new text to Button</button>
 		<br>
 		<button type="button" class="duiRedButton" checked id="autobtn1" data-dojo-type="dui/mobile/ToggleButton" data-dojo-props='textDir:"auto"' label="&#1513;&#1500;&#1493;&#1501!"/>
 		  	  <button type="button" class="duiRedButton" checked id="autobtn2" data-dojo-type="dui/mobile/ToggleButton" data-dojo-props='textDir:"auto"' label="Hello!"/>

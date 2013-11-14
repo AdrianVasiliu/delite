@@ -1,7 +1,12 @@
-define(["doh/main", "require"], function(doh, require){
+define([
+	"doh/main",
+	"require",
+
+	// Core methods/modules [temporarily in dui?]
+	"./Stateful"
+], function (doh, require) {
 
 	// Utility methods (previously in dui/_base)
-	doh.register("registry", require.toUrl("./registry.html"), 999999);
 	doh.register("focus", require.toUrl("./focus.html"), 999999);
 	doh.register("place", require.toUrl("./place.html"), 999999);
 	doh.register("place-margin", require.toUrl("./place-margin.html"), 999999);
@@ -9,21 +14,21 @@ define(["doh/main", "require"], function(doh, require){
 	doh.register("popup", require.toUrl("./popup.html"), 999999);
 	doh.register("a11y", require.toUrl("./a11y.html"), 999999);
 	doh.register("css", require.toUrl("./css.html"), 999999);
+	doh.register("handlebars", require.toUrl("./handlebars.html"), 999999);
 	doh.register("robot.typematic", require.toUrl("./robot/typematic.html"), 999999);
 
 	// _Widget
-	doh.register("_Widget-lifecycle", require.toUrl("./_Widget-lifecycle.html"), 999999);
-	doh.register("_Widget-attr", require.toUrl("./_Widget-attr.html"), 999999);
-	doh.register("_Widget-placeAt", require.toUrl("./_Widget-placeAt.html"), 999999);
-	doh.register("robot._Widget-on", require.toUrl("./_Widget-on.html"), 999999);
+	doh.register("Widget-lifecycle", require.toUrl("./Widget-lifecycle.html"), 999999);
+	doh.register("Widget-attr", require.toUrl("./Widget-attr.html"), 999999);
+	doh.register("Widget-placeAt", require.toUrl("./Widget-placeAt.html"), 999999);
+	doh.register("Widget-utility", require.toUrl("./Widget-utility.html"), 999999);
+	doh.register("Widget-on", require.toUrl("./Widget-on.html"), 999999);
 
-	// _Templated and other mixins
-	doh.register("_AttachMixin", require.toUrl("./_AttachMixin.html"), 999999);
-	doh.register("_TemplatedMixin", require.toUrl("./_TemplatedMixin.html"), 999999);
-	doh.register("_WidgetsInTemplateMixin", require.toUrl("./_WidgetsInTemplateMixin.html"), 999999);
-	doh.register("_Container", require.toUrl("./_Container.html"), 999999);
+	// Mixins
+	doh.register("Container", require.toUrl("./Container.html"), 999999);
 	doh.register("_KeyNavContainer", require.toUrl("./_KeyNavContainer.html"), 999999);
-	doh.register("_HasDropDown", require.toUrl("./_HasDropDown.html"), 999999);
+	doh.register("HasDropDown", require.toUrl("./HasDropDown.html"), 999999);
+	doh.register("CssState", require.toUrl("./CssState.html"), 999999);
 
 	doh.register("Declaration", require.toUrl("./test_Declaration.html"), 999999);
 

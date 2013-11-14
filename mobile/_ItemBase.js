@@ -1,5 +1,4 @@
 define([
-	"dojo/_base/array",
 	"dojo/_base/declare",
 	"dojo/_base/lang",
 	"dojo/_base/window",
@@ -7,19 +6,19 @@ define([
 	"dojo/on",
 	"dojo/touch",
 	"dui/registry",
-	"dui/_Contained",
-	"dui/_Container",
-	"dui/_WidgetBase",
+	"../Contained",
+	"../Container",
+	"../Widget",
 	"./TransitionEvent",
 	"./iconUtils",
 	"dojo/sniff",
 	"dojo/has!dojo-bidi?dui/mobile/bidi/_ItemBase"
-], function(array, declare, lang, win, domClass, on, touch, registry, Contained, Container, WidgetBase, TransitionEvent, iconUtils, has, BidiItemBase){
+], function(declare, lang, win, domClass, on, touch, registry, Contained, Container, Widget, TransitionEvent, iconUtils, has, BidiItemBase){
 
 	// module:
 	//		dui/mobile/_ItemBase
 
-	var _ItemBase = declare(has("dojo-bidi") ? "dui.mobile._NonBidiItemBase" : "dui.mobile._ItemBase", [WidgetBase, Container, Contained], {
+	var _ItemBase = declare(has("dojo-bidi") ? "dui.mobile._NonBidiItemBase" : "dui.mobile._ItemBase", [Widget, Container, Contained], {
 		// summary:
 		//		A base class for item classes (e.g. ListItem, IconItem, etc.).
 		// description:
@@ -193,7 +192,7 @@ define([
 			//		by the property paramsToInherit.
 			var parent = this.getParent();
 			if(parent){
-				array.forEach(this.paramsToInherit.split(/,/), function(p){
+				this.paramsToInherit.split(/,/).forEach(function(p){
 					if(p.match(/icon/i)){
 						var base = p + "Base", pos = p + "Pos";
 						if(this[p] && parent[base] &&
@@ -229,8 +228,8 @@ define([
 			//		Copies from the parent and returns the values of parameters  
 			//		specified by the property paramsToInherit.
 			var opts = this.transitionOptions || {};
-			array.forEach(["moveTo", "href", "hrefTarget", "url", "target",
-				"urlTarget", "transition", "transitionDir"], function(p){
+			["moveTo", "href", "hrefTarget", "url", "target",
+				"urlTarget", "transition", "transitionDir"].forEach(function(p){
 				opts[p] = opts[p] || this[p];
 			}, this);
 			return opts; // Object
@@ -447,10 +446,10 @@ define([
 				var p = this.getParent();
 				if(p && p.selectOne){
 					// deselect the currently selected item
-					var arr = array.filter(p.getChildren(), function(w){
+					var arr = p.getChildren().filter(function(w){
 						return w.selected;
 					});
-					array.forEach(arr, function(c){
+					arr.forEach(function(c){
 						this._prevSel = c;
 						c.set("selected", false);
 					}, this);

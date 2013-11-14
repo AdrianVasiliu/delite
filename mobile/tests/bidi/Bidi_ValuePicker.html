@@ -14,18 +14,16 @@
 		require([
 			"dojo/_base/connect",
 			"dojo/domReady",
-			"dojo/_base/array",
 			"dojo/dom",
 			"dui/registry",
-			"dui/_base/manager",
 			"dojo/parser",
 			"dui/mobile/compat",
-			"dui/mobile/ValuePicker",	
-			"dui/mobile/ValuePickerSlot",		
-			"dui/mobile/Button",
+			"dui/mobile/ValuePicker",
+			"dui/mobile/ValuePickerSlot",
+			"dui/Button",
 			"dui/mobile/ScrollableView",
 			"dui/mobile/ListItem"
-		], function(connect, ready, array, dom, registry){
+		], function(connect, ready, dom, registry){
 			ready(function(){
 			
 				//change label 
@@ -95,9 +93,9 @@
 	
 	<div id="view1" data-dojo-type="dui/mobile/ScrollableView">
 		<h1 data-dojo-type="dui/mobile/Heading" data-dojo-props='back:"Back", moveTo:"view0"'>Dir LTR | textDir LTR</h1>
-		<button data-dojo-type="dui/mobile/Button" id="btn5" class="duiRedButton" data-dojo-props='label:"Set Slot textDir ltr"'></button>
-		<button data-dojo-type="dui/mobile/Button" id="btn6" class="duiRedButton" data-dojo-props='label:"Set Slot textDir rtl"'></button>
-		<button data-dojo-type="dui/mobile/Button" id="btn7" class="duiRedButton" data-dojo-props='label:"Set Slot textDir auto"'></button>
+		<button data-dojo-type="dui/Button" id="btn5" class="duiRedButton" data-dojo-props='label:"Set Slot textDir ltr"'></button>
+		<button data-dojo-type="dui/Button" id="btn6" class="duiRedButton" data-dojo-props='label:"Set Slot textDir rtl"'></button>
+		<button data-dojo-type="dui/Button" id="btn7" class="duiRedButton" data-dojo-props='label:"Set Slot textDir auto"'></button>
 		
 		<div data-dojo-type="dui/mobile/RoundRect" data-dojo-props='shadow:true'>	
 		
@@ -187,7 +185,7 @@
 				style="width:200px;"></div>
 			</div>
 		</div>		
-		<button data-dojo-type="dui/mobile/Button" id="btnlbl" >Set new text Button for picker slot</button>
+		<button data-dojo-type="dui/Button" id="btnlbl" >Set new text Button for picker slot</button>
 		
 		</div>		
 		<h1 data-dojo-type="dui/mobile/Heading">TextDir is set to ValuePicker</h1>

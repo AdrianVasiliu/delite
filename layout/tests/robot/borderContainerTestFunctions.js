@@ -1,4 +1,4 @@
-define(["dojo/_base/kernel", "dojo/_base/array", "dojo/dom-geometry", "dojo/json"], function(dojo, array, geom, json){
+define(["dojo/_base/kernel", "dojo/dom-geometry"], function(dojo, geom){
 
 	function duiById(id){
 		return dojo.global.require("dui/registry").byId(id);
@@ -18,7 +18,7 @@ define(["dojo/_base/kernel", "dojo/_base/array", "dojo/dom-geometry", "dojo/json
 			doh.t(
 				cp.y >= pp.y && cp.y+cp.h <= pp.y+pp.h &&
 				cp.x >= pp.x && cp.x+cp.w <= pp.x+pp.w,
-				(comment ? comment + ": " : "") + child.region + " inside " + parent.id + json.stringify(cp) + json.stringify(pp)
+				(comment ? comment + ": " : "") + child.region + " inside " + parent.id + JSON.stringify(cp) + JSON.stringify(pp)
 			);
 		},
 
@@ -33,7 +33,7 @@ define(["dojo/_base/kernel", "dojo/_base/array", "dojo/dom-geometry", "dojo/json
 				bp = geom.position(below.domNode, true);
 	
 			doh.t(ap.y+ap.h < bp.y,
-				comment + " " + above.region + " above " + below.region + json.stringify(ap) + json.stringify(bp)
+				comment + " " + above.region + " above " + below.region + JSON.stringify(ap) + JSON.stringify(bp)
 			);
 		},
 
@@ -48,7 +48,7 @@ define(["dojo/_base/kernel", "dojo/_base/array", "dojo/dom-geometry", "dojo/json
 				rp = geom.position(right.domNode, true);
 	
 			doh.t(lp.x+lp.w < rp.x,
-				comment + " " + left.region + " to left of " + right.region + json.stringify(lp) + json.stringify(rp)
+				comment + " " + left.region + " to left of " + right.region + JSON.stringify(lp) + JSON.stringify(rp)
 			);
 		},
 
@@ -61,37 +61,37 @@ define(["dojo/_base/kernel", "dojo/_base/array", "dojo/dom-geometry", "dojo/json
 				regions = {};
 	
 			// Check all panes inside BorderContainer
-			array.forEach(children, function(child, comment){
+			children.forEach(function(child, comment){
 				exports.checkInside(child, bc, comment);
 				regions[child.region] = child;
 			});
 	
 			// Check pane positions relative to each other
-			array.forEach(children, function(child){
+			children.forEach(function(child){
 				switch(child.region){
 					case "top":
-						array.forEach(bc.design == "sidebar" ? ["center", "bottom"] : ["left", "center", "right", "bottom"], function(region){
+						(bc.design == "sidebar" ? ["center", "bottom"] : ["left", "center", "right", "bottom"]).forEach(function(region){
 							if(regions[region]){
 								exports.checkAbove(bc.id, child, regions[region], comment);
 							}
 						});
 						break;
 					case "bottom":
-						array.forEach(bc.design == "sidebar" ? ["center", "top"] : ["left", "center", "right", "top"], function(region){
+						(bc.design == "sidebar" ? ["center", "top"] : ["left", "center", "right", "top"]).forEach(function(region){
 							if(regions[region]){
 								exports.checkAbove(bc.id, regions[region], child, comment);
 							}
 						});
 						break;
 					case "left":
-						array.forEach(bc.design == "sidebar" ? ["top", "center", "bottom", "right"] : ["right"], function(region){
+						(bc.design == "sidebar" ? ["top", "center", "bottom", "right"] : ["right"]).forEach(function(region){
 							if(regions[region]){
 								exports.checkLeft(bc.id, child, regions[region], comment);
 							}
 						});
 						break;
 					case "right":
-						array.forEach(bc.design == "sidebar" ? ["top", "center", "bottom", "left"] : ["left"], function(region){
+						(bc.design == "sidebar" ? ["top", "center", "bottom", "left"] : ["left"]).forEach(function(region){
 							if(regions[region]){
 								exports.checkLeft(bc.id, regions[region], child, comment);
 							}

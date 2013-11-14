@@ -1,18 +1,16 @@
 define([
-	"dojo/_base/array", // array.forEach
 	"dojo/_base/declare", // declare
 	"dojo/dom", // dom.byId
 	"dojo/has",
 	"dojo/keys", // keys.ALT keys.CAPS_LOCK keys.CTRL keys.META keys.SHIFT
-	"dojo/_base/lang", // lang.mixin
-	"dojo/on", // on
-	"../_FocusMixin"
-], function(array, declare, dom, has, keys, lang, on, _FocusMixin){
+	"dojo/_base/lang", // lang.mixin, lang.hitch
+	"dojo/on" // on
+], function(declare, dom, has, keys, lang, on){
 
 	// module:
 	//		dui/form/_TextBoxMixin
 
-	var _TextBoxMixin = declare("dui.form._TextBoxMixin" + (has("dojo-bidi") ? "_NoBidi" : ""), _FocusMixin, {
+	var _TextBoxMixin = declare("dui.form._TextBoxMixin" + (has("dojo-bidi") ? "_NoBidi" : ""), null, {
 		// summary:
 		//		A mixin for textbox form input widgets
 
@@ -375,7 +373,7 @@ define([
 				return val;
 			}
 			if(this.trim){
-				val = lang.trim(val);
+				val = val.trim();
 			}
 			if(this.uppercase){
 				val = val.toUpperCase();
@@ -446,7 +444,7 @@ define([
 		},
 
 		reset: function(){
-			// Overrides `dui/_FormWidget/reset()`.
+			// Overrides FormWidget.reset()
 			// Additionally resets the displayed textbox value to ''
 			this.textbox.value = '';
 			this.inherited(arguments);

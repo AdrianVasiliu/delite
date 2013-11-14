@@ -1,6 +1,13 @@
 # dui
 
-This project provides a UI Widget framework and a predefined set of components working both on desktop and mobile platforms
+This project provides a UI Widget framework and a predefined set of components working both on desktop and mobile platforms.
+
+One goal of the project is to
+[converge the dijit and dojox/mobile widgets](https://docs.google.com/document/d/1_kgrX25ylxuhtZCRrqAoABMaSdgxjAQgpyd0Ap4xvZU/edit#)
+into a single set of components.
+
+Another is to
+[build on emerging web standards](https://docs.google.com/document/d/1kqe3Oq7W6lg-JY_iqMl5G7SxGTD0uQ6FFIoP4KPAkUw/edit#heading=h.ct7kwnepj0cc).
 
 ## Status
 
@@ -8,10 +15,14 @@ No official release yet.
 
 ## Migration
 
-This is a merge of the former dijit & dojox/mobile project. Migration will require manual steps including:
+This is a merge of the former dijit & dojox/mobile project.
 
- * replacing references to dojox/mobile and dijit modules by their dui equivalents
- * ...
+Migration will require manual steps listed [here](docs/migration.md).
+
+## Issues
+
+Bugs and open issues are tracked in the
+[github issues tracker])(https://github.com/ibm-dojo/dui/issues).
 
 ## Licensing
 
@@ -22,14 +33,18 @@ All contributions require a [Dojo Foundation CLA](http://dojofoundation.org/abou
 
 This project requires the following other projects to run:
  * dojo
+ * dcl    (git clone https://github.com/uhop/dcl.git)
+ * requirejs (git clone https://github.com/jrburke/requirejs.git)
 
 ## Installation
 
-* Manual installation by dropping dui as a sibling of the top level Dojo modules:
+* Manual installation by dropping dui as a sibling of the top level packages:
  * dojo
  * dui
+ * dcl
+ * requirejs
 
- To install the latest master, go to the root Dojo installation directory and clone dui from github
+To install the latest master, go to the root Dojo installation directory and clone dui from github
 
  git clone git://github.com/ibm-dojo/dui.git
 

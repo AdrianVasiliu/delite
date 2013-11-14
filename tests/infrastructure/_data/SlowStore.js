@@ -1,6 +1,6 @@
-define(["dojo/_base/declare", "dojo/data/ItemFileReadStore"], function(declare, ItemFileReadStore){
+define(["dcl/dcl", "dojo/data/ItemFileReadStore"], function (dcl, ItemFileReadStore) {
 
-	return declare("dui.tests._data.SlowStore", ItemFileReadStore, {
+	return dcl(ItemFileReadStore, {
 		// summary:
 		//		This wrapper decorates an ItemFileReadStore by delaying queries issued according to the
 		//		length of the query:
@@ -10,17 +10,19 @@ define(["dojo/_base/declare", "dojo/data/ItemFileReadStore"], function(declare, 
 		//		- 3 characters: 500ms,
 		//		- 4 or more characters: 100ms.
 
-		constructor: function(){
+		declaredClass: "dui.tests._data.SlowStore",
+
+		constructor: function () {
 			this.log = [];
 		},
 
-		fetch: function(/* Object */ keywordArgs){
+		fetch: function (/* Object */ keywordArgs) {
 			// Get the query phrase (store into first), and the # of chars it has
 			var count = 0;
 			var first;
-			if("query" in keywordArgs){
+			if ("query" in keywordArgs) {
 				var query = keywordArgs.query;
-				for(var attr in query){
+				for (var attr in query) {
 					first = query[attr];
 					break;
 				}
@@ -28,20 +30,20 @@ define(["dojo/_base/declare", "dojo/data/ItemFileReadStore"], function(declare, 
 			}
 
 			var delay = 100;
-			switch(count || 0){
-				case 0:
-					delay = 2000;
-					break;
-				case 1:
-				case 2:
-					delay = 1000;
-					break;
-				case 3:
-					delay = 500;
-					break;
-				case 4:
-					delay = 100;
-					break;
+			switch (count || 0) {
+			case 0:
+				delay = 2000;
+				break;
+			case 1:
+			case 2:
+				delay = 1000;
+				break;
+			case 3:
+				delay = 500;
+				break;
+			case 4:
+				delay = 100;
+				break;
 			}
 
 			this.log.push({
@@ -55,7 +57,7 @@ define(["dojo/_base/declare", "dojo/data/ItemFileReadStore"], function(declare, 
 
 			var that = this,
 				thatArgs = arguments;
-			var handle = setTimeout(function(){
+			var handle = setTimeout(function () {
 				that.log.push({
 					type: "end",
 					date: new Date(),
@@ -70,7 +72,7 @@ define(["dojo/_base/declare", "dojo/data/ItemFileReadStore"], function(declare, 
 			// This abort() method cancels a request before it has even been sent to ItemFileReadStore.
 			// (Since ItemFileReadStore has already loaded the data (as per code in the test file),
 			// it operates synchronously; there is never a case to send the cancel request to that object)
-			keywordArgs.abort = function(){
+			keywordArgs.abort = function () {
 				clearTimeout(handle);
 				that.log.push({
 					type: "cancel",

@@ -1,9 +1,9 @@
-define(["dojo/_base/array", "dui/_BidiMixin"], function(array, _BidiMixin){
+define(["../../Bidi"], function(){
 
 	// module:
 	//		dui/mobile/bidi/common
 
-	// TODO: I don't see the point of this module, seems like dijit/_BidiMixin is sufficient.
+	// TODO: I don't see the point of this module, seems like dui/Bidi is sufficient.
 
 	var common = {
 		// summary:
@@ -23,7 +23,7 @@ define(["dojo/_base/array", "dui/_BidiMixin"], function(array, _BidiMixin){
 			//		when dir is set to LTR.
 			//		Therefore the only solution is to use UCC to display the text in correct orientation.
 			if(textDir){
-				textDir = (textDir === "auto") ? _BidiMixin._checkContextual(text) : textDir;
+				textDir = (textDir === "auto") ? Bidi._checkContextual(text) : textDir;
 				return ((textDir === "rtl") ? common.MARK.RLE : common.MARK.LRE) + text + common.MARK.PDF;
 			}
 			return text;
@@ -47,7 +47,7 @@ define(["dojo/_base/array", "dui/_BidiMixin"], function(array, _BidiMixin){
 			//		parent widget
 			var children = widget.getChildren();
 			if (children && widget.textDir){
-				array.forEach(children, function(ch){
+				children.forEach(function(ch){
 					ch.set("textDir", widget.textDir);
 				}, widget);
 			}

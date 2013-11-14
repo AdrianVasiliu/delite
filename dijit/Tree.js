@@ -1,5 +1,4 @@
 define([
-	"dojo/_base/array", // array.filter array.forEach array.map
 	"dojo/aspect",
 	"dojo/cookie", // cookie
 	"dojo/_base/declare", // declare
@@ -20,26 +19,26 @@ define([
 	"../a11yclick",
 	"../focus",
 	"../registry", // registry.byNode(), registry.getEnclosingWidget()
-	"../_WidgetBase",
+	"../Widget",
 	"../_TemplatedMixin",
-	"../_Container",
-	"../_Contained",
-	"../_CssStateMixin",
-	"../_KeyNavMixin",
+	"../Container",
+	"../Contained",
+	"../CssState",
+	"../KeyNav",
 	"dojo/text!./templates/TreeNode.html",
 	"dojo/text!./templates/Tree.html",
 	"./tree/_dndSelector",
 	"dojo/query!css2"	// needed when on.selector() used with a string for the selector
-], function(array, aspect, cookie, declare, Deferred, all,
+], function(aspect, cookie, declare, Deferred, all,
 			dom, domClass, domGeometry, domStyle, createError, fxUtils, has, keys, lang, on, touch, when,
-			a11yclick, focus, registry, _WidgetBase, _TemplatedMixin, _Container, _Contained, _CssStateMixin, _KeyNavMixin,
+			a11yclick, focus, registry, Widget, _TemplatedMixin, Container, Contained, _CssStateMixin, _KeyNavMixin,
 			treeNodeTemplate, treeTemplate, _dndSelector){
 
 	// module:
 	//		dui/Tree
 
 
-	var TreeNode = declare("dui._TreeNode", [_WidgetBase, _TemplatedMixin, _Container, _Contained, _CssStateMixin], {
+	var TreeNode = declare("dui._TreeNode", [Widget, _TemplatedMixin, Container, Contained, CssState], {
 		// summary:
 		//		Single node within a tree.   This class is used internally
 		//		by Tree and should not be accessed directly.
@@ -91,7 +90,7 @@ define([
 			rowNode: "duiTreeRow"
 		},
 
-		// Tooltip is defined in _WidgetBase but we need to handle the mapping to DOM here
+		// Tooltip is defined in Widget but we need to handle the mapping to DOM here
 		_setTooltipAttr: {node: "rowNode", type: "attribute", attribute: "title"},
 
 		buildRendering: function(){
@@ -124,7 +123,7 @@ define([
 			domStyle.set(this.domNode, "backgroundPosition", pixels + " 0px");	// TODOC: what is this for???
 			domStyle.set(this.rowNode, this.isLeftToRight() ? "paddingLeft" : "paddingRight", pixels);
 
-			array.forEach(this.getChildren(), function(child){
+			this.getChildren().forEach(function(child){
 				child.set("indent", indent + 1);
 			});
 
@@ -343,15 +342,15 @@ define([
 			// If items contains some of the same items as before then we will reattach them.
 			// Don't call this.removeChild() because that will collapse the tree etc.
 			var oldChildren = this.getChildren();
-			array.forEach(oldChildren, function(child){
-				_Container.prototype.removeChild.call(this, child);
+			oldChildren.forEach(function(child){
+				Container.prototype.removeChild.call(this, child);
 			}, this);
 
 			// All the old children of this TreeNode are subject for destruction if
 			//		1) they aren't listed in the new children array (items)
 			//		2) they aren't immediately adopted by another node (DnD)
 			this.defer(function(){
-				array.forEach(oldChildren, function(node){
+				oldChildren.forEach(function(node){
 					if(!node._destroyed && !node.getParent()){
 						// If node is in selection then remove it.
 						tree.dndController.removeTreeNode(node);
@@ -363,19 +362,19 @@ define([
 							if(ary.length == 1){
 								delete tree._itemNodesMap[id];
 							}else{
-								var index = array.indexOf(ary, node);
+								var index = ary.indexOf(node);
 								if(index != -1){
 									ary.splice(index, 1);
 								}
 							}
-							array.forEach(node.getChildren(), remove);
+							node.getChildren().forEach(remove);
 						}
 
 						remove(node);
 
 						// Remove any entries involving this node from cookie tracking expanded nodes
 						if(tree.persist){
-							var destroyedPath = array.map(node.getTreePath(),function(item){
+							var destroyedPath = node.getTreePath().map(function(item){
 								return tree.model.getIdentity(item);
 							}).join("/");
 							for(var path in tree._openedNodes){
@@ -400,7 +399,7 @@ define([
 				// Create _TreeNode widget for each specified tree node, unless one already
 				// exists and isn't being used (presumably it's from a DnD move and was recently
 				// released
-				array.forEach(items, function(item){    // MARKER: REUSE NODE
+				items.forEach(function(item){    // MARKER: REUSE NODE
 					var id = model.getIdentity(item),
 						existingNodes = tree._itemNodesMap[id],
 						node;
@@ -444,7 +443,7 @@ define([
 
 				// note that updateLayout() needs to be called on each child after
 				// _all_ the children exist
-				array.forEach(this.getChildren(), function(child){
+				this.getChildren().forEach(function(child){
 					child._updateLayout();
 				});
 			}else{
@@ -489,7 +488,7 @@ define([
 				this.collapse();
 			}
 
-			array.forEach(children, function(child){
+			children.forEach(function(child){
 				child._updateLayout();
 			});
 		},
@@ -516,7 +515,7 @@ define([
 				if(textDir && ((this.textDir != textDir) || !this._created)){
 					this._set("textDir", textDir);
 					this.applyTextDir(this.labelNode);
-					array.forEach(this.getChildren(), function(childNode){
+					this.getChildren().forEach(function(childNode){
 						childNode.set("textDir", textDir);
 					}, this);
 				}
@@ -524,7 +523,7 @@ define([
 		});
 	}
 
-	var Tree = declare("dui.Tree", [_WidgetBase, _KeyNavMixin, _TemplatedMixin, _CssStateMixin], {
+	var Tree = declare("dui.Tree", [Widget, KeyNav, _TemplatedMixin, CssState], {
 		// summary:
 		//		This widget displays hierarchical data from a store.
 
@@ -838,7 +837,7 @@ define([
 			if(!item){
 				return [];
 			}
-			var identity = lang.isString(item) ? item : this.model.getIdentity(item);
+			var identity = (typeof item === "string") ? item : this.model.getIdentity(item);
 			// return a copy so widget don't get messed up by changes to returned array
 			return [].concat(this._itemNodesMap[identity]);
 		},
@@ -850,11 +849,11 @@ define([
 			//		behavior is undefined. Use set('paths', ...) instead.
 			var tree = this;
 			return this.pendingCommandsPromise = this.pendingCommandsPromise.always(lang.hitch(this, function(){
-				var identities = array.map(items, function(item){
-					return (!item || lang.isString(item)) ? item : tree.model.getIdentity(item);
+				var identities = items.map(function(item){
+					return (!item || (typeof item === "string")) ? item : tree.model.getIdentity(item);
 				});
 				var nodes = [];
-				array.forEach(identities, function(id){
+				identities.forEach(function(id){
 					nodes = nodes.concat(tree._itemNodesMap[id] || []);
 				});
 				this.set('selectedNodes', nodes);
@@ -901,7 +900,7 @@ define([
 				return all(array.map(paths, function(path){
 					// normalize path to use identity
 					path = array.map(path, function(item){
-						return lang.isString(item) ? item : tree.model.getIdentity(item);
+						return (typeof item === "string") ? item : tree.model.getIdentity(item);
 					});
 
 					if(path.length){
@@ -938,12 +937,12 @@ define([
 				// Expand the node
 				return _this._expandNode(node).then(function(){
 					// When node has expanded, call expand() recursively on each non-leaf child
-					var childBranches = array.filter(node.getChildren() || [], function(node){
+					var childBranches = node.getChildren().filter(function(node){
 						return node.isExpandable;
 					});
 
 					// And when all those recursive calls finish, signal that I'm finished
-					return all(array.map(childBranches, expand));
+					return all(childBranches.map(expand));
 				});
 			}
 
@@ -960,10 +959,10 @@ define([
 
 			function collapse(node){
 				// Collapse children first
-				var childBranches = array.filter(node.getChildren() || [], function(node){
+				var childBranches = node.getChildren().filter(function(node){
 						return node.isExpandable;
 					}),
-					defs = all(array.map(childBranches, collapse));
+					defs = all(childBranches.map(collapse));
 
 				// And when all those recursive calls finish, collapse myself, unless I'm the invisible root node,
 				// in which case collapseAll() is finished
@@ -1391,13 +1390,13 @@ define([
 			this.focusChild(node);
 		},
 
-		_onNodeMouseEnter: function(/*dui/_WidgetBase*/ /*===== node =====*/){
+		_onNodeMouseEnter: function(/*dui/Widget*/ /*===== node =====*/){
 			// summary:
 			//		Called when mouse is over a node (onmouseenter event),
 			//		this is monitored by the DND code
 		},
 
-		_onNodeMouseLeave: function(/*dui/_WidgetBase*/ /*===== node =====*/){
+		_onNodeMouseLeave: function(/*dui/Widget*/ /*===== node =====*/){
 			// summary:
 			//		Called when mouse leaves a node (onmouseleave event),
 			//		this is monitored by the DND code
@@ -1415,7 +1414,7 @@ define([
 			if(nodes){
 				var label = this.getLabel(item),
 					tooltip = this.getTooltip(item);
-				array.forEach(nodes, function(node){
+				nodes.forEach(function(node){
 					node.set({
 						item: item, // theoretically could be new JS Object representing same item
 						label: label,
@@ -1434,7 +1433,7 @@ define([
 				parentNodes = this._itemNodesMap[identity];
 
 			if(parentNodes){
-				array.forEach(parentNodes, function(parentNode){
+				parentNodes.forEach(function(parentNode){
 					parentNode.setChildItems(newChildrenList);
 				});
 			}
@@ -1450,7 +1449,7 @@ define([
 				nodes = this._itemNodesMap[identity];
 
 			if(nodes){
-				array.forEach(nodes, function(node){
+				nodes.forEach(function(node){
 					// Remove node from set of selected nodes (if it's selected)
 					this.dndController.removeTreeNode(node);
 
@@ -1474,7 +1473,7 @@ define([
 			if(this.persist && this.cookieName){
 				var oreo = cookie(this.cookieName);
 				if(oreo){
-					array.forEach(oreo.split(','), function(item){
+					oreo.split(',').forEach(function(item){
 						this._openedNodes[item] = true;
 					}, this);
 				}
@@ -1487,7 +1486,7 @@ define([
 			if(!this.persist){
 				return false;
 			}
-			var path = array.map(node.getTreePath(),function(item){
+			var path = node.getTreePath().map(function(item){
 				return this.model.getIdentity(item);
 			}, this).join("/");
 			if(arguments.length === 1){
@@ -1520,7 +1519,7 @@ define([
 			if(this.rootNode){
 				this.rootNode.destroyRecursive();
 			}
-			if(this.dndController && !lang.isString(this.dndController)){
+			if(this.dndController && (typeof this.dndController !== "string")){
 				this.dndController.destroy();
 			}
 			this.rootNode = null;

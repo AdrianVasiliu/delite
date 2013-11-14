@@ -9,7 +9,6 @@
 	<script type="text/javascript">
 		require([
 			"doh/runner",
-			"dojo/_base/array",
 			"dojo/aspect",
 			"dojo/_base/declare",
 			"dojo/dom",
@@ -19,7 +18,7 @@
 			"dojo/request",
 			"dojo/when",
 			"dui/registry",
-			"dui/_WidgetBase",
+			"dui/Widget",
 			"dui/_TemplatedMixin",
 			"dui/Tooltip",
 			"dui/TooltipDialog",
@@ -31,14 +30,14 @@
 			"dui/layout/AccordionContainer",
 			"dui/tests/helpers",
 			"dojo/domReady!"
-		], function(doh, array, aspect, declare, dom, domClass, lang, parser, request, when,
-				registry, _WidgetBase, _TemplatedMixin, Tooltip, TooltipDialog, Button, DropDownButton,
+		], function(doh, aspect, declare, dom, domClass, lang, parser, request, when,
+				registry, Widget, _TemplatedMixin, Tooltip, TooltipDialog, Button, DropDownButton,
 				ContentPane, StackContainer, TabContainer, AccordionContainer, helpers){
 
 			var tabCounter;
 			testClose = function(pane, tab){
 				// remove html from title
-				var title = lang.trim(tab.title.replace(/<\/?[a-z][a-z0-9]*[^>]*>/ig, ""));
+				var title = tab.title.replace(/<\/?[a-z][a-z0-9]*[^>]*>/ig, "").trim();
 				return confirm("Please confirm that you want tab "+title+" closed");
 			};
 
@@ -65,7 +64,7 @@
 
 			// create a do nothing, only for test widget
 			declare("TestWidget",
-				[_WidgetBase, _TemplatedMixin], {
+				[Widget, _TemplatedMixin], {
 				templateString: "<span class='duiTestWidget'></span>"
 			});
 
@@ -91,7 +90,7 @@
 						var d = new doh.Deferred();
 
 						cp.set('href', 'getResponse.php?messId=1').then(d.getTestCallback(function(){
-							doh.is(1, _WidgetBase.prototype.getChildren.call(cp).length);
+							doh.is(1, Widget.prototype.getChildren.call(cp).length);
 						}));
 						return d;
 					}
@@ -230,7 +229,7 @@
 							doh.t(cp.isLoaded, "eventually, cp was loaded");
 							doh.is("unloaded and reloaded", history);
 
-							array.forEach(handles, function(handle){
+							handles.forEach(function(handle){
 								handle.remove();
 							});
 						}), true));

@@ -29,11 +29,9 @@
 		var bc, cp1, cp2, cp3;
 
 		require([
-			"dojo/_base/array",
 			"dojo/aspect",
 			"dojo/dom",
 			"dojo/dom-style",
-			"dojo/json",
 			"dojo/on",
 			"dojo/parser",
 			"dui/registry",
@@ -41,7 +39,7 @@
 			"dui/layout/ContentPane",
 			"dui/form/FilteringSelect",
 			"dojo/domReady!"
-		], function(array, aspect, dom, domStyle, json, on, parser, registry, BorderContainer, ContentPane, FilteringSelect){
+		], function(aspect, dom, domStyle, on, parser, registry, BorderContainer, ContentPane, FilteringSelect){
 
 			togglePanel = function(button, id){
 				var leftPanel = registry.byId(id);
@@ -63,7 +61,7 @@
 			function watchSplitters(bc){
 				var out = dom.byId("watchedOutput");
 				var moveConnects = {};
-				array.forEach(["top", "left"], function(region){
+				["top", "left"].forEach(function(region){
 					var spl = bc.getSplitter(region);
 	
 					aspect.after(spl, "_startDrag", function(){
@@ -71,11 +69,11 @@
 						domStyle.set(spl.child.domNode, "opacity", "0.4");
 						moveConnects[spl.widgetId] = on(spl.domNode, "mousemove", function(evt){
 	
-							out.innerHTML = spl.region + ": " + json.stringify({
+							out.innerHTML = spl.region + ": " + JSON.stringify({
 								x: !spl.horizontal ? spl.domNode.style[spl.region] : 0,
 								y: spl.horizontal ? spl.domNode.style[spl.region] : 0
 							});
-						})
+						});
 	
 					});
 					aspect.after(spl, "_stopDrag", function(evt){
@@ -83,7 +81,7 @@
 						moveConnects[spl.widgetId].remove();
 						delete moveConnects[spl.widgetId];
 					});
-				})
+				});
 			}
 
 			parser.parse();

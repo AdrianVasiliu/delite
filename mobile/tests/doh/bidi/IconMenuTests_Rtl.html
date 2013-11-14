@@ -48,7 +48,6 @@
 		var COL_NUM = 3;
 
 		require([
-			"dojo/_base/array",
 			"dojo/_base/lang", // dojo.mixin
 			"dojo/dom-construct", // dojo.place
 			"dojo/dom-class", // dojo.hasClass
@@ -60,7 +59,7 @@
 			"dojo/parser",
 			"dui/mobile/compat",
 			"dui/mobile/View"
-		], function(array, lang, domConst, domClass, ready, registry, runner, IconMenuItem, IconMenu){
+		], function(lang, domConst, domClass, ready, registry, runner, IconMenuItem, IconMenu){
 			function _createAccordionDeclaratively(widgetId){
 				return registry.byId(widgetId);
 			}
@@ -81,7 +80,7 @@
 			function _createAccordionProgrammaticallyWithSourceNodeReference(widgetId, childWidgetId){
 				var r = new IconMenu({cols:"3"}, widgetId);
 				r.startup();
-				children = array.filter(r.domNode.childNodes, function(node){ return node.nodeType == 1; });
+				children = r.domNode.childNodes.filter(function(node){ return node.nodeType == 1; });
 				var childWidget;
 				for(var i = 0, len =Math.min(WIDGET_PROPS.length, children.length); i<len ;i++){
 					childWidget = IconMenuItem(WIDGET_PROPS[i], children[i]);
@@ -103,7 +102,7 @@
 
 				runner.assertTrue(domClass.contains(childWidgets[0].domNode, WIDGET_ICON_SEL), WIDGET_ICON_SEL + " id=" + childWidgets[0].domNode.id);
 				for(var i=0;i< ITEM_NUM;i++){
-	 				runner.assertEqual(WIDGET_LABELS[i].label, dojo.trim(childWidgets[i].labelNode.innerHTML.replace(/\r\n|\n|\t/g,"")), "id=" + childWidgets[i].domNode.id);
+	 				runner.assertEqual(WIDGET_LABELS[i].label, childWidgets[i].labelNode.innerHTML.replace(/\r\n|\n|\t/g,"").trim(), "id=" + childWidgets[i].domNode.id);
 	 				switch(i % COL_NUM){
 						case 0:
 							runner.assertTrue(domClass.contains(childWidgets[i].domNode, CHILDWIDGET_CLASSNAME2), CHILDWIDGET_CLASSNAME2 + " id=" + childWidgets[i].domNode.id);
@@ -152,7 +151,7 @@
 				]);
 				runner.run();
 			});
-		})
+		});
 	</script>
 
 </head>

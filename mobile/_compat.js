@@ -1,8 +1,7 @@
 define([
-	"dojo/_base/array",	// array.forEach
 	"dojo/_base/config",
 	"dojo/_base/fx",	// fx.fadeOut, fx.fadeIn
-	"dojo/_base/lang",	// lang.extend, lang.isArray
+	"dojo/_base/lang",	// lang.extend, lang.hitch, lang.getObject
 	"dojo/sniff",		// has("webkit"), has("ie")
 	"dojo/_base/window",	// win.doc, win.body
 	"dojo/aspect",
@@ -28,7 +27,7 @@ define([
 	"./View",
 	"./Heading",
 	"require"
-], function(array, config, bfx, lang, has, win, domClass, domConstruct, domGeometry, domStyle, domAttr, fx, easing, domReady, uacss, registry, xfx, flip, EdgeToEdgeList, IconContainer, ProgressIndicator, RoundRect, RoundRectList, ScrollableView, Switch, View, Heading, require){
+], function(config, bfx, lang, has, win, domClass, domConstruct, domGeometry, domStyle, domAttr, fx, easing, domReady, uacss, registry, xfx, flip, EdgeToEdgeList, IconContainer, ProgressIndicator, RoundRect, RoundRectList, ScrollableView, Switch, View, Heading, require){
 
 	// module:
 	//		dui/mobile/compat
@@ -305,7 +304,7 @@ return {
 					dm.createRoundRect(this, true);
 					this.domNode.className = "duiRoundRectList";
 					if(has("ie") && has("dojo-bidi") && !this.isLeftToRight()){
-						this.domNode.className = "duiRoundRectList duiRoundRectListRtl"
+						this.domNode.className = "duiRoundRectList duiRoundRectListRtl";
 					}
 				},
 
@@ -512,12 +511,12 @@ return {
 			//		private
 			if(!dm._loadedCss){
 				var obj = {};
-				array.forEach(dm.getCssPaths(), function(path){
+				dm.getCssPaths().forEach(function(path){
 					obj[path] = true;
 				});
 				dm._loadedCss = obj;
 			}
-			if(!lang.isArray(files)){ files = [files]; }
+			if(!Array.isArray(files)){ files = [files]; }
 			for(var i = 0; i < files.length; i++){
 				var file = files[i];
 				if(!dm._loadedCss[file]){

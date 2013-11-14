@@ -1,5 +1,4 @@
 define([
-	"dojo/_base/array", // array.forEach
 	"dojo/_base/declare", // declare
 	"dojo/dom", // dom.setSelectable
 	"dojo/dom-attr", // domAttr.set or get domAttr.remove
@@ -8,18 +7,18 @@ define([
 	"dojo/fx", // fxUtils.wipeIn fxUtils.wipeOut
 	"dojo/has",
 	"dojo/keys", // keys.DOWN_ARROW keys.ENTER
-	"../_CssStateMixin",
+	"../CssState",
 	"../_TemplatedMixin",
 	"../layout/ContentPane",
 	"dojo/text!./templates/TitlePane.html",
 	"../a11yclick"	// template uses ondijitclick
-], function(array, declare, dom, domAttr, domClass, domGeometry, fxUtils, has, keys,
+], function(declare, dom, domAttr, domClass, domGeometry, fxUtils, has, keys,
 			_CssStateMixin, _TemplatedMixin, ContentPane, template){
 
 	// module:
 	//		dui/TitlePane
 
-	var TitlePane = declare("dui.TitlePane", [ContentPane, _TemplatedMixin, _CssStateMixin], {
+	var TitlePane = declare("dui.TitlePane", [ContentPane, _TemplatedMixin, CssState], {
 		// summary:
 		//		A pane with a title on top, that can be expanded or collapsed.
 		//
@@ -78,7 +77,7 @@ define([
 		//		the size of an inner widget.
 		doLayout: false,
 
-		// Tooltip is defined in _WidgetBase but we need to handle the mapping to DOM here
+		// Tooltip is defined in Widget but we need to handle the mapping to DOM here
 		_setTooltipAttr: {node: "focusNode", type: "attribute", attribute: "title"}, // focusNode spans the entire width, titleNode doesn't
 
 		buildRendering: function(){
@@ -120,7 +119,7 @@ define([
 			// open: Boolean
 			//		True if you want to open the pane, false if you want to close it.
 
-			array.forEach([this._wipeIn, this._wipeOut], function(animation){
+			[this._wipeIn, this._wipeOut].forEach(function(animation){
 				if(animation && animation.status() == "playing"){
 					animation.stop();
 				}

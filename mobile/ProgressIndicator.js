@@ -7,15 +7,15 @@ define([
 	"dojo/dom-geometry",
 	"dojo/dom-style",
 	"dojo/has",
-	"dui/_Contained",
-	"dui/_WidgetBase",
+	"../Contained",
+	"../Widget",
 	"./_css3"
-], function(config, declare, lang, domClass, domConstruct, domGeometry, domStyle, has, Contained, WidgetBase, css3){
+], function(config, declare, lang, domClass, domConstruct, domGeometry, domStyle, has, Contained, Widget, css3){
 
 	// module:
 	//		dui/mobile/ProgressIndicator
 
-	var cls = declare("dui.mobile.ProgressIndicator", [WidgetBase, Contained], {
+	var cls = declare("dui.mobile.ProgressIndicator", [Widget, Contained], {
 		// summary:
 		//		A progress indication widget.
 		// description:

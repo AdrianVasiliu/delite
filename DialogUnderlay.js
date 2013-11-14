@@ -1,22 +1,20 @@
 define([
-	"dojo/_base/declare", // declare
 	"dojo/_base/lang", // lang.hitch
 	"dojo/aspect", // aspect.after
 	"dojo/dom-attr", // domAttr.set
 	"dojo/dom-style", // domStyle.getComputedStyle
 	"dojo/on",
 	"dojo/window", // winUtils.getBox, winUtils.get
-	"./_WidgetBase",
-	"./_TemplatedMixin",
+	"./register",
+	"./Widget",
 	"./BackgroundIframe",
 	"./Viewport"
-], function(declare, lang, aspect, domAttr, domStyle, on,
-			winUtils, _WidgetBase, _TemplatedMixin, BackgroundIframe, Viewport){
+], function (lang, aspect, domAttr, domStyle, on, winUtils, register, Widget, BackgroundIframe, Viewport) {
 
 	// module:
 	//		dui/DialogUnderlay
 
-	var DialogUnderlay = declare("dui.DialogUnderlay", [_WidgetBase, _TemplatedMixin], {
+	var DialogUnderlay = register("d-dialog-underlay", [HTMLElement, Widget], {
 		// summary:
 		//		A component used to block input behind a `dui/Dialog`.
 		//
@@ -29,10 +27,6 @@ define([
 		//
 		//		In the case of `dui.Dialog`, this id is based on the id of the Dialog,
 		//		suffixed with _underlay.
-
-		// Template has two divs; outer div is used for fade-in/fade-out, and also to hold background iframe.
-		// Inner div has opacity specified in CSS file.
-		templateString: "<div class='duiDialogUnderlayWrapper'><div class='duiDialogUnderlay' tabIndex='-1' data-dojo-attach-point='node'></div></div>",
 
 		// Parameters on creation or updatable later
 
@@ -48,26 +42,33 @@ define([
 		// is called first.   The array is shared between instances but that's OK because we never write into it.
 		_modalConnects: [],
 
-		_setDialogIdAttr: function(id){
+		_setDialogIdAttr: function (id) {
 			domAttr.set(this.node, "id", id + "_underlay");
 			this._set("dialogId", id);
 		},
 
-		_setClassAttr: function(clazz){
+		_setClassAttr: function (clazz) {
 			this.node.className = "duiDialogUnderlay " + clazz;
 			this._set("class", clazz);
 		},
 
-		postCreate: function(){
-			// Append the underlay to the body
-			this.ownerDocumentBody.appendChild(this.domNode);
-
-			this.own(on(this.domNode, "keydown", lang.hitch(this, "_onKeyDown")));
-
-			this.inherited(arguments);
+		buildRendering: function () {
+			// Outer div is used for fade-in/fade-out, and also to hold background iframe.
+			// Inner div has opacity specified in CSS file.
+			this.domNode.class = "duiDialogUnderlayWrapper";
+			this.node = this.ownerDocument.createElement("div");
+			this.node.setAttribute("tabindex", "-1");
+			this.domNode.appendChild(this.node);
 		},
 
-		layout: function(){
+		postCreate: function () {
+			// Append the underlay to the body
+			this.ownerDocumentBody.appendChild(this);
+
+			this.own(on(this, "keydown", lang.hitch(this, "_onKeyDown")));
+		},
+
+		layout: function () {
 			// summary:
 			//		Sets the background to the size of the viewport
 			//
@@ -79,7 +80,7 @@ define([
 			//		private
 
 			var is = this.node.style,
-				os = this.domNode.style;
+				os = this.style;
 
 			// hide the background temporarily, so that the background itself isn't
 			// causing scrollbars to appear (might happen when user shrinks browser
@@ -95,13 +96,13 @@ define([
 			os.display = "block";
 		},
 
-		show: function(){
+		show: function () {
 			// summary:
 			//		Show the dialog underlay
-			this.domNode.style.display = "block";
+			this.style.display = "block";
 			this.open = true;
 			this.layout();
-			this.bgIframe = new BackgroundIframe(this.domNode);
+			this.bgIframe = new BackgroundIframe(this);
 
 			var win = winUtils.get(this.ownerDocument);
 			this._modalConnects = [
@@ -111,29 +112,32 @@ define([
 
 		},
 
-		hide: function(){
+		hide: function () {
 			// summary:
 			//		Hides the dialog underlay
 
 			this.bgIframe.destroy();
 			delete this.bgIframe;
-			this.domNode.style.display = "none";
-			while(this._modalConnects.length){ (this._modalConnects.pop()).remove(); }
+			this.style.display = "none";
+			while (this._modalConnects.length) {
+				(this._modalConnects.pop()).remove();
+			}
 			this.open = false;
 		},
 
-		destroy: function(){
-			while(this._modalConnects.length){ (this._modalConnects.pop()).remove(); }
-			this.inherited(arguments);
-		},
+		destroy: register.before(function () {
+			while (this._modalConnects.length) {
+				(this._modalConnects.pop()).remove();
+			}
+		}),
 
-		_onKeyDown: function(){
+		_onKeyDown: function () {
 			// summary:
 			//		Extension point so Dialog can monitor keyboard events on the underlay.
 		}
 	});
 
-	DialogUnderlay.show = function(/*Object*/ attrs, /*Number*/ zIndex){
+	DialogUnderlay.show = function (/*Object*/ attrs, /*Number*/ zIndex) {
 		// summary:
 		//		Display the underlay with the given attributes set.  If the underlay is already displayed,
 		//		then adjust it's attributes as specified.
@@ -143,25 +147,27 @@ define([
 		//		zIndex of the underlay
 
 		var underlay = DialogUnderlay._singleton;
-		if(!underlay || underlay._destroyed){
+		if (!underlay || underlay._destroyed) {
 			underlay = DialogUnderlay._singleton = new DialogUnderlay(attrs);
-		}else{
-			if(attrs){ underlay.set(attrs); }
+		} else {
+			if (attrs) {
+				underlay.set(attrs);
+			}
 		}
-		domStyle.set(underlay.domNode, 'zIndex', zIndex);
-		if(!underlay.open){
+		domStyle.set(underlay, "zIndex", zIndex);
+		if (!underlay.open) {
 			underlay.show();
 		}
 	};
 
-	DialogUnderlay.hide = function(){
+	DialogUnderlay.hide = function () {
 		// summary:
 		//		Hide the underlay.
 
 		// Guard code in case the underlay widget has already been destroyed
 		// because we are being called during page unload (when all widgets are destroyed)
 		var underlay = DialogUnderlay._singleton;
-		if(underlay && !underlay._destroyed){
+		if (underlay && !underlay._destroyed) {
 			underlay.hide();
 		}
 	};

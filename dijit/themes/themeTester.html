@@ -143,7 +143,7 @@
 
 <script type="text/javascript">
 	require([
-		"dojo/_base/array", "dojo/_base/fx", "dojo/dom", "dojo/dom-class", "dojo/dom-geometry", "dojo/dom-style",
+		"dojo/_base/fx", "dojo/dom", "dojo/dom-class", "dojo/dom-geometry", "dojo/dom-style",
 		"dojo/hccss", "dojo/date/locale", "dojo/parser", "dojo/store/Memory",
 		"dui/registry", "dui/tree/ObjectStoreModel",
 
@@ -168,7 +168,7 @@
 			
 		// Don't call the parser until the DOM has finished loading
 		"dojo/domReady!"
-	], function(array, baseFx, dom, domClass, domGeom, domStyle, has, locale, parser, Memory, registry, ObjectStoreModel,
+	], function(baseFx, dom, domClass, domGeom, domStyle, has, locale, parser, Memory, registry, ObjectStoreModel,
 			CheckedMenuItem, RadioMenuItem, MenuSeparator){
 		// If you are doing box-model sizing then need to tell dom-geometry, see #15104
 		if(domStyle.get(document.body, "boxSizing") == "border-box" ||
@@ -219,7 +219,7 @@
 			}
 
 			// Clear previously checked MenuItem (radio-button effect).
-			array.forEach(this.getParent().getChildren(), function(mi){
+			this.getParent().getChildren().forEach(function(mi){
 				if(mi != this){
 					mi.set("checked", false);
 				}
@@ -240,20 +240,12 @@
 			}
 		};
 
-		logWidgets = function(){
-			// summary:
-			//		Print all the widgets to console
-			console.log("Widgets in registry:");
-			registry.forEach(function(w){
-				console.log(w);
-			});
-		};
-
 		tearDown = function(){
 			// summary:
 			//		Destroy all widgets, top down, and then check for any orphaned widgets
-			registry._destroyAll();
-			logWidgets();
+			require("dui/Widget").prototype.findWidgets(document.body).forEach(function(w){
+				w.destroy();
+			});
 		};
 
 		// Data for Tree, ComboBox, InlineEditBox
@@ -349,7 +341,7 @@
 
 			// Create menu choices and links to test other themes
 			var tmpString = '';
-			array.forEach(availableThemes, function(theme){
+			availableThemes.forEach(function(theme){
 				if(theme != curTheme){
 					tmpString +=
 							'<a href="?theme=' + theme.theme + '">' + theme.theme + '</' + 'a> (' +
@@ -362,7 +354,7 @@
 			dom.byId('themeData').innerHTML = tmpString;
 
 			// Create menu choices to test other themes
-			array.forEach(availableThemes, function(theme){
+			availableThemes.forEach(function(theme){
 				registry.byId('themeMenu').addChild(new RadioMenuItem({
 					id: theme.theme + "_radio",
 					label: theme.theme,
@@ -493,7 +485,6 @@
 		<div data-dojo-type="dui/Menu" id="fileMenu">
 			<div data-dojo-type="dui/MenuItem" id="globals" data-dojo-props="onClick: logStrayGlobals">Log globals
 			</div>
-			<div data-dojo-type="dui/MenuItem" id="widgets" data-dojo-props="onClick: logWidgets">Log widgets</div>
 			<div data-dojo-type="dui/MenuItem" id="destroy"
 				 data-dojo-props="iconClass:'duiIconDelete', onClick:tearDown">Destroy All
 			</div>
@@ -659,7 +650,7 @@
 
 				<div data-dojo-type="dui/TooltipDialog" id="tooltipDlg" data-dojo-props='
 						title:"Enter Login information",
-						execute: function(){ alert("submitted w/args:\n" + dojo.toJson(arguments[0], true)); }
+						execute: function(){ alert("submitted w/args:\n" + JSON.stringify(arguments[0])); }
 					'>
 					<table>
 						<tr>

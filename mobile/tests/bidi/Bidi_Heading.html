@@ -14,17 +14,16 @@
 		require([
 			"dojo/_base/connect",
 			"dojo/domReady",
-			"dojo/_base/array",
 			"dojo/dom",
 			"dui/registry",
-			"dui/mobile/Heading",			
+			"dui/mobile/Heading",
 			"dojo/parser",
 			"dui/mobile/compat",
-			"dui/mobile/Button",
+			"dui/Button",
 			"dui/mobile/ScrollableView",
 			"dui/mobile/TabBar",
 			"dui/mobile/ListItem"
-		], function(connect, ready, array, dom, registry, Heading){
+		], function(connect, ready, dom, registry, Heading){
 			ready(function(){
 				var view = registry.byId("view2");
 				var demoWidget = new Heading({label:"Programm Heading!", textDir:"rtl", id:"hdn", back:"\u05e9\u05d9\u05de\u05d5\u05e9\u0020\u05d1\u05ea\u05d2\u05d9\u05d5\u05ea back..."});
@@ -107,9 +106,9 @@
 		<div data-dojo-type="dui/mobile/Heading"  data-dojo-props=' textDir:"ltr", back:"&#1513;&#1500;&#1493;&#1501; World!"'>&#1513;&#1500;&#1493;&#1501; World!
 		</div><br>
 		<hr>
-		<button data-dojo-type="dui/mobile/Button" id="btn5" class="duiRedButton" data-dojo-props='label:"Set textDir ltr"'></button>
-		<button data-dojo-type="dui/mobile/Button" id="btn6" class="duiRedButton" data-dojo-props='label:"Set textDir rtl"'></button>
-		<button data-dojo-type="dui/mobile/Button" id="btn7" class="duiRedButton" data-dojo-props='label:"Set textDir auto"'></button>
+		<button data-dojo-type="dui/Button" id="btn5" class="duiRedButton" data-dojo-props='label:"Set textDir ltr"'></button>
+		<button data-dojo-type="dui/Button" id="btn6" class="duiRedButton" data-dojo-props='label:"Set textDir rtl"'></button>
+		<button data-dojo-type="dui/Button" id="btn7" class="duiRedButton" data-dojo-props='label:"Set textDir auto"'></button>
 		<hr>
 		<div data-dojo-type="dui/mobile/Heading" data-dojo-props='textDir:"ltr", label:"RTL text Dir in ToolBarButton"'>
 			<span data-dojo-type="dui/mobile/ToolBarButton" defaultColor="duiColorBlue" data-dojo-props='icon:"duiDomButtonWhitePlus",textDir:"rtl", label:"Hello &#1506;&#1493;&#1500;&#1501;!"' style="width:120px"></span>
@@ -151,7 +150,7 @@
 		<div data-dojo-type="dui/mobile/Heading"  data-dojo-props=' textDir:"auto", back:"&#1513;&#1500;&#1493;&#1501; World!"'>&#1513;&#1500;&#1493;&#1501; World!
 		</div><br>
 		<hr>		
-		<button data-dojo-type="dui/mobile/Button" id="btnLbl" >Set new text</button>
+		<button data-dojo-type="dui/Button" id="btnLbl" >Set new text</button>
 		
 	</div>	
 	 

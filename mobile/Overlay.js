@@ -8,14 +8,13 @@ define([
 	"dojo/dom-style",
 	"dojo/on",
 	"dojo/window",
-	"dui/_WidgetBase",
-	"dojo/_base/array",
+	"../Widget",
 	"dui/registry",
 	"dojo/touch",
 	"./_css3"
-], function(declare, lang, has, win, domClass, domGeometry, domStyle, on, windowUtils, WidgetBase, array, registry, touch, css3){
+], function(declare, lang, has, win, domClass, domGeometry, domStyle, on, windowUtils, Widget, registry, touch, css3){
 
-	return declare("dui.mobile.Overlay", WidgetBase, {
+	return declare("dui.mobile.Overlay", Widget, {
 		// summary:
 		//		A non-templated widget that animates up from the bottom, 
 		//		overlaying the current content.
@@ -50,7 +49,7 @@ define([
 		show: function(/*DomNode?*/aroundNode){
 			// summary:
 			//		Scroll the overlay up into view
-			array.forEach(registry.findWidgets(this.domNode), function(w){
+			registry.findWidgets(this.domNode).forEach(function(w){
 				if(w && w.height == "auto" && typeof w.resize == "function"){
 					w.resize();
 				}

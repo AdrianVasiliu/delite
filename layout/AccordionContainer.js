@@ -1,6 +1,5 @@
 define([
 	"require",
-	"dojo/_base/array", // array.forEach array.map
 	"dojo/_base/declare", // declare
 	"dojo/_base/fx", // fx.Animation
 	"dojo/dom", // dom.setSelectable
@@ -13,16 +12,16 @@ define([
 	"dojo/has", // has("dojo-bidi")
 	"dojo/topic", // publish
 	"../focus", // focus.focus()
-	"../_WidgetBase",
-	"../_Container",
+	"../Widget",
+	"../Container",
 	"../_TemplatedMixin",
-	"../_CssStateMixin",
+	"../CssState",
 	"./StackContainer",
 	"./ContentPane",
 	"dojo/text!./templates/AccordionButton.html",
 	"../a11yclick" // AccordionButton template uses ondijitclick; not for keyboard, but for responsive touch.
-], function(require, array, declare, fx, dom, domAttr, domClass, domConstruct, domGeometry, keys, lang, has, topic,
-		focus, manager, _WidgetBase, _Container, _TemplatedMixin, _CssStateMixin, StackContainer, ContentPane, template){
+], function(require, declare, fx, dom, domAttr, domClass, domConstruct, domGeometry, keys, lang, has, topic,
+		focus, manager, Widget, Container, _TemplatedMixin, _CssStateMixin, StackContainer, ContentPane, template){
 
 	// module:
 	//		dui/layout/AccordionContainer
@@ -49,7 +48,7 @@ define([
 	// During animation there are two dijtAccordionChildWrapper's shown, so we need
 	// to compensate for that.
 
-	var AccordionButton = declare("dui.layout._AccordionButton", [_WidgetBase, _TemplatedMixin, _CssStateMixin], {
+	var AccordionButton = declare("dui.layout._AccordionButton", [Widget, _TemplatedMixin, _CssStateMixin], {
 		// summary:
 		//		The title bar to click to open up an accordion pane.
 		//		Internal widget used by AccordionContainer.
@@ -135,7 +134,7 @@ define([
 		});
 	}
 
-	var AccordionInnerContainer = declare("dui.layout._AccordionInnerContainer" + (has("dojo-bidi") ? "_NoBidi" : ""), [_WidgetBase, _CssStateMixin], {
+	var AccordionInnerContainer = declare("dui.layout._AccordionInnerContainer" + (has("dojo-bidi") ? "_NoBidi" : ""), [Widget, _CssStateMixin], {
 		// summary:
 		//		Internal widget placed as direct child of AccordionContainer.containerNode.
 		//		When other widgets are added as children to an AccordionContainer they are wrapped in
@@ -150,7 +149,7 @@ define([
 		 =====*/
 
 		/*=====
-		 // contentWidget: dui/_WidgetBase
+		 // contentWidget: dui/Widget
 		 //		Pointer to the real child widget
 		 contentWidget: null,
 		 =====*/
@@ -175,7 +174,7 @@ define([
 
 			// wrapper div's first child is the button widget (ie, the title bar)
 			var child = this.contentWidget,
-				cls = lang.isString(this.buttonWidget) ? lang.getObject(this.buttonWidget) : this.buttonWidget;
+				cls = (typeof this.buttonWidget === "string") ? lang.getObject(this.buttonWidget) : this.buttonWidget;
 			this.button = child._buttonWidget = (new cls({
 				contentWidget: child,
 				label: child.title,
@@ -227,14 +226,14 @@ define([
 		},
 
 		startup: function(){
-			// Called by _Container.addChild()
+			// Called by Container.addChild()
 			this.contentWidget.startup();
 		},
 
 		destroy: function(){
 			this.button.destroyRecursive();
 
-			array.forEach(this._contentWidgetWatches || [], function(w){
+			(this._contentWidgetWatches || []).forEach(function(w){
 				w.unwatch();
 			});
 
@@ -332,7 +331,7 @@ define([
 
 			// get cumulative height of all the unselected title bars
 			var totalCollapsedHeight = 0;
-			array.forEach(this.getChildren(), function(child){
+			this.getChildren().forEach(function(child){
 				if(child != openPane){
 					// Using domGeometry.getMarginSize() rather than domGeometry.position() since claro has 1px bottom margin
 					// to separate accordion panes.  Not sure that works perfectly, it's probably putting a 1px
@@ -396,8 +395,8 @@ define([
 		},
 
 		getChildren: function(){
-			// Overrides _Container.getChildren() to return content panes rather than internal AccordionInnerContainer panes
-			return array.map(this.inherited(arguments), function(child){
+			// Overrides Container.getChildren() to return content panes rather than internal AccordionInnerContainer panes
+			return this.inherited(arguments).map(function(child){
 				return child.declaredClass == "dui.layout._AccordionInnerContainer" ? child.contentWidget : child;
 			}, this);
 		},
@@ -406,7 +405,7 @@ define([
 			if(this._animation){
 				this._animation.stop();
 			}
-			array.forEach(this.getChildren(), function(child){
+			this.getChildren().forEach(function(child){
 				// If AccordionContainer has been started, then each child has a wrapper widget which
 				// also needs to be destroyed.
 				if(child._wrapperWidget){
@@ -430,7 +429,7 @@ define([
 			this.inherited(arguments);
 		},
 
-		_transition: function(/*dui/_WidgetBase?*/ newWidget, /*dui/_WidgetBase?*/ oldWidget, /*Boolean*/ animate){
+		_transition: function(/*dui/Widget?*/ newWidget, /*dui/Widget?*/ oldWidget, /*Boolean*/ animate){
 			// Overrides StackContainer._transition() to provide sliding of title bars etc.
 
 			if(this._animation){
@@ -500,7 +499,7 @@ define([
 		},
 
 		// note: we are treating the container as controller here
-		_onKeyDown: function(/*Event*/ e, /*dui/_WidgetBase*/ fromTitle){
+		_onKeyDown: function(/*Event*/ e, /*dui/Widget*/ fromTitle){
 			// summary:
 			//		Handle keydown events
 			// description:

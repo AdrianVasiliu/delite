@@ -1,5 +1,4 @@
 define([
-	"dojo/_base/array", // array.filter array.forEach array.map
 	"dojo/cookie", // cookie
 	"dojo/_base/declare", // declare
 	"dojo/dom-class", // domClass.add domClass.remove domClass.toggle
@@ -10,17 +9,17 @@ define([
 	"dojo/_base/lang", // getObject() hitch() delegate()
 	"dojo/on",
 	"dojo/touch",
-	"../_WidgetBase",
+	"../Widget",
 	"../_TemplatedMixin",
 	"./LayoutContainer",
 	"./utils"        // layoutUtils.layoutChildren
-], function(array, cookie, declare, domClass, domConstruct, domGeometry, domStyle, keys, lang, on, touch,
-			_WidgetBase, _TemplatedMixin, LayoutContainer, layoutUtils){
+], function(cookie, declare, domClass, domConstruct, domGeometry, domStyle, keys, lang, on, touch,
+			Widget, _TemplatedMixin, LayoutContainer, layoutUtils){
 
 	// module:
 	//		dui/layout/BorderContainer
 
-	var _Splitter = declare("dui.layout._Splitter", [_WidgetBase, _TemplatedMixin ], {
+	var _Splitter = declare("dui.layout._Splitter", [Widget, _TemplatedMixin ], {
 		// summary:
 		//		A draggable spacer between two items in a `dui/layout/BorderContainer`.
 		// description:
@@ -83,7 +82,7 @@ define([
 
 			var dim = this.horizontal ? 'h' : 'w',
 				childSize = domGeometry.getMarginBox(this.child.domNode)[dim],
-				center = array.filter(this.container.getChildren(), function(child){
+				center = this.container.getChildren().filter(function(child){
 					return child.region == "center";
 				})[0];
 
@@ -227,7 +226,7 @@ define([
 		}
 	});
 
-	var _Gutter = declare("dui.layout._Gutter", [_WidgetBase, _TemplatedMixin], {
+	var _Gutter = declare("dui.layout._Gutter", [Widget, _TemplatedMixin], {
 		// summary:
 		//		Just a spacer div to separate side pane from center pane.
 		//		Basically a trick to lookup the gutter/splitter width from the theme.
@@ -292,7 +291,7 @@ define([
 			this.inherited(arguments);
 		},
 
-		_setupChild: function(/*dui/_WidgetBase*/ child){
+		_setupChild: function(/*dui/Widget*/ child){
 			// Override LayoutContainer._setupChild().
 
 			this.inherited(arguments);
@@ -337,7 +336,7 @@ define([
 			this._layoutChildren();
 		},
 
-		removeChild: function(/*dui/_WidgetBase*/ child){
+		removeChild: function(/*dui/Widget*/ child){
 			// Override _LayoutWidget.removeChild().
 
 			var splitter = child._splitterWidget;
@@ -351,7 +350,7 @@ define([
 
 		getChildren: function(){
 			// Override _LayoutWidget.getChildren() to only return real children, not the splitters.
-			return array.filter(this.inherited(arguments), function(widget){
+			return this.inherited(arguments).filter(function(widget){
 				return !widget.isSplitter;
 			});
 		},
@@ -397,7 +396,7 @@ define([
 
 			// Combining the externally specified children with splitters and gutters
 			var childrenAndSplitters = [];
-			array.forEach(this._getOrderedChildren(), function(pane){
+			this._getOrderedChildren().forEach(function(pane){
 				childrenAndSplitters.push(pane);
 				if(pane._splitterWidget){
 					childrenAndSplitters.push(pane._splitterWidget);
@@ -419,7 +418,7 @@ define([
 
 		destroyRecursive: function(){
 			// Destroy splitters first, while getChildren() still works
-			array.forEach(this.getChildren(), function(child){
+			this.getChildren().forEach(function(child){
 				var splitter = child._splitterWidget;
 				if(splitter){
 					splitter.destroy();
@@ -455,7 +454,7 @@ define([
 	// Since any widget can be specified as a BorderContainer child, mix it
 	// into the base widget class.  (This is a hack, but it's effective.)
 	// This is for the benefit of the parser.   Remove for 2.0.  Also, hide from doc viewer.
-	lang.extend(_WidgetBase, /*===== {} || =====*/ BorderContainer.ChildWidgetProperties);
+	lang.extend(Widget, /*===== {} || =====*/ BorderContainer.ChildWidgetProperties);
 
 	// For monkey patching
 	BorderContainer._Splitter = _Splitter;

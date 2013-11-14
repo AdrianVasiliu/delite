@@ -1,21 +1,20 @@
 define([
-	"dojo/_base/array",
 	"dojo/_base/declare",
 	"dojo/_base/lang",
 	"dojo/_base/window",
 	"dojo/dom-construct",
-	"dui/_Contained",
-	"dui/_Container",
-	"dui/_WidgetBase",
+	"../Contained",
+	"../Container",
+	"../Widget",
 	"./IconItem", // to load IconItem for you (no direct references)
 	"./Heading",
 	"./View"
-], function(array, declare, lang, win, domConstruct, Contained, Container, WidgetBase, IconItem, Heading, View){
+], function(declare, lang, win, domConstruct, Contained, Container, Widget, IconItem, Heading, View){
 
 	// module:
 	//		dui/mobile/IconContainer
 
-	return declare("dui.mobile.IconContainer", [WidgetBase, Container, Contained],{
+	return declare("dui.mobile.IconContainer", [Widget, Container, Contained],{
 		// summary:
 		//		A container widget which can hold multiple icons.
 		// description:
@@ -143,7 +142,7 @@ define([
 		closeAll: function(){
 			// summary:
 			//		Closes all the icon items.
-			array.forEach(this.getChildren(), function(w){
+			this.getChildren().forEach(function(w){
 				w.close(true); // disables closing animation
 			}, this);
 		},

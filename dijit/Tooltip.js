@@ -1,22 +1,21 @@
 define([
-	"dojo/_base/array", // array.forEach array.indexOf array.map
 	"dojo/_base/declare", // declare
 	"dojo/_base/fx", // fx.fadeIn fx.fadeOut
 	"dojo/dom", // dom.byId
 	"dojo/dom-class", // domClass.add
 	"dojo/dom-geometry", // domGeometry.position
 	"dojo/dom-style", // domStyle.set, domStyle.get
-	"dojo/_base/lang", // lang.hitch lang.isArrayLike
+	"dojo/_base/lang", // lang.hitch
 	"dojo/mouse",
 	"dojo/on",
 	"dojo/sniff", // has("ie")
 	"../place",
-	"../_WidgetBase",
+	"../Widget",
 	"../_TemplatedMixin",
 	"../BackgroundIframe",
 	"dojo/text!./templates/Tooltip.html"
-], function(array, declare, fx, dom, domClass, domGeometry, domStyle, lang, mouse, on, has,
-			place, _WidgetBase, _TemplatedMixin, BackgroundIframe, template){
+], function(declare, fx, dom, domClass, domGeometry, domStyle, lang, mouse, on, has,
+			place, Widget, _TemplatedMixin, BackgroundIframe, template){
 
 	// module:
 	//		dui/Tooltip
@@ -30,7 +29,7 @@ define([
 	// The problem is that Tooltip's implementation supplies it's own <iframe> and interacts directly
 	// with dui/place, rather than going through dui/popup like TooltipDialog and other popups (ex: Menu).
 
-	var MasterTooltip = declare("dui._MasterTooltip", [_WidgetBase, _TemplatedMixin], {
+	var MasterTooltip = declare("dui._MasterTooltip", [Widget, _TemplatedMixin], {
 		// summary:
 		//		Internal widget that holds the actual tooltip markup,
 		//		which occurs once per page.
@@ -66,10 +65,10 @@ define([
 			// position: String[]?
 			//		List of positions to try to position tooltip (ex: ["right", "above"])
 			// rtl: Boolean?
-			//		Corresponds to `WidgetBase.dir` attribute, where false means "ltr" and true
+			//		Corresponds to `Widget.dir` attribute, where false means "ltr" and true
 			//		means "rtl"; specifies GUI direction, not text direction.
 			// textDir: String?
-			//		Corresponds to `WidgetBase.textdir` attribute; specifies direction of text.
+			//		Corresponds to `Widget.textdir` attribute; specifies direction of text.
 
 
 			if(this.aroundNode && this.aroundNode === aroundNode && this.containerNode.innerHTML == innerHTML){
@@ -238,7 +237,7 @@ define([
 				//		private
 
 				this.applyTextDir(node);
-				array.forEach(node.children, function(child){ this._setAutoTextDir(child); }, this);
+				node.children.forEach(function(child){ this._setAutoTextDir(child); }, this);
 			},
 
 			_setTextDirAttr: function(/*String*/ textDir){
@@ -261,7 +260,7 @@ define([
 		});
 	}
 
-	var Tooltip = declare("dui.Tooltip", _WidgetBase, {
+	var Tooltip = declare("dui.Tooltip", Widget, {
 		// summary:
 		//		Pops up a tooltip (a help message) when you hover over a node.
 		//		Also provides static show() and hide() methods that can be used without instantiating a dui/Tooltip.
@@ -299,9 +298,11 @@ define([
 			//		Connect to specified node
 
 			// Remove connections to old nodes (if there are any)
-			array.forEach(this._connections || [], function(handle){
-				handle.remove();
-			});
+			if(this._connections){
+				this._connections.forEach(function(handle){
+					handle.remove();
+				});
+			}
 
 			var node = dom.byId(newId, this.ownerDocument);
 
@@ -434,10 +435,12 @@ define([
 		destroy: function(){
 			this.close();
 
-			// Remove connections manually since they aren't registered to be removed by _WidgetBase
-			array.forEach(this._connections || [], function(handle){
-				handle.remove();
-			}, this);
+			// Remove connections manually since they aren't registered to be removed by Widget
+			if(this._connections){
+				this._connections.forEach(function(handle){
+					handle.remove();
+				}, this);
+			}
 
 			this.inherited(arguments);
 		}
@@ -457,15 +460,15 @@ define([
 		// position: String[]?
 		//		List of positions to try to position tooltip (ex: ["right", "above"])
 		// rtl: Boolean?
-		//		Corresponds to `WidgetBase.dir` attribute, where false means "ltr" and true
+		//		Corresponds to `Widget.dir` attribute, where false means "ltr" and true
 		//		means "rtl"; specifies GUI direction, not text direction.
 		// textDir: String?
-		//		Corresponds to `WidgetBase.textdir` attribute; specifies direction of text.
+		//		Corresponds to `Widget.textdir` attribute; specifies direction of text.
 
 		// After/before don't work, but for back-compat convert them to the working after-centered, before-centered.
 		// Possibly remove this in 2.0.   Alternately, get before/after to work.
 		if(position){
-			position = array.map(position, function(val){
+			position = position.map(function(val){
 				return {after: "after-centered", before: "before-centered"}[val] || val;
 			});
 		}

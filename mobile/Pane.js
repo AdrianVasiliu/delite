@@ -1,14 +1,13 @@
 define([
-	"dojo/_base/array",
 	"dojo/_base/declare",
-	"dui/_Contained",
-	"dui/_WidgetBase"
-], function(array, declare, Contained, WidgetBase){
+	"../Contained",
+	"../Widget"
+], function(declare, Contained, Widget){
 
 	// module:
 	//		dui/mobile/Pane
 
-	return declare("dui.mobile.Pane", [WidgetBase, Contained], {
+	return declare("dui.mobile.Pane", [Widget, Contained], {
 		// summary:
 		//		A simple pane widget.
 		// description:
@@ -30,7 +29,7 @@ define([
 		resize: function(){
 			// summary:
 			//		Calls resize() of each child widget.
-			array.forEach(this.getChildren(), function(child){
+			this.getChildren().forEach(function(child){
 				if(child.resize){ child.resize(); }
 			});
 		}

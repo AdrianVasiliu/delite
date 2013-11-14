@@ -1,5 +1,4 @@
 define([
-	"dojo/_base/array", // array.indexOf
 	"dojo/_base/declare", // declare
 	"dojo/dom", // dom.isDescendant domClass.replace
 	"dojo/dom-attr",
@@ -10,18 +9,18 @@ define([
 	"dojo/window",
 	"../a11yclick",
 	"../registry",
-	"../_WidgetBase",
-	"../_Container",
-	"../_CssStateMixin",
-	"../_KeyNavMixin",
+	"../Widget",
+	"../Container",
+	"../CssState",
+	"../KeyNav",
 	"../_TemplatedMixin"
-], function(array, declare, dom, domAttr, domClass, lang, mouse, on, winUtils, a11yclick,
-			registry, _WidgetBase, _Container, _CssStateMixin, _KeyNavMixin, _TemplatedMixin){
+], function(declare, dom, domAttr, domClass, lang, mouse, on, winUtils, a11yclick,
+			registry, Widget, Container, _CssStateMixin, _KeyNavMixin, _TemplatedMixin){
 
 	// module:
 	//		dui/_MenuBase
 
-	return declare("dui._MenuBase", [_WidgetBase, _TemplatedMixin, _Container, _KeyNavMixin, _CssStateMixin], {
+	return declare("dui._MenuBase", [Widget, _TemplatedMixin, Container, KeyNav, CssState], {
 		// summary:
 		//		Abstract base class for Menu and MenuBar.
 		//		Subclass should implement _onUpArrow(), _onDownArrow(), _onLeftArrow(), and _onRightArrow().
@@ -72,10 +71,10 @@ define([
 		//		the popup to open.  Default is Infinity, meaning you need to click the menu to open it.
 		passivePopupDelay: Infinity,
 
-		// autoFocus: Boolean
+		// focusOnOpen: Boolean
 		//		A toggle to control whether or not a Menu gets focused when opened as a drop down from a MenuBar
 		//		or DropDownButton/ComboButton.   Note though that it always get focused when opened via the keyboard.
-		autoFocus: false,
+		focusOnOpen: false,
 
 		childSelector: function(/*DOMNode*/ node){
 			// summary:
@@ -121,7 +120,7 @@ define([
 			}
 		},
 
-		_keyboardSearchCompare: function(/*dui/_WidgetBase*/ item, /*String*/ searchString){
+		_keyboardSearchCompare: function(/*dui/Widget*/ item, /*String*/ searchString){
 			// summary:
 			//		Compares the searchString to the widget's text label, returning:
 			//		-1: a high priority match and stop searching
@@ -217,8 +216,6 @@ define([
 			}
 
 			this._hoveredChild = item;
-
-			item._set("hovering", true);
 		},
 
 		_onChildDeselect: function(item){
@@ -253,8 +250,6 @@ define([
 				this.passive_hover_timer.remove();
 				this.passive_hover_timer = null;
 			}
-
-			item._set("hovering", false);
 		},
 
 		_stopPopupTimer: function(){
@@ -288,7 +283,7 @@ define([
 			return top;
 		},
 
-		onItemClick: function(/*dui/_WidgetBase*/ item, /*Event*/ evt){
+		onItemClick: function(/*dui/Widget*/ item, /*Event*/ evt){
 			// summary:
 			//		Handle clicks on an item.
 			// tags:

@@ -1,18 +1,17 @@
 define([
-	"dojo/_base/array", // array.filter array.forEach array.map array.some
 	"dojo/Deferred",
 	"dojo/aspect", // aspect.after
 	"dojo/_base/declare", // declare
 	"dojo/dom", // dom.setSelectable
 	"dojo/dom-class", // domClass.toggle
 	"dojo/_base/kernel",	// _scopeName
-	"dojo/_base/lang", // lang.delegate lang.isArray lang.isObject lang.hitch
+	"dojo/_base/lang", // lang.delegate lang.isObject lang.hitch
 	"dojo/query", // query
 	"dojo/when",
 	"dojo/store/util/QueryResults",
-	"./_FormValueWidget"
-], function(array, Deferred, aspect, declare, dom, domClass, kernel, lang, query, when,
-			QueryResults, _FormValueWidget){
+	"../FormValueWidget"
+], function(Deferred, aspect, declare, dom, domClass, kernel, lang, query, when,
+			QueryResults, FormValueWidget){
 
 	// module:
 	//		dui/form/_FormSelectWidget
@@ -31,9 +30,9 @@ define([
 	};
 	=====*/
 
-	var _FormSelectWidget = declare("dui.form._FormSelectWidget", _FormValueWidget, {
+	var _FormSelectWidget = declare("dui.form._FormSelectWidget", FormValueWidget, {
 		// summary:
-		//		Extends _FormValueWidget in order to provide "select-specific"
+		//		Extends FormValueWidget in order to provide "select-specific"
 		//		values - i.e., those values that are unique to `<select>` elements.
 		//		This also provides the mechanism for reading the elements from
 		//		a store, if desired.
@@ -115,17 +114,19 @@ define([
 			if(valueOrIdx == null){
 				return opts; // __SelectOption[]
 			}
-			if(lang.isArray(valueOrIdx)){
-				return array.map(valueOrIdx, "return this.getOptions(item);", this); // __SelectOption[]
+			if(Array.isArray(valueOrIdx)){
+				return valueOrIdx.map(function(item){
+					return this.getOptions(item); 
+				}, this); // __SelectOption[]
 			}
-			if(lang.isString(valueOrIdx)){
+			if(typeof valueOrIdx === "string"){
 				valueOrIdx = { value: valueOrIdx };
 			}
-			if(lang.isObject(valueOrIdx)){
+			if(lang.isObject(valueOrIdx)){ // TODO: call of lang.isObject to be addressed later
 				// We were passed an option - so see if it's in our array (directly),
 				// and if it's not, try and find it by value.
 
-				if(!array.some(opts, function(option, idx){
+				if(!opts.some(function(option, idx){
 					for(var a in valueOrIdx){
 						if(!(a in option) || option[a] != valueOrIdx[a]){ // == and not === so that 100 matches '100'
 							return false;
@@ -149,8 +150,8 @@ define([
 			//		of the option is empty or missing, a separator is created instead.
 			//		Passing in an array of options will yield slightly better performance
 			//		since the children are only loaded once.
-			array.forEach(lang.isArray(option) ? option : [option], function(i){
-				if(i && lang.isObject(i)){
+			(Array.isArray(option) ? option : [option]).forEach(function(i){
+				if(i && lang.isObject(i)){ // TODO: call of lang.isObject to be addressed later
 					this.options.push(i);
 				}
 			}, this);
@@ -166,17 +167,19 @@ define([
 			//		You can also pass in an array of those values for a slightly
 			//		better performance since the children are only loaded once.
 			//		For numeric option values, specify {value: number} as the argument.
-			var oldOpts = this.getOptions(lang.isArray(valueOrIdx) ? valueOrIdx : [valueOrIdx]);
-			array.forEach(oldOpts, function(option){
-				// We can get null back in our array - if our option was not found.  In
-				// that case, we don't want to blow up...
-				if(option){
-					this.options = array.filter(this.options, function(node){
-						return (node.value !== option.value || node.label !== option.label);
-					});
-					this._removeOptionItem(option);
-				}
-			}, this);
+			var oldOpts = this.getOptions(Array.isArray(valueOrIdx) ? valueOrIdx : [valueOrIdx]);
+			if(oldOpts){ // getOptions() can return null
+				oldOpts.forEach(function(option){
+					// We can get null back in our array - if our option was not found.  In
+					// that case, we don't want to blow up...
+					if(option){
+						this.options = this.options ? this.options.filter(function(node){
+							return (node.value !== option.value || node.label !== option.label);
+						}) : [];
+						this._removeOptionItem(option);
+					}
+				}, this);
+			}
 			this._loadChildren();
 		},
 
@@ -186,7 +189,7 @@ define([
 			//		is matched based on the value of the entered option.  Passing
 			//		in an array of new options will yield better performance since
 			//		the children will only be loaded once.
-			array.forEach(lang.isArray(newOption) ? newOption : [newOption], function(i){
+			(Array.isArray(newOption) ? newOption : [newOption]).forEach(function(i){
 				var oldOpt = this.getOptions({ value: i.value }), k;
 				if(oldOpt){
 					for(k in i){
@@ -249,9 +252,11 @@ define([
 				this._queryRes = store.query(this.query, this.queryOptions);
 				when(this._queryRes, lang.hitch(this, function(items){
 					// TODO: Add these guys as a batch, instead of separately
-					array.forEach(items, function(i){
-						this._addOptionForItem(i);
-					}, this);
+					if(items){
+						items.forEach(function(i){
+							this._addOptionForItem(i);
+						}, this);
+					}
 
 					// Register listener for store updates
 					if(this._queryRes.observe){
@@ -310,37 +315,40 @@ define([
 			if(newValue == null){
 				return;
 			}
-			if(lang.isArray(newValue)){
-				newValue = array.map(newValue, function(value){
+			if(Array.isArray(newValue)){
+				newValue = newValue.map(function(value){
+					// TODO: call of lang.isObject to be addressed later
 					return lang.isObject(value) ? value : { value: value };
 				}); // __SelectOption[]
-			}else if(lang.isObject(newValue)){
+			}else if(lang.isObject(newValue)){ // TODO: call of lang.isObject to be addressed later
 				newValue = [newValue];
 			}else{
 				newValue = [
 					{ value: newValue }
 				];
 			}
-			newValue = array.filter(this.getOptions(newValue), function(i){
+			newValue = (this.getOptions(newValue) || []).filter(function(i){
 				return i && i.value;
 			});
 			var opts = this.getOptions() || [];
 			if(!this.multiple && (!newValue[0] || !newValue[0].value) && !!opts.length){
 				newValue[0] = opts[0];
 			}
-			array.forEach(opts, function(opt){
-				opt.selected = array.some(newValue, function(v){
-					return v.value === opt.value;
+			if(Array.isArray(opts)){
+				opts.forEach(function(opt){
+					opt.selected = newValue.some(function(v){
+						return v.value === opt.value;
+					});
 				});
-			});
-			var val = array.map(newValue, function(opt){
+			}
+			var val = newValue.map(function(opt){
 				return opt.value;
 			});
 
 			if(typeof val == "undefined" || typeof val[0] == "undefined"){
 				return;
 			} // not fully initialized yet or a failed value lookup
-			var disp = array.map(newValue, function(opt){
+			var disp = newValue.map(function(opt){
 				return opt.label;
 			});
 			this._setDisplay(this.multiple ? disp : disp[0]);
@@ -351,7 +359,7 @@ define([
 		_getDisplayedValueAttr: function(){
 			// summary:
 			//		returns the displayed value of the widget
-			var ret = array.map([].concat(this.get('selectedOptions')), function(v){
+			var ret = [].concat(this.get('selectedOptions')).map(function(v){
 				if(v && "label" in v){
 					return v.label;
 				}else if(v){
@@ -375,11 +383,13 @@ define([
 			if(this._loadingStore){
 				return;
 			}
-			array.forEach(this._getChildren(), function(child){
+			this._getChildren().forEach(function(child){
 				child.destroyRecursive();
 			});
 			// Add each menu item
-			array.forEach(this.options, this._addOptionItem, this);
+			if(this.options){
+				this.options.forEach(this._addOptionItem, this);
+			}
 
 			// Update states
 			this._updateSelection();
@@ -393,8 +403,8 @@ define([
 			var val = [].concat(this.value);
 			if(val && val[0]){
 				var self = this;
-				array.forEach(this._getChildren(), function(child){
-					var isSelected = array.some(val, function(v){
+				this._getChildren().forEach(function(child){
+					var isSelected = val.some(function(v){
 						return child.option && (v === child.option.value);
 					});
 					if(isSelected && !self.multiple){
@@ -413,7 +423,7 @@ define([
 			var opts = this.getOptions() || [];
 			if(!this.multiple && opts.length){
 				// Mirror what a select does - choose the first one
-				var opt = array.filter(opts, function(i){
+				var opt = opts.filter(function(i){
 					return i.selected;
 				})[0];
 				if(opt && opt.value){
@@ -424,9 +434,9 @@ define([
 				}
 			}else if(this.multiple){
 				// Set value to be the sum of all selected
-				return array.map(array.filter(opts, function(i){
+				return opts.filter(function(i){
 					return i.selected;
-				}), function(i){
+				}).map(function(i){
 					return i.value;
 				}) || [];
 			}

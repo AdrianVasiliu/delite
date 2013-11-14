@@ -1,15 +1,15 @@
-define([ "dojo/_base/array",
-         "dojo/_base/lang",
-         "dojo/_base/declare",
-         "dojo/sniff",
-         "dojo/dom-construct",
-         "dojo/dom-geometry",
-         "dojo/on",
-         "dojo/aspect",
-         "dui/registry",
-         "./common",
-         "./viewRegistry" ],
-		function(array, lang, declare, has, domConstruct, domGeometry, on, aspect, registry, dm, viewRegistry){
+define([
+		"dojo/_base/lang",
+		"dojo/_base/declare",
+		"dojo/sniff",
+		"dojo/dom-construct",
+		"dojo/dom-geometry",
+		"dojo/on",
+		"dojo/aspect",
+		"dui/registry",
+		"./common",
+		"./viewRegistry" ],
+		function(lang, declare, has, domConstruct, domGeometry, on, aspect, registry, dm, viewRegistry){
 
 	// module:
 	//		dui/mobile/LongListMixin
@@ -118,7 +118,7 @@ define([ "dojo/_base/array",
 		_clearItems: function(){
 			// summary: Removes all currently loaded items.
 			var c = this.containerNode;
-			array.forEach(registry.findWidgets(c), function(item){
+			registry.findWidgets(c).forEach(function(item){
 				c.removeChild(item.domNode);
 			});
 		},
@@ -233,14 +233,13 @@ define([ "dojo/_base/array",
 			}
 		},
 		
-		// The rest of the methods are overrides of _Container and _WidgetBase.
+		// The rest of the methods are overrides of Container and Widget.
 		// We must override them because children are not all added to the DOM tree
 		// under the list node, only a subset of them will really be in the DOM,
 		// but we still want the list to look as if all children were there.
 
 		addChild : function(/* dui._Widget */widget, /* int? */insertIndex){
-			// summary: Overrides dui._Container
-			if(this._items){
+			// summary: Overrides dui._Container			if(this._items){
 				if( typeof insertIndex == "number"){
 					this._items.splice(insertIndex, 0, widget);
 				}else{
@@ -253,8 +252,7 @@ define([ "dojo/_base/array",
 		},
 
 		removeChild : function(/* Widget|int */widget){
-			// summary: Overrides dui._Container
-			if(this._items){
+			// summary: Overrides dui._CContainer		if(this._items){
 				this._items.splice(typeof widget == "number" ? widget : this._items.indexOf(widget), 1);
 				this._childrenChanged();
 			}else{
@@ -263,7 +261,7 @@ define([ "dojo/_base/array",
 		},
 
 		getChildren : function(){
-			// summary: Overrides dui._WidgetBase
+			// summary: Overrides dui.Widget
 			if(this._items){
 				return this._items.slice(0);
 			}else{
@@ -295,7 +293,7 @@ define([ "dojo/_base/array",
 				// And since the superclass destroys all children returned by getChildren(), and
 				// this would actually return no children because _items is now empty, we must
 				// destroy all children manually first.
-				array.forEach(this.getChildren(), function(child){
+				this.getChildren().forEach(function(child){
 					child.destroyRecursive();
 				});
 				this._items = [];

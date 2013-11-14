@@ -1,5 +1,4 @@
 define([
-	"dojo/_base/array",
 	"dojo/_base/config",
 	"dojo/_base/declare",
 	"dojo/_base/lang",
@@ -14,21 +13,21 @@ define([
 	"dojo/on",
 	"dui/registry",
 	"dojo/topic",
-	"dui/_Contained",
-	"dui/_Container",
-	"dui/_WidgetBase",
+	"../Contained",
+	"../Container",
+	"../Widget",
 	"./ViewController", // to load ViewController for you (no direct references)
 	"./common",
 	"./viewRegistry",
 	"./_css3"
-], function(array, config, declare, lang, has, win, Deferred, dom, domClass, domConstruct, domGeometry, domStyle, on, registry, topic, Contained, Container, WidgetBase, ViewController, common, viewRegistry, css3){
+], function(config, declare, lang, has, win, Deferred, dom, domClass, domConstruct, domGeometry, domStyle, on, registry, topic, Contained, Container, Widget, ViewController, common, viewRegistry, css3){
 
 	// module:
 	//		dui/mobile/View
 
 	var dm = lang.getObject("dui.mobile", true);
 
-	return declare("dui.mobile.View", [WidgetBase, Container, Contained], {
+	return declare("dui.mobile.View", [Widget, Container, Contained], {
 		// summary:
 		//		A container widget for any HTML element and/or Dojo widgets
 		// description:
@@ -110,8 +109,8 @@ define([
 				var views = this.getSiblingViews();
 				var ids = location.hash && location.hash.substring(1).split(/,/);
 				var fragView, selectedView, firstView;
-				array.forEach(views, function(v, i){
-					if(array.indexOf(ids, v.id) !== -1){ fragView = v; }
+				views.forEach(function(v, i){
+					if(ids.indexOf(v.id) !== -1){ fragView = v; }
 					if(i == 0){ firstView = v; }
 					if(v.selected){ selectedView = v; }
 					v._visible = false;
@@ -154,7 +153,7 @@ define([
 		resize: function(){
 			// summary:
 			//		Calls resize() of each child widget.
-			array.forEach(this.getChildren(), function(child){
+			this.getChildren().forEach(function(child){
 				if(child.resize){ child.resize(); }
 			});
 		},
@@ -201,7 +200,7 @@ define([
 			//		Remove all the "dui" prefixed classes except dui*View.
 			if(!node){ return; }
 			var classes = [];
-			array.forEach(lang.trim(node.className||"").split(/\s+/), function(c){
+			(node.className || "").trim().split(/\s+/).forEach(function(c){
 				if(c.match(/^dui\w*View$/) || c.indexOf("dui") === -1){
 					classes.push(c);
 				}
@@ -376,7 +375,8 @@ define([
 			}
 
 			this.onBeforeTransitionOut.apply(this, this._arguments);
-			topic.publish.apply(topic, ["/dui/mobile/beforeTransitionOut", this].concat(lang._toArray(this._arguments)));
+			topic.publish.apply(topic, 
+				["/dui/mobile/beforeTransitionOut", this].concat([].concat(Array.prototype.slice.call(this._arguments, 0))));
 			if(toWidget){
 				// perform view transition keeping the scroll position
 				if(this.keepScrollPos && !this.getParent()){
@@ -391,7 +391,8 @@ define([
 					toNode.style.top = "0px";
 				}
 				toWidget.onBeforeTransitionIn.apply(toWidget, this._arguments);
-				topic.publish.apply(topic, ["/dui/mobile/beforeTransitionIn", toWidget].concat(lang._toArray(this._arguments)));
+				topic.publish.apply(topic, 
+					["/dui/mobile/beforeTransitionIn", toWidget].concat(Array.prototype.slice.call(this._arguments, 0)));
 			}
 			toNode.style.display = "none";
 			toNode.style.visibility = "visible";
@@ -611,9 +612,11 @@ define([
 			// summary:
 			//		Returns an array of the sibling views.
 			if(!this.domNode.parentNode){ return [this]; }
-			return array.map(array.filter(this.domNode.parentNode.childNodes,
-				function(n){ return n.nodeType === 1 && domClass.contains(n, "duiView"); }),
-				function(n){ return registry.byNode(n); });
+			return this.domNode.parentNode.childNodes.filter(function(n){ 
+					return n.nodeType === 1 && domClass.contains(n, "duiView"); 
+				}).map(function(n){ 
+				return registry.byNode(n); 
+			});
 		},
 
 		show: function(/*Boolean?*/noEvent, /*Boolean?*/doNotHideOthers){
@@ -632,7 +635,7 @@ define([
 			if(doNotHideOthers){
 				this.domNode.style.display = "";
 			}else{
-				array.forEach(this.getSiblingViews(), function(v){
+				this.getSiblingViews().forEach(function(v){
 					v.domNode.style.display = (v === this) ? "" : "none";
 				}, this);
 			}

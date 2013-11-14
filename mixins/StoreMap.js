@@ -1,142 +1,192 @@
-define(["dojo/_base/declare", "dojo/_base/lang", "./Store"],
-	function(declare, lang, Store){
+define(["dcl/dcl", "dojo/_base/lang", "./Store"], function (dcl, lang, Store) {
 
-	var getvalue = function(map, item, key, store){
-		if(map[key+"Func"]){
-			return map[key+"Func"](item, store);
-		}else if(map[key+"Attr"]){
-			return item[map[key+"Attr"]];
-		}else{
+	var getvalue = function (map, item, key, store) {
+		if (map[key + "Func"]) {
+			return map[key + "Func"](item, store);
+		} else if (map[key + "Attr"]) {
+			return item[map[key + "Attr"]];
+		} else {
 			return item[key];
 		}
 	};
 
-	var setvalue = function(map, item, key, store, value){
-		if(map[key+"Func"]){
-			map[key+"Func"](item, store, value);
-		}else if(map[key+"Attr"]){
-			item[map[key+"Attr"]] = value;
-		}else{
+	var setvalue = function (map, item, key, store, value) {
+		if (map[key + "Func"]) {
+			map[key + "Func"](item, store, value);
+		} else if (map[key + "Attr"]) {
+			item[map[key + "Attr"]] = value;
+		} else {
 			item[key] = value;
 		}
 	};
 
-	var attrregexp = /^(?!_set)(\w)+(?=Attr$|Func$)/;
+	var propregexp = /^(?!_)(\w)+(?=Attr$|Func$)/;
 
-	return declare(Store, {
+	var attrregexp = /^(?!_)(\w)+(?=attr$|func$)/;
+
+	var capitalize = /f(?=unc$)|a(?=ttr$)/;
+
+	return dcl(Store, {
 
 		// summary:
 		//		Mixin providing store binding management for widgets that extend dui/mixins/Store. Classes extending
-		//		this mixin can easily define how store items properties are mapped in the render items properties consumable
-		// 		by the widget. The mapping can either occur by property (property A in store item corresponds to property B
-		//		in render item) or by function (a function is specified that mapped the store item into the value of a
-		//		property of the render item).
+		//		this mixin can easily define how store items properties are mapped in the render items properties
+		//		consumable by the widget. The mapping can either occur by property (property A in store item
+		//		corresponds to property B in render item) or by function (a function is specified that mapped the
+		//		store item into the value of a property of the render item).
 		// description:
 		//		For each mapped property "foo" from the render item one can provide:
-		//			* fooAttr property in which case the mapping is looking into the store item property specified by fooAttr
-		//			* fooFunc property function in which case the mapping is delegating the mapping operation to the fooFunc function.
+		//			* fooAttr property in which case the mapping is looking into the store item property specified
+		//				by fooAttr
+		//			* fooFunc property function in which case the mapping is delegating the mapping operation to the
+		//				fooFunc function.
 		//			  fooFunc is of the following signature (value must be passed only for set operations:
 		//				fooFunc(item, store, value)
 		//			* if none of this is provided the mapping is looking into store item "foo" property
+		//		Mapping property are meant to be added to the widget class using the mixin. One can directly add the
+		// 		mapping properties to an instance but in this cases there are two limitations:
+		//			* The property must be added before the widget is started
+		//			* If the property is added in the markup only fully lower case properties are supported
+		// 				(e.g. foobar not fooBar)
 
-		// mapAtInit: Boolean
-		//		Whether the mapping occurs once when store items are loaded or on demand each time a property is accessed.
-		// 		This can only makes an actual difference if you are using a binding function which behavior varies over time. Default is true.
-		mapAtInit: true,
+		// allowRemap: Boolean
+		//		Whether the created render items will be updated when call the remap() function on the component
+		//		allowing the consuming component to re-perform the mapping on demand. This property must not be
+		//		changed after the initialization cycle.
+		//		Default is false.
+		allowRemap: false,
 
-		// mappedKeys: Array?
-		//		Array of item keys to be considered for mapping. If null the component will be introspected to find all the properties
-		// 		ending with "Attr" or "Func" and provide mapping for those. Default is null.
-		mappedKeys: null,
+		// _mappedKeys: [private] Array?
+		//		Array of item keys to be considered for mapping. The component will be introspected to find
+		//		all the properties ending with "Attr" or "Func" and provide mapping for those.
+		_mappedKeys: null,
 
 		// copyAllItemProps: Boolean
-		//		If true, in addition to the mapped properties copy all the other properties of the store item into the render item
-		// 		with direct mapping. Default is false.
+		//		If true, in addition to the mapped properties copy all the other properties of the store item into
+		//		the render item with direct mapping. This property must not be changed after the initialization cycle.
+		//		Default is false.
 		copyAllItemProps: false,
 
-		postMixInProperties: function(){
-			var match;
-			if(!this.mappedKeys){
-				this.mappedKeys = [];
-				for(var prop in this){
-					match = null;
-					if((match = attrregexp.exec(prop)) && match && this.mappedKeys.indexOf(match[0]) == -1){
-						this.mappedKeys.push(match[0]);
+		startup: function () {
+			var match, attr, idx = 0, value;
+			var mappedKeys = [];
+			// look into properties of the instance for keys to map
+			for (var prop in this) {
+				match = null;
+				if ((match = propregexp.exec(prop)) && mappedKeys.indexOf(match[0]) === -1) {
+					mappedKeys.push(match[0]);
+				}
+			}
+			// look into attributes as well because only pre-declared properties are mapped from attr -> prop
+			while ((attr = this.attributes[idx++])) {
+				var name = attr.name.toLowerCase();	// note: will be lower case already except for IE9
+				match = null;
+				if ((match = attrregexp.exec(name))) {
+					name = name.replace(capitalize, capitalize.exec(name)[0].toUpperCase());
+					mappedKeys.push(match[0]);
+					value = attr.value;
+					if (name.lastIndexOf("Attr") === name.length - 4) {
+						this[name] = value;
+					} else {
+						// this will be executed only if you use functions in your tag attributes
+						// <my-tag labelFunc="myfunc"></my-tag>
+						/* jshint evil:true */
+						this[name] = lang.getObject(value, false) || new Function(value);
 					}
 				}
 			}
 			// which are the considered keys in the store item itself
-			this._itemKeys = [];
-			for(var key in this.mappedKeys){
-				this._itemKeys.push(this[key+"Attr"]?this[key+"Attr"]:key);
+			if (this.copyAllItemProps) {
+				this._itemKeys = [];
+				for (var i = 0; i < mappedKeys.length; i++) {
+					this._itemKeys.push(this[mappedKeys[i] + "Attr"] ?
+						this[mappedKeys[i] + "Attr"] : mappedKeys[i]);
+				}
 			}
+			this._mappedKeys = mappedKeys;
+			this.validateProperties();
 		},
 
-		renderItemToItem: function(/*Object*/ renderItem){
+
+		validateProperties: dcl.superCall(function (sup) {
+			return function (props) {
+				// if we are not yet started we delay the validation because we need the mapping to be configured first
+				if (this._started) {
+					sup.call(this, props);
+				}
+			};
+		}),
+
+		validateRendering: dcl.superCall(function (sup) {
+			return function (props) {
+				// if we are not yet started we delay the validation because we need the mapping to be configured first
+				if (this._started) {
+					sup.call(this, props);
+				}
+			};
+		}),
+
+		renderItemToItem: function (/*Object*/ renderItem) {
 			// summary:
-			//		Create a store item based from the widget internal item. By default it returns the widget internal item itself.
+			//		Create a store item based from the widget internal item. By default it returns the widget
+			//		internal item itself.
 			// renderItem: Object
 			//		The render item.
 			// returns: Object
-			var item, store = this.get("store");
-			if(this.mapAtInit){
-				item = {};
-				// special id case
-				item[store.idProperty] = renderItem.id;
-				for(var key in renderItem){
-					setvalue(this, item, key, store, renderItem[key]);
-				}
-			}else{
-				// mapping has already been done onto the original item
-				// just use it
-				item = renderItem.__item;
+			var item = {}, store = this.store;
+			// special id case
+			item[store.idProperty] = renderItem.id;
+			for (var key in renderItem) {
+				setvalue(this, item, key, store, renderItem[key]);
 			}
 			return lang.mixin(store.get(renderItem[store.idProperty]), item);
 		},
 
-		itemToRenderItem: function(item){
+		itemToRenderItem: function (item) {
 			// summary:
-			//		Returns the widget internal item for a given store item. By default it returns the store item itself.
+			//		Returns the widget internal item for a given store item. By default it returns the store
+			//		item itself.
 			// item: Object
 			//		The store item.
 			// tags:
 			//		protected
 
 			var renderItem = {};
-			var mappedKeys = this.mappedKeys?this.mappedKeys:Object.keys(item);
-			var self = this, store = this.get("store");
+			var mappedKeys = this._mappedKeys;
+			var store = this.store;
 
-			if(!this.mapAtInit){
-				Object.defineProperty(renderItem, "__item", {
-					value: lang.clone(item),
-					enumerable: false
-				});
+			if (this.allowRemap) {
+				// if we allow remap we need to store the initial item
+				// we need this to be enumerable for dealing with update case (where only enumerable
+				// properties are copied)
+				renderItem.__item = item;
 			}
 
 			// special id case
 			renderItem.id = store.getIdentity(item);
 			// general mapping case
-			for(var i = 0; i < mappedKeys.length; i++){
-				if(this.mapAtInit){
-					renderItem[mappedKeys[i]] = getvalue(this, item, mappedKeys[i], store);
-				}else{
-					(function(key){
-						Object.defineProperty(renderItem, key, {
-							get: function(){ return getvalue(self, this.__item, key, store); },
-		    				set: function(value){ setvalue(self, this.__item, key, store, value); }
-						});
-					})(mappedKeys[i]);
-				}
+			for (var i = 0; i < mappedKeys.length; i++) {
+				renderItem[mappedKeys[i]] = getvalue(this, item, mappedKeys[i], store);
 			}
-			if(this.copyAllItemProps){
-				for(var key in item){
-					if(this._itemKeys.indexOf(key) == -1){
+			if (this.copyAllItemProps) {
+				for (var key in item) {
+					if (this._itemKeys.indexOf(key) === -1) {
 						renderItem[key] = item[key];
 					}
 				}
 			}
 
 			return renderItem;
+		},
+
+		remap: function () {
+			var items = this.items;
+			var mappedKeys = this._mappedKeys;
+			for (var i = 0; i < items.length; i++) {
+				for (var j = 0; j < mappedKeys.length; j++) {
+					items[i][mappedKeys[j]] = getvalue(this, items[i].__item, mappedKeys[j], this.store);
+				}
+			}
 		}
 	});
 });

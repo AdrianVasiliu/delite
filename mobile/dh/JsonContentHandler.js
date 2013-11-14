@@ -1,12 +1,10 @@
 define([
 	"dojo/_base/kernel",
-	"dojo/_base/array",
 	"dojo/_base/declare",
 	"dojo/_base/lang",
 	"dojo/_base/Deferred",
-	"dojo/json",
 	"dojo/dom-construct"
-], function(dojo, array, declare, lang, Deferred, json, domConstruct){
+], function(dojo, declare, lang, Deferred, domConstruct){
 
 	// module:
 	//		dui/mobile/dh/JsonContentHandler
@@ -119,15 +117,17 @@ define([
 			target.insertBefore(container, refNode);
 			this._ws = [];
 			this._req = [];
-			var root = json.parse(content);
+			var root = JSON.parse(content);
 			return Deferred.when(this._loadPrereqs(root), lang.hitch(this, function(){
 				view = this._instantiate(root, container);
 				view.style.visibility = "hidden";
-				array.forEach(this._ws, function(w){
-					if(!w._started && w.startup){
-						w.startup();
-					}
-				});
+				if(this._ws){
+					this._ws.forEach(function(w){
+						if(!w._started && w.startup){
+							w.startup();
+						}
+					});
+				}
 				this._ws = null;
 				return view.id;
 			}));
@@ -141,12 +141,12 @@ define([
 			if(req.length === 0){ return true; }
 
 			if(dojo.require){
-				array.forEach(req, function(c){
+				req.forEach(function(c){
 					dojo["require"](c);
 				});
 				return true;
 			}else{
-				req = array.map(req, function(s){ return s.replace(/\./g, "/"); });
+				req = req.map(function(s){ return s.replace(/\./g, "/"); });
 				require(req, function(){
 					d.resolve(true);
 				});
@@ -164,7 +164,7 @@ define([
 				this._req.push(cls);
 				if(!cls){ continue; }
 				var objs = className ? [obj] :
-						(lang.isArray(obj[key]) ? obj[key] : [obj[key]]);
+						(Array.isArray(obj[key]) ? obj[key] : [obj[key]]);
 				for(var i = 0; i < objs.length; i++){
 					// process child widgets
 					if(!className){
@@ -193,7 +193,7 @@ define([
 				if(!cls){ continue; }
 				var proto = cls.prototype,
 					objs = className ? [obj] :
-						(lang.isArray(obj[key]) ? obj[key] : [obj[key]]);
+						(Array.isArray(obj[key]) ? obj[key] : [obj[key]]);
 				for(var i = 0; i < objs.length; i++){
 					var params = {};
 					for(var prop in objs[i]){
@@ -201,7 +201,7 @@ define([
 							var v = objs[i][prop];
 							prop = prop.substring(1);
 							var t = typeof proto[prop];
-							if(lang.isArray(proto[prop])){
+							if(Array.isArray(proto[prop])){
 								params[prop] = v.split(/\s*,\s*/);
 							}else if(t === "string"){
 								params[prop] = v;
@@ -210,7 +210,7 @@ define([
 							}else if(t === "boolean"){
 								params[prop] = (v !== "false");
 							}else if(t === "object"){
-								params[prop] = json.parse(v);
+								params[prop] = JSON.parse(v);
 							}else if(t === "function"){
 								params[prop] = lang.getObject(v, false) || new Function(v);
 							}
