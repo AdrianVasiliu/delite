@@ -721,7 +721,7 @@ define(["dojo/_base/declare",
 		},
 
 		_centerOfListAboveCenterOfViewport: function () {
-			return (this._visibleHeight / 2) - (this._isScrollable ? this.getCurrentScroll() : 0) - this._topSpacerHeight > (this._cellsHeight / 2);
+			return (this._visibleHeight / 2) + (this._isScrollable ? this.getCurrentScroll() : 0) - this._topSpacerHeight > (this._cellsHeight / 2);
 		},
 
 		_nodeRendersCategoryHeader: function (node) {
@@ -863,7 +863,7 @@ define(["dojo/_base/declare",
 		},
 
 		_topOfNodeDistanceToTopOfViewport: function (node) {
-			return node.offsetTop + (this._isScrollable ? this.getCurrentScroll() : 0);
+			return node.offsetTop - (this._isScrollable ? this.getCurrentScroll() : 0);
 		},
 
 		_bottomOfNodeIsBeforeBottomOfViewport: function (node) {
@@ -871,7 +871,7 @@ define(["dojo/_base/declare",
 		},
 
 		_bottomOfNodeDistanceToBottomOfViewport: function (node) {
-			return node.offsetTop + node.offsetHeight + (this._isScrollable ? this.getCurrentScroll() : 0) - this._visibleHeight;
+			return node.offsetTop + node.offsetHeight - (this._isScrollable ? this.getCurrentScroll() : 0) - this._visibleHeight;
 		},
 
 		/////////////////////////////////

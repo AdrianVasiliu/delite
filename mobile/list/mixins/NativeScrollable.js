@@ -42,7 +42,7 @@ define(["dojo/_base/declare",
 		},
 
 		getCurrentScroll: function(){
-			return -this._scroll; // TODO: MAKE IT A POSITIVE VALUE
+			return this._scroll;
 		},
 
 		/////////////////////////////////
