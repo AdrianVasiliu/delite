@@ -134,7 +134,6 @@ define(["dojo/_base/declare",
 			}if (this._hasNextPage) {
 				this._renderPageLoader(false);
 				domConstruct.place(this._loaderNode, this.containerNode);
-				// FIXME: cells height calculation is not correct in some cases here (example: list3 in test page !!!)
 				this._cellsHeight += this._getNodeHeight(this._loaderNode);
 				////////////////////////////////////////////////////
 				// TODO: Move this handler in the Renderer itself ?

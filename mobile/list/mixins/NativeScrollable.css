@@ -1,0 +1,6 @@
+.duiNativeScrollable {
+	-webkit-overflow-scrolling: touch;
+	overflow-y: scroll;
+	overflow-x: hidden;
+	-ms-touch-action: none;
+}
