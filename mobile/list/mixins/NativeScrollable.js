@@ -41,8 +41,12 @@ define(["dojo/_base/declare",
 			// abstract method
 		},
 
-		getCurrentScroll: function(){
+		getCurrentScroll: function () {
 			return this._scroll;
+		},
+
+		getViewportClientRect: function () {
+			return this._viewportNode.getBoundingClientRect();
 		},
 
 		/////////////////////////////////

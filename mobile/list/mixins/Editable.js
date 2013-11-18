@@ -34,6 +34,8 @@ define(["dojo/_base/declare",
 		_draggedCell: null,
 		_touchStartY: null,
 		_startTop: null,
+		_draggedCellTop: null,
+		_draggedEntryIndex: null,
 		_dropPosition: -1,
 
 		/////////////////////////////////
@@ -229,6 +231,7 @@ define(["dojo/_base/declare",
 					return;
 				}
 				this._draggedCell = cell;
+				this._draggedEntryIndex = cell.entryIndex;
 				this._dropPosition = cell.entryIndex;
 				this._placeHolderNode = domConstruct.create("li", {className: this.baseClass + this._cssSuffixes.entry});
 				this._placeHolderNode.style.height = this._draggedCell.getHeight() + "px";
@@ -245,14 +248,20 @@ define(["dojo/_base/declare",
 
 		_onEditableTouchMove: function (event) {
 			///////////////////////////////////////////////////////////
-			// TODO: AUTOSCROLL WHEN NEAR THE LIST TOP OR BOTTOM
 			// TODO: CATEGORIZED LISTS SUPPORT
 			///////////////////////////////////////////////////////////
 			var nextCellNode, previousCellNode,
 				pageY = event.touches ? event.touches[0].pageY : event.pageY,
-				clientY = event.touches ? event.touches[0].clientY : event.clientY,
-				newTop = this._startTop + (pageY - this._touchStartY);
-			this._draggedCell.domNode.style.top = newTop + "px";
+				clientY = event.touches ? event.touches[0].clientY : event.clientY;
+			this._draggedCellTop = this._startTop + (pageY - this._touchStartY);
+			this._stopEditableAutoScroll();
+			this._draggedCell.domNode.style.top = this._draggedCellTop + "px";
+			this._updatePlaceholderPosition(clientY);
+			event.preventDefault();
+			event.stopPropagation();
+		},
+
+		_updatePlaceholderPosition: function (clientY) {
 			if (clientY < this._placeHolderNodeClientRect.top) {
 				previousCellNode = this._getPreviousCellNode(this._placeHolderNode);
 				if (previousCellNode === this._draggedCell.domNode) {
@@ -272,18 +281,51 @@ define(["dojo/_base/declare",
 					this._dropPosition++;
 				}
 			}
-			event.preventDefault();
-			event.stopPropagation();
+			if (this._isScrollable && this.cellPages <= 0) {
+				var viewportRect = this.getViewportClientRect();
+				if (clientY < viewportRect.top + 15) {
+					this._editableAutoScroll(-15, clientY);
+				} else if (clientY > viewportRect.top + viewportRect.height - 15) {
+					this._editableAutoScroll(15, clientY);
+				} else {
+					this._stopEditableAutoScroll();
+				}
+			}
+		},
+
+		_editableAutoScroll: function (rate, clientY) {
+			this._editableAutoScrollID = setTimeout(lang.hitch(this, function () {
+				var oldScroll = this._scroll;
+				this.scrollBy(rate);
+				setTimeout(lang.hitch(this, function () {
+					if (this._scroll !== oldScroll) {
+						if (this._placeHolderNode) {
+							this._placeHolderNodeClientRect = this._placeHolderNode.getBoundingClientRect();
+							this._startTop += rate;
+							this._draggedCellTop += rate;
+							this._draggedCell.domNode.style.top = this._draggedCellTop + "px";
+							this._updatePlaceholderPosition(clientY);
+						}
+					}
+				}));
+			}), 50);
+		},
+
+		_stopEditableAutoScroll: function() {
+			if (this._editableAutoScrollID) {
+				clearTimeout(this._editableAutoScrollID);
+				this._editableAutoScrollID = null;
+			}
 		},
 
 		_onEditableTouchRelease: function (event) {
-			if (this._draggedCell) {
+			if (this._draggedCell) {this._draggedEntryIndex
 				if (this._dropPosition >= 0) {
-					var movedEntryIndex = this._draggedCell.entryIndex;
-					if (this._dropPosition !== movedEntryIndex) {
+					if (this._dropPosition !== this._draggedEntryIndex) {
 						// TODO: ADD A HANDLER THAT IS ABLE TO CANCEL THE MOVE !!!
-						this.moveEntry(movedEntryIndex, this._dropPosition);
+						this.moveEntry(this._draggedEntryIndex, this._dropPosition);
 					}
+					this._draggedEntryIndex = null;
 					this._dropPosition = -1;
 				}
 				this.defer(function () { // iPhone needs setTimeout (via defer)
