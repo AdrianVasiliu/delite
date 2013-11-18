@@ -131,7 +131,7 @@ define(["dojo/_base/declare",
 			if (this._loaderNode) {
 				// move it to the end of the list
 				domConstruct.place(this._loaderNode, this.containerNode);
-			}if (this._hasNextPage) {
+			} else if (this._hasNextPage) {
 				this._renderPageLoader(false);
 				domConstruct.place(this._loaderNode, this.containerNode);
 				this._cellsHeight += this._getNodeHeight(this._loaderNode);
