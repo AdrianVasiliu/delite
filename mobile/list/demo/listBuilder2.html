@@ -25,8 +25,8 @@
 			"dojo/on",
 			"dui/mobile/list/List2",
 			"dui/mobile/list/mixins/NativeScrollable",
-			"dui/mobile/list/mixins/Editable",
-			"dui/mobile/list/mixins/StoreModel",
+			"dui/mobile/list/mixins/Editable2",
+			"dui/mobile/list/mixins/StoreModel2",
 			"dojo/dom",
 			"dojo/request",
 			"dojo/store/util/QueryResults",
@@ -76,7 +76,6 @@
 					domNode: dom.byId("listNode"),
 					selectionMode: 	dom.byId("selectionMode").value,
 					pageLength: parseInt(dom.byId("pageLength").value),
-					cellPages: parseInt(dom.byId("cellPages").value),
 					height: parseInt(dom.byId("height").value),
 					baseClass: dom.byId("listStyle").value
 				}
@@ -204,9 +203,6 @@
 		<br>
 		<label for="pageLength">Page length:</label>
 		<input id="pageLength" type="number" value="0"></input>
-		<br>
-		<label for="cellPages">Cell pages:</label>
-		<input id="cellPages" type="number" value="0"></input>
 		<br>
 		<button id="buildButton">Build</button>
 	</div>
