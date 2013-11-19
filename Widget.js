@@ -221,7 +221,7 @@ define([
 			do {
 				Object.keys(proto).forEach(function (prop) {
 					if (!/^_/.test(prop)) {
-						if (typeof proto[prop] !== "function" ) {
+						if (typeof proto[prop] !== "function") {
 							list.push(prop);
 						}
 						pcm[prop.toLowerCase()] = prop;
@@ -235,7 +235,7 @@ define([
 			return list;
 		},
 
-		_introspect: function (/*String[]*/ props) {
+		_introspect: function () {
 			// Various introspection to be done on my prototype.
 			// "this" refers to my prototype.
 
@@ -271,10 +271,6 @@ define([
 			// Get parameters that were specified declaratively on the widget DOMNode.
 			var params = this.mapAttributes();
 
-			// this is needed for Chrome to delete the tabIndex=-1 default attribute from DIV elements,
-			// so that the custom setter in the prototype runs.
-			delete this.tabIndex;
-
 			this.preCreate();
 
 			// Render the widget
@@ -292,6 +288,36 @@ define([
 			// Now that creation has finished, apply parameters that were specified declaratively.
 			// This is consistent with the timing that parameters are applied for programmatic creation.
 			dcl.mix(this, params);
+		},
+
+		enteredViewCallback: function(){
+			// summary:
+			//		Called when the widget is first inserted into the document.
+			//		If widget is created programatically then app must call startup() to trigger this method.
+
+			this._enteredView = true;
+
+			// Since safari masks all custom setters for tabIndex on the prototype, call them here manually.
+			// For details see:
+			//		https://bugs.webkit.org/show_bug.cgi?id=36423
+			//		https://bugs.webkit.org/show_bug.cgi?id=49739
+			//		https://bugs.webkit.org/show_bug.cgi?id=75297
+			var desc;
+			if (has("dom-proto-set")) {
+				// Trace up prototype chain looking for custom setter
+				for (var proto = Object.getPrototypeOf(this); proto && !desc; proto = Object.getPrototypeOf(proto)) {
+					desc = Object.getOwnPropertyDescriptor(proto, "tabIndex");
+				}
+			} else {
+				// IE.  If there's a custom setter it's on the element itself.
+				desc = Object.getOwnPropertyDescriptor(this, "tabIndex");
+			}
+			if ( desc && desc.set ){
+				var tabIndex = (this.tabIndex !== null && this.tabIndex !== "") ? this.tabIndex : proto.tabIndex;
+				delete this.tabIndex;
+				this.removeAttribute("tabindex");
+				desc.set.call(this, tabIndex);
+			}
 		},
 
 		/**
@@ -423,8 +449,13 @@ define([
 			//		inside a hidden dui/Dialog or an unselected tab of a dui/layout/TabContainer.
 			//		For widgets that need to do layout, it's best to put that layout code inside resize(), and then
 			//		extend dui/layout/_LayoutWidget so that resize() is called when the widget is visible.
+
 			if (this._started) {
 				return;
+			}
+
+			if (!this._enteredView){
+				this.enteredViewCallback();
 			}
 
 			// Generate an id for the widget if one wasn't specified, or it was specified as id: undefined.
@@ -433,8 +464,6 @@ define([
 			if (!this.id) {
 				this.id = getUniqueId(this.nodeName.toLowerCase());
 			}
-
-			// TODO: Maybe startup() should call enteredViewCallback.
 
 			this._started = true;
 			this.getChildren().forEach(function (obj) {
