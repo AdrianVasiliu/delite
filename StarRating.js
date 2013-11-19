@@ -104,17 +104,17 @@ define([
 		},
 
 		buildRendering: function () {
-			var tabIndex = this.getAttribute("tabIndex");
 			this.style.display = "inline-block";
 
 			// init WAI-ARIA attributes
 			this.setAttribute("role", "slider");
 			this.setAttribute("aria-label", messages["aria-label"]);
 			this.setAttribute("aria-valuemin", 0);
-			// keyboard navigation
-			if (tabIndex === null) {
-				this.setAttribute("tabindex", 0);
-			}
+            // init tabIndex if not explicitly set
+            if (!this.hasAttribute("tabindex")) {
+                this.setAttribute("tabindex", "0");
+            }
+
 			this.refreshRendering(this);
 		},
 
@@ -123,6 +123,7 @@ define([
 				this.setAttribute("aria-valuemax", this.maximum);
 			}
 			if (props.value !== undefined) {
+				console.log(this.id + " " + this.value);
 				this.setAttribute("aria-valuenow", this.value);
 				this.setAttribute("aria-valuetext", string.substitute(messages["aria-valuetext"], this));
 			}
