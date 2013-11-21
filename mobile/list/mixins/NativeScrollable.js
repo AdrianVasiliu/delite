@@ -78,17 +78,6 @@ define(["dojo/_base/declare",
 			this.domNode = domNode;
 		},
 
-		startup: function(){
-			this.resize();
-			this.inherited(arguments);
-		},
-
-		resize: function(){
-			// calculate the dimensions of the viewport
-			var rect = this._viewportNode.getBoundingClientRect();
-			this._visibleHeight = rect.bottom - rect.top;
-		},
-
 		destroy: function(){
 			this.inherited(arguments);
 			if(this._viewportNode){

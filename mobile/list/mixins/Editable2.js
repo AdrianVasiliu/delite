@@ -105,7 +105,7 @@ define(["dojo/_base/declare",
 		},
 
 		deleteEntry: function (entryIndex, removeFromStore) {
-			if (this.onEntryDelete(this.entries[entryIndex], entryIndex) !== false) {
+			if (this.onEntryDelete(this._entries[entryIndex], entryIndex) !== false) {
 				this.inherited(arguments);
 			}
 		},

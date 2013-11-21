@@ -72,11 +72,21 @@
 
 .duiRoundRectList {
 	position: relative; /* needed for moving list items in editable mode */
-    margin: 0px 9px;
+    margin: 0px 9px !important;
 	-webkit-transform: translate3d(0,0,0);
 	transform: translate3d(0,0,0);
   	overflow: hidden;
   	padding: 0;
+}
+
+.duiRoundRectList-loadingPanel {
+	position: absolute;
+    color: grey;
+    font-size: xx-large;
+    font-style: italic;
+    text-align: center;
+    background-color: #c5ccd3;
+	cursor: wait;
 }
 
 .duiRoundRectList-container > div:first-child {
@@ -146,8 +156,7 @@
 	height: 43px;
 	line-height: 43px;
   	background-color: #ffffff;
- 	border-bottom-left-radius: 8px;
-    border-bottom-right-radius: 8px;
+  	border-bottom: 1px solid #adaaad;
 }
 
 .duiRoundRectList-loaderNodeLoading{
@@ -157,8 +166,7 @@
 	height: 43px;
 	line-height: 43px;
   	background-color: #ffffff;
- 	border-bottom-left-radius: 8px;
-    border-bottom-right-radius: 8px;
+	border-bottom: 1px solid #adaaad;
 }
 
 /********************************/
@@ -187,6 +195,17 @@
 	transform: translate3d(0,0,0);
   	overflow: hidden;
   	padding: 0;
+  	margin: 0 !important;
+}
+
+.duiEdgeToEdgeList-loadingPanel {
+	position: absolute;
+    color: grey;
+    font-size: xx-large;
+    font-style: italic;
+    text-align: center;
+    background-color: #c5ccd3;
+	cursor: wait;
 }
 
 .duiEdgeToEdgeList-container > div:last-child {
@@ -241,6 +260,7 @@
 	height: 43px;
 	line-height: 43px;
   	background-color: #ffffff;
+  	border-bottom: 1px solid #adaaad;
 }
 
 .duiEdgeToEdgeList-loaderNodeLoading{
@@ -250,4 +270,5 @@
 	height: 43px;
 	line-height: 43px;
   	background-color: #ffffff;
+  	border-bottom: 1px solid #adaaad;
 }

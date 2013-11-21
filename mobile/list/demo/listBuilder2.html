@@ -21,6 +21,7 @@
 		    "dojo/_base/declare",
 		    "dojo/_base/lang",
 		    "dojo/_base/window",
+		    "dojo/domReady",
 			"dui/registry",
 			"dojo/on",
 			"dui/mobile/list/List2",
@@ -31,7 +32,10 @@
 			"dojo/request",
 			"dojo/store/util/QueryResults",
 			"dui/mobile/common"
-		], function(declare, lang, win, registry, on, List, Scrollable, Editable, StoreModel, dom, request, QueryResults){
+		], function(declare, lang, win, domReady, registry, on, List, Scrollable, Editable, StoreModel, dom, request, QueryResults){
+			domReady(function () {
+				document.body.dojoClick = false; // this is to avoid https://bugs.dojotoolkit.org/ticket/17578
+			});
 			// List model
 			var useIcon, useRightText, useRightIcon, useRightIcon2;
 			var entriesStore = {
@@ -65,10 +69,8 @@
 			};
 			// List
 			var list = null;
-			var autoScrollHandler = null;
 			// Builder
-			var buildList = function(){
-				dom.byId("autoScroller").style.display = '';
+			var buildList = function(event){
 				if(list){
 					list.destroyRecursive();
 				}
@@ -76,8 +78,10 @@
 					domNode: dom.byId("listNode"),
 					selectionMode: 	dom.byId("selectionMode").value,
 					pageLength: parseInt(dom.byId("pageLength").value),
+					maxPages: parseInt(dom.byId("maxPages").value),
 					height: parseInt(dom.byId("height").value),
-					baseClass: dom.byId("listStyle").value
+					baseClass: dom.byId("listStyle").value,
+					useMaskingPanel: dom.byId("useMaskingPanel").value
 				}
 				var editable = dom.byId("editable").value;
 				var editButton = dom.byId("editButton");
@@ -121,11 +125,6 @@
 				list.store = entriesStore;
 				list.placeAt(dom.byId("list"));
 				list.startup();
-				if(!autoScrollHandler){
-					autoScrollHandler = on(dom.byId('autoscroll'), 'click', function(){
-						list._animateScroll(dom.byId('duration').valueAsNumber, dom.byId('length').valueAsNumber);
-					});
-				}
 				if(editable){
 					editButton.innerHTML = list.deleteable ? "Stop editing" : "Edit";
 					editButton.style.display = "";
@@ -204,10 +203,18 @@
 		<label for="pageLength">Page length:</label>
 		<input id="pageLength" type="number" value="0"></input>
 		<br>
+		<label for="maxPages">Max nb of pages:</label>
+		<input id="maxPages" type="number" value="0"></input>
+		<br>
+		<label for="useMaskingPanel">Mask on page update:</label>
+		<select id="useMaskingPanel">
+			<option value="true">Yes</option>
+			<option value="">No</option>
+		</select>
+		<br>
 		<button id="buildButton">Build</button>
 	</div>
 	<p>
-	<div id='autoScroller' style='display: none'>duration (s): <input id='duration' type='number' value='3'/> length (px): <input id='length' type='number' value='-50000'/><button id='autoscroll'>auto scroll</button></div>
 	<button id="editButton" style='display: none; margin-bottom: 15px;' disabled="disabled";></button>
 	<br>
 	<div id="list"></div>
