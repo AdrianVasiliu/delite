@@ -1,15 +1,14 @@
 define([
-	"dcl/dcl",
 	"./register",
 	"./Widget",
 	"./Container",
 	"./mixins/Invalidating",
 	"dojo/dom-class",
 	"./themes/load!BasicLayout"],
-	function(dcl, register, Widget, Container, Invalidating, domClass){
-		var BasicLayout = dcl([Widget, Container, Invalidating], {
+	function(register, Widget, Container, Invalidating, domClass){
+		return register("d-basic-layout", [HTMLElement, Widget, Container, Invalidating], {
 
-			baseClass: "mblBasicLayout",
+			baseClass: "duiBasicLayout",
 			direction: "horizontal",
 
 			preCreate: function () {
@@ -29,5 +28,5 @@ define([
 				this.invalidateRendering();
 			}
 		});
-		return register("d-basic-layout", [HTMLElement, BasicLayout]);
+
 	})
