@@ -25,7 +25,7 @@ define([
 	};
 
 	// Does platform have native support for document.register() or a polyfill to simulate it?
-	has.add('document-register', document.register);
+	has.add('document-register', !!document.register);
 
 	// Can we use __proto__ to reset the prototype of DOMNodes?
 	// It's not available on IE<11, and even on IE11 it makes the node's attributes (ex: node.attributes, node.textContent)
@@ -56,21 +56,23 @@ define([
 	var registry = {};
 
 	/**
-	 * Create an Element.  Equivalent to document.createElement(), but if tag is the name of a widget defined by
+	 * Create an Element.  Similar to document.createElement(), but if tag is the name of a widget defined by
 	 * register(), then it upgrades the Element to be a widget.
 	 * @param {String} tag
 	 * @returns {Element} The DOMNode
 	 */
 	function createElement(tag) {
-		var base = registry[tag] ? registry[tag].extends : null,
-			element = doc.createElement(base || tag);
-		if (base) {
-			element.setAttribute('is', tag);
+		var base = registry[tag] ? registry[tag].extends : null;
+		if (has("document-register")) {
+			return base ? doc.createElement(base, tag) : doc.createElement(tag);
+		} else {
+			var element = doc.createElement(base || tag);
+			if (base) {
+				element.setAttribute('is', tag);
+			}
+			upgrade(element);
+			return element;
 		}
-
-		upgrade(element);
-
-		return element;
 	}
 
 	function getPropDescriptors(proto) {
@@ -101,7 +103,7 @@ define([
 	 * @param {Element} inElement The DOMNode
 	 */
 	function upgrade(element) {
-		if (!element.__upgraded__) {
+		if (!has("document-register") && !element.__upgraded__) {
 			var widget = registry[element.getAttribute('is') || element.nodeName.toLowerCase()];
 			if (widget) {
 				if (has("dom-proto-set")) {
@@ -234,50 +236,48 @@ define([
 			config.extends = tags[baseName];
 		}
 
-		// If platform natively support document.register, we can call it here.
-		var tagConstructor;
-
 		if (has("document-register")) {
-			tagConstructor = doc.register(tag, config);
+			doc.register(tag, config);
 		} else {
 			if (!has("dom-proto-set")) {
 				// Get descriptors for all the properties in the prototype.  This is needed on IE<=10 in upgrade().
 				config.props = getPropDescriptors(proto);
 			}
-
-			// Register the selector to find this custom element
-			selectors.push(config.extends ? config.extends + '[is="' + tag + '"]' : tag);
-
-			// Note: if we wanted to support registering new types after the parser was called, then here we should
-			// scan the document for the new type (selectors[length-1]) and upgrade any nodes found.
-
-			// Create a constructor method to return a DOMNode representing this widget.
-			tagConstructor = function (params, srcNodeRef) {
-				// Create new widget node or upgrade existing node to widget
-				var node;
-				if (srcNodeRef) {
-					node = typeof srcNodeRef == "string" ? document.getElementById(srcNodeRef) : srcNodeRef;
-					upgrade(node);
-				} else {
-					node = createElement(tag);
-				}
-
-				// Set parameters on node
-				for (var name in params || {}) {
-					if ( name === "style" ) {
-						node.style.cssText = params.style;
-					} else {
-						node[name] = params[name];
-					}
-				}
-
-				return node;
-			};
 		}
+
+		// Register the selector to find this custom element
+		selectors.push(config.extends ? config.extends + '[is="' + tag + '"]' : tag);
+
+		// Note: if we wanted to support registering new types after the parser was called, then here we should
+		// scan the document for the new type (selectors[length-1]) and upgrade any nodes found.
+
+		// Create a constructor method to return a DOMNode representing this widget.
+		var tagConstructor = function (params, srcNodeRef) {
+			// Create new widget node or upgrade existing node to widget
+			var node;
+			if (srcNodeRef) {
+				node = typeof srcNodeRef == "string" ? document.getElementById(srcNodeRef) : srcNodeRef;
+				upgrade(node);
+			} else {
+				node = createElement(tag);
+			}
+
+			// Set parameters on node
+			for (var name in params || {}) {
+				if ( name === "style" ) {
+					node.style.cssText = params.style;
+				} else {
+					node[name] = params[name];
+				}
+			}
+
+			return node;
+		};
 
 		// Add some flags for debugging and return the new constructor
 		tagConstructor.tag = tag;
 		tagConstructor._ctor = baseCtor;
+
 		return tagConstructor;
 	}
 
@@ -354,12 +354,8 @@ define([
 	 * @param {Element?} Root DOMNode to parse from
 	 */
 	function parse(root) {
-		if (has("document-register")) {
-			// If there's native support for custom elements then they are parsed automatically
-			return;
-		}
-
-		// Otherwise, parse manually
+		// Note that upgrade() will be a no-op when has("document-register") is true, but we still
+		// need to calculate nodes[] for the startup() call below.
 		var node, idx = 0, nodes = (root || doc).querySelectorAll(selectors);
 		while (node = nodes[idx++]) {
 			upgrade(node);

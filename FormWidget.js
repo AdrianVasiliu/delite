@@ -3,7 +3,7 @@ define([
 	"dojo/window", // winUtils.scrollIntoView
 	"dojo/dom-style", // domStyle
 	"./Widget",
-	"./mixins/Invalidating"
+	"./Invalidating"
 ], function (dcl, winUtils, domStyle, Widget, Invalidating) {
 
 	// module:
@@ -59,10 +59,11 @@ define([
 			);
 		},
 
-		refreshRendering: function (props) {
+		refreshRendering: dcl.after(function (args) {
 			// summary:
 			//		Handle disabled and tabIndex, across the tabStops and root node.
 			//		No special processing is needed for tabStops other than just to refresh disable and tabIndex.
+			var props = args[0];
 			var self = this;
 			var tabStops = this.tabStops.split(/[ ,]/);
 			if (props.tabStops || props.disabled) {
@@ -86,7 +87,6 @@ define([
 				}
 			}
 			if (props.tabStops || props.tabIndex || props.disabled) {
-				var isRoot = false;
 				tabStops.forEach(
 					function (nodeName) {
 						var node = self[nodeName];
@@ -94,20 +94,15 @@ define([
 							if (self.disabled) {
 								node.removeAttribute("tabindex");
 							} else {
-								node.tabIndex = self.tabIndex;
+								node.tabIndex = self._get("tabIndex");
 							}
-						} else {
-							isRoot = true;
 						}
 					},
 					this
 				);
-				if (!isRoot) {
-					this.removeAttribute("tabindex");
-				}
 			}
 			return props; // for after advice
-		},
+		}),
 
 		_onFocus: dcl.before(function () {
 			if (this.scrollOnFocus) {
@@ -135,13 +130,6 @@ define([
 					// squelch errors from hidden nodes
 				}
 			}
-		},
-
-		createdCallback: dcl.after(function () {
-			// summary:
-			//		Process interdependent fields: tabStops, tabIndex, disabled
-			this._postMixInProperties = true;
-			this.disabled = this.disabled; // run disabled setter which also runs tabIndex setter
-		})
+		}
 	});
 });
