@@ -48,7 +48,16 @@ define(["dojo/_base/declare",
 		getViewportClientRect: function () {
 			return this._viewportNode.getBoundingClientRect();
 		},
-
+		
+		isTopScroll: function () {
+			return this._viewportNode.scrollTop == 0;
+		},
+		
+		isBottomScroll: function () {
+			var scroller = this._viewportNode;
+			return scroller.offsetHeight + scroller.scrollTop >= scroller.scrollHeight;
+		},
+	
 		/////////////////////////////////
 		// Widget methods updated by this mixin
 		/////////////////////////////////

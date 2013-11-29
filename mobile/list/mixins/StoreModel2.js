@@ -7,12 +7,22 @@ define(["dojo/_base/declare",
         "dojo/dom",
         "dojo/dom-construct",
         "dojo/dom-class",
+        "dojo/sniff",
         "dui/_WidgetBase",
-], function (declare, lang, string, when, Deferred, on, dom, domConstruct, domClass, _WidgetBase) {
+], function (declare, lang, string, when, Deferred, on, dom, domConstruct, domClass, has, _WidgetBase) {
 
+	// Adrian: If true, automatically loads next/previous page when 
+	// scrolling reaches the top/bottom
+	var _autoLoad = true; // Temporary flag to ease the testing with/without this feature
+	
 	var LoaderWidget = declare([_WidgetBase], {
 
-		clickToLoadMessage: "Click to load more entries",
+		clickToLoadMessage: _autoLoad ?
+			// Adrian: when list-poc will be updated to latest dui, this could be replaced
+			// by a ProgressIndicator (avoiding text, and matching the LAF of facebook or 
+			// twitter mobile apps).
+			"Loading more entries..." :   
+			"Click to load more entries",
 
 		loadingMessage: "Loading more entries...",
 
@@ -116,6 +126,37 @@ define(["dojo/_base/declare",
 		// Widget lifecycle
 		/////////////////////////////////
 
+		startup: function () {
+			this.inherited(arguments);
+			if (this._isScrollable) {
+				if (_autoLoad) {
+					this._viewportNode.addEventListener('scroll', lang.hitch(this, '_onScroll'), true);
+				}
+			}
+		},
+		
+		_counter:  0, // Only to ease debugging
+		_onScroll: function () {
+			if (this._isScrollable) {
+				if (this.isTopScroll()) {
+					console.log("top " + this._counter++);
+					if (this._noExtremity && this._previousPageLoader) {
+						this._previousPageLoader._onClick();
+					}
+					this._noExtremity = false;
+				} else if (this.isBottomScroll()) {
+					console.log("bottom " + this._counter++);
+					if (this._noExtremity && this._nextPageLoader) {
+						this._nextPageLoader._onClick();
+					}
+					this._noExtremity = false;
+				} else {
+					console.log("     scroll " + this._counter++);
+					this._noExtremity = true;
+				}
+			}
+		},
+		
 		destroy: function () {
 			this.inherited(arguments);
 			if (this._nextPageLoader) {
@@ -324,7 +365,9 @@ define(["dojo/_base/declare",
 				return this._loadNext(this._onNextPageReady);
 			});
 			this._nextPageLoader.startup();
-			this._nextPageLoader.placeAt(this.containerNode);
+			if (!_autoLoad || !has("touch")) {
+				this._nextPageLoader.placeAt(this.containerNode);
+			}
 		},
 
 		_createPreviousPageLoader: function () {
@@ -337,17 +380,23 @@ define(["dojo/_base/declare",
 				return this._loadPrevious(this._onPreviousPageReady);
 			});
 			this._previousPageLoader.startup();
-			this._previousPageLoader.placeAt(this.containerNode, "first");
+			if (!_autoLoad || !has("touch")) {
+				this._previousPageLoader.placeAt(this.containerNode, "first");
+			}
 		},
 
 		_displayLoadingPanel: function () {
-			var viewportGeometry = this.getViewportClientRect();
-			var message = string.substitute(this.pageLoadingMessage, this);
-			this._loadingPanel = domConstruct.create("div", {innerHTML: message, className: this.baseClass + "-loadingPanel", style: "position: absolute; line-height: " + (viewportGeometry.bottom - viewportGeometry.top) + "px; width: " + (viewportGeometry.right - viewportGeometry.left) + "px; top: " + (viewportGeometry.top + window.scrollY) + "px; left: " + (viewportGeometry.left + window.scrollX) + "px;" }, document.body);
+			if (!_autoLoad || !has("touch")) {
+				var viewportGeometry = this.getViewportClientRect();
+				var message = string.substitute(this.pageLoadingMessage, this);
+				this._loadingPanel = domConstruct.create("div", {innerHTML: message, className: this.baseClass + "-loadingPanel", style: "position: absolute; line-height: " + (viewportGeometry.bottom - viewportGeometry.top) + "px; width: " + (viewportGeometry.right - viewportGeometry.left) + "px; top: " + (viewportGeometry.top + window.scrollY) + "px; left: " + (viewportGeometry.left + window.scrollX) + "px;" }, document.body);
+			}
 		},
 
 		_hideLoadingPanel: function () {
-			document.body.removeChild(this._loadingPanel);
+			if (!_autoLoad || !has("touch")) {
+				document.body.removeChild(this._loadingPanel);
+			}
 		},
 
 		/////////////////////////////////
