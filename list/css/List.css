@@ -93,12 +93,12 @@
 	cursor: wait;
 }
 
-.duiRoundRectList-container > *:first-child {
+.duiRoundRectList > *:first-child {
   border-top-left-radius: 8px;
   border-top-right-radius: 8px;
 }
 
-.duiRoundRectList-container > *:last-child {
+.duiRoundRectList > *:last-child {
   border-bottom-width: 0;
   padding-bottom: 1px; /* to compensate the fact that the bottom width is 0 instead of 1 */
   border-bottom-left-radius: 8px;
@@ -201,7 +201,7 @@
 	cursor: wait;
 }
 
-.duiEdgeToEdgeList-container > *:last-child {
+.duiEdgeToEdgeList > *:last-child {
   border-bottom-width: 0;
   padding-bottom: 1px; /* to compensate the fact that the bottom width is 0 instead of 1 */
 }

@@ -73,8 +73,7 @@ define(["dcl/dcl",
 		_cssSuffixes: {entry: "-entry",
 					   category: "-category",
 					   selected: "-selectedEntry",
-					   loading: "-loading",
-					   container: "-container"},
+					   loading: "-loading"},
 		_initialized: false,
 		_cellCategoryHeaders: null,
 		_entries: null,
@@ -92,9 +91,7 @@ define(["dcl/dcl",
 			var i, len, cell;
 			this.style.display = "block";
 			this.dojoClick = false; // this is to avoid https://bugs.dojotoolkit.org/ticket/17578
-			// TODO: REPLACE NEXT LINE BY this.containerNode = this ?
-			this.containerNode = domConstruct.create("div", {className: this.baseClass + this._cssSuffixes.container,
-															 tabIndex: -1}, this);
+			this.containerNode = this;
 			if (this.childNodes.length > 1) {
 				// reparent
 				len = this.childNodes.length - 1;
@@ -409,7 +406,7 @@ define(["dcl/dcl",
 			var currentNode = dom.byId(node);
 			while (currentNode) {
 				if (currentNode.parentNode && domClass.contains(currentNode.parentNode,
-						this.baseClass + this._cssSuffixes.container)) {
+						this.baseClass)) {
 					break;
 				}
 				currentNode = currentNode.parentNode;
@@ -452,7 +449,7 @@ define(["dcl/dcl",
 		},
 
 		childSelector: function (child) {
-			return child;
+			return child !== this;
 		},
 
 		_getFirst: function () {

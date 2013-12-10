@@ -167,9 +167,6 @@ define([
 			// tags:
 			//		protected
 
-			if (!widget) {
-				return;
-			}
 			widget.tabIndex = this.tabIndex;	// for IE focus outline to appear, must set tabIndex before focus
 			widget.focus(last ? "end" : "start");
 

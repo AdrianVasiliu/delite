@@ -182,7 +182,7 @@ define(["dcl/dcl",
 			var node = evt.target;
 			var resetDeleteableEntry = true;
 			if (this.deleteable) {
-				while (node && !domClass.contains(node, this.baseClass + this._cssSuffixes.container)) {
+				while (node && !domClass.contains(node, this.baseClass)) {
 					if (domClass.contains(node, "duiListEntryLeftEdit")) {
 						if (this._indexOfDeleteableEntry === entryIndex) {
 							// do nothing
