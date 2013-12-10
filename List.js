@@ -219,10 +219,18 @@ define(["dcl/dcl",
 		},
 
 		deleteEntry: function (index) {
-			var cell = this.getEntryCellByIndex(index);
+			var cell = this.getEntryCellByIndex(index),
+				nextFocusCell;
 			// Make sure that the cell is not selected before removing it
 			if (this.isSelected(index)) {
 				this.setSelected(index, false);
+			}
+			// Update focus if necessary
+			if (this._getFocusedCell() === cell) {
+				nextFocusCell = this._getNext(cell, 1) || this._getNext(cell, -1);
+				if (nextFocusCell) {
+					this.focusChild(nextFocusCell);
+				}
 			}
 			// Update the model
 			this._entries.splice(index, 1);

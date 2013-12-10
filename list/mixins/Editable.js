@@ -2,13 +2,14 @@ define(["dcl/dcl",
         "dojo/_base/lang",
         "dojo/_base/array",
         "dojo/on",
+        "dojo/keys",
         "dojo/dom",
         "dojo/dom-class",
         "dojo/dom-style",
         "dojo/dom-construct",
         "dojo/dom-geometry",
         "dojo/touch"
-], function (dcl, lang, array, on, dom, domClass, domStyle, domConstruct, domGeometry, touch) {
+], function (dcl, lang, array, on, keys, dom, domClass, domStyle, domConstruct, domGeometry, touch) {
 
 	return dcl(null, {
 
@@ -79,6 +80,7 @@ define(["dcl/dcl",
 			if (this.moveable) {
 				this.on(touch.press, lang.hitch(this, "_onEditableTouchPress"));
 			}
+			this.onCellEvent("keydown", lang.hitch(this, "_onCellKeydown"));
 		}),
 
 		destroy: dcl.after(function () {
@@ -210,6 +212,26 @@ define(["dcl/dcl",
 				this._hideDeleteButton(this._indexOfDeleteableEntry);
 				this._indexOfDeleteableEntry = -1;
 			}
+		},
+
+		_onCellKeydown: function (evt, entryIndex) {
+			if (evt.keyCode === keys.DELETE && this.deleteable) {
+				if (this._indexOfDeleteableEntry >= 0) {
+					if (this._indexOfDeleteableEntry === entryIndex) {
+						this._hideDeleteButton(entryIndex);
+						this._indexOfDeleteableEntry = -1;
+						this.deleteEntry(entryIndex, this.deleteFromStore);
+					} else {
+						this._hideDeleteButton(this._indexOfDeleteableEntry);
+						this._showDeleteButton(entryIndex);
+						this._indexOfDeleteableEntry = entryIndex;
+					}
+				} else {
+					this._showDeleteButton(entryIndex);
+					this._indexOfDeleteableEntry = entryIndex;
+				}
+			}
+			// TODO: implement moving item using keyboard
 		},
 
 		///////////////////////////////

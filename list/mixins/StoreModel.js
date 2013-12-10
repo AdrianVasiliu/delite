@@ -146,7 +146,9 @@ define(["dcl/dcl",
 		// Public methods from List
 		/////////////////////////////////
 
-		deleteEntry: dcl.after(function (entryIndex, deleteFromStore) {
+		/*jshint unused:false */
+		deleteEntry: dcl.after(function (args, result) {
+			var entryIndex = args[0], deleteFromStore = args[1];
 			if (deleteFromStore) {
 				/////////////////////////////////////////////////
 				// TODO: REMOVE FROM STORE (NEED THE ENTRY ID)
