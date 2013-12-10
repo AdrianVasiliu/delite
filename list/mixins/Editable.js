@@ -297,11 +297,12 @@ define(["dcl/dcl",
 				var oldScroll = this._scroll;
 				this.scrollBy(rate);
 				setTimeout(lang.hitch(this, function () {
-					if (this._scroll !== oldScroll) {
+					var realRate = this._scroll - oldScroll;
+					if (realRate !== 0) {
 						if (this._placeHolder) {
 							this._placeHolderClientRect = this._placeHolder.getBoundingClientRect();
-							this._startTop += rate;
-							this._draggedCellTop += rate;
+							this._startTop += realRate;
+							this._draggedCellTop += realRate;
 							this._draggedCell.style.top = this._draggedCellTop + "px";
 							this._updatePlaceholderPosition(clientY);
 						}
