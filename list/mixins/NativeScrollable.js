@@ -1,8 +1,9 @@
 define(["dcl/dcl",
-        "dui/register",
-        "dojo/_base/lang",
-        "dojo/dom-construct",
-        "dui/Widget"
+		"dui/register",
+		"dojo/_base/lang",
+		"dojo/dom-construct",
+		"dui/Widget",
+		"../../themes/load!../../themes/{{theme}}/ScrollableList" // for duiNativeScrollable
 ], function (dcl, register, lang, domConstruct, Widget) {
 
 	return dcl(null, {
@@ -97,7 +98,6 @@ define(["dcl/dcl",
 			var oldScroll = this._scroll;
 			this._scroll = this._viewportNode.scrollTop;
 			this.onScroll(oldScroll - this._scroll);
-		},
-
+		}
 	});
 });
