@@ -409,25 +409,11 @@ define(["dcl/dcl",
 		},
 
 		_getFirst: function () {
-			var cell = this._getFirstCell();
-			while (cell) {
-				if (this._topOfNodeIsBelowTopOfViewport(cell)) {
-					break;
-				}
-				cell = cell.nextElementSibling;
-			}
-			return cell;
+			return this._getFirstCell();
 		},
 
 		_getLast: function () {
-			var cell = this._getLastCell();
-			while (cell) {
-				if (this._bottomOfNodeIsBeforeBottomOfViewport(cell)) {
-					break;
-				}
-				cell = cell.previousElementSibling;
-			}
-			return cell;
+			return this._getLastCell();
 		},
 
 		_getNext: function (child, dir) {
@@ -498,30 +484,6 @@ define(["dcl/dcl",
 
 		_getFocusedCell: function () {
 			return this.focusedChild ? this._getParentCell(this.focusedChild) : null;
-		},
-
-		_topOfNodeIsBelowTopOfViewport: function (node) {
-			return this._topOfNodeDistanceToTopOfViewport(node) >= 0;
-		},
-
-		_topOfNodeDistanceToTopOfViewport: function (node) {
-			return node.offsetTop - (this._isScrollable ? this.getCurrentScroll() : 0);
-		},
-
-		_bottomOfNodeIsBeforeBottomOfViewport: function (node) {
-			return this._bottomOfNodeDistanceToBottomOfViewport(node) <= 0;
-		},
-
-		_bottomOfNodeDistanceToBottomOfViewport: function (node) {
-			var viewportClientRect = this.getViewportClientRect();
-			return node.offsetTop
-				+ node.offsetHeight
-				- (this._isScrollable ? this.getCurrentScroll() : 0)
-				- (viewportClientRect.bottom - viewportClientRect.top);
-		},
-
-		getViewportClientRect: function () {
-			return this.getBoundingClientRect();
 		},
 
 		/////////////////////////////////

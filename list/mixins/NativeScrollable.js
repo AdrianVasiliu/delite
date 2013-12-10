@@ -49,7 +49,27 @@ define(["dcl/dcl",
 			var scroller = this._viewportNode;
 			return scroller.offsetHeight + scroller.scrollTop >= scroller.scrollHeight;
 		},
-	
+
+		isTopOfNodeBelowTopOfViewport: function (node) {
+			return this.getTopOfNodeDistanceToTopOfViewport(node) >= 0;
+		},
+
+		getTopOfNodeDistanceToTopOfViewport: function (node) {
+			return node.offsetTop - this.getCurrentScroll();
+		},
+
+		isBottomOfNodeBeforeBottomOfViewport: function (node) {
+			return this.getBottomOfNodeDistanceToBottomOfViewport(node) <= 0;
+		},
+
+		getBottomOfNodeDistanceToBottomOfViewport: function (node) {
+			var viewportClientRect = this.getViewportClientRect();
+			return node.offsetTop
+				+ node.offsetHeight
+				- this.getCurrentScroll()
+				- (viewportClientRect.bottom - viewportClientRect.top);
+		},
+
 		/////////////////////////////////
 		// Widget methods updated by this mixin
 		/////////////////////////////////
@@ -88,6 +108,36 @@ define(["dcl/dcl",
 				this._viewportNode.removeEventListener("scroll", lang.hitch(this, "_nsOnBrowserScroll"), true);
 				domConstruct.destroy(this._viewportNode);
 			}
+		}),
+
+		/////////////////////////////////
+		// List methods updated by this mixin
+		/////////////////////////////////
+
+		_getFirst: dcl.superCall(function (sup) {
+			return function () {
+				var cell = sup.apply(this, arguments);
+				while (cell) {
+					if (this.isTopOfNodeBelowTopOfViewport(cell)) {
+						break;
+					}
+					cell = cell.nextElementSibling;
+				}
+				return cell;
+			};
+		}),
+
+		_getLast: dcl.superCall(function (sup) {
+			return function () {
+				var cell = sup.apply(this, arguments);
+				while (cell) {
+					if (this.isBottomOfNodeBeforeBottomOfViewport(cell)) {
+						break;
+					}
+					cell = cell.previousElementSibling;
+				}
+				return cell;
+			};
 		}),
 
 		/////////////////////////////////

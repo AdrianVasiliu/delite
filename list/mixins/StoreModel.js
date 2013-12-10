@@ -265,7 +265,7 @@ define(["dcl/dcl",
 					try {
 						// scroll the currently focused child so that it is at the top of the screen
 						if (this._isScrollable) {
-							this.scrollBy(this._topOfNodeDistanceToTopOfViewport(this._getFocusedCell()));
+							this.scrollBy(this.getTopOfNodeDistanceToTopOfViewport(this._getFocusedCell()));
 						} else {
 							// TODO: try to scroll the page ?
 						}
@@ -314,7 +314,7 @@ define(["dcl/dcl",
 					try {
 						// scroll the currently focused child so that it is at the bottom of the screen
 						if (this._isScrollable) {
-							this.scrollBy(this._bottomOfNodeDistanceToBottomOfViewport(this._getFocusedCell()));
+							this.scrollBy(this.getBottomOfNodeDistanceToBottomOfViewport(this._getFocusedCell()));
 						} else {
 							// TODO: try to scroll the page
 						}
