@@ -115,7 +115,7 @@
   background-color: #ffffff;
 }
 
-.duiRoundRectList-selectedEntry {
+.duiRoundRectList > .duiSelected {
   color: #ffffff;
   background-image: -webkit-gradient(linear, left top, left bottom, from(#048bf4), to(#005ce5));
   background-image: linear-gradient(to bottom, #048bf4 0%, #005ce5 100%);
@@ -216,7 +216,7 @@
   background-color: #ffffff;
 }
 
-.duiEdgeToEdgeList-selectedEntry {
+.duiEdgeToEdgeList > .duiSelected {
   color: #ffffff;
   background-image: -webkit-gradient(linear, left top, left bottom, from(#048bf4), to(#005ce5));
   background-image: linear-gradient(to bottom, #048bf4 0%, #005ce5 100%);

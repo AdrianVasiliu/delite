@@ -74,7 +74,6 @@ define(["dcl/dcl",
 					   selected: "-selectedEntry",
 					   loading: "-loading"},
 		_initialized: false,
-		_cellCategoryHeaders: null,
 		_entries: null,
 
 		/////////////////////////////////
@@ -82,7 +81,6 @@ define(["dcl/dcl",
 		/////////////////////////////////
 
 		preCreate: function () {
-			this._cellCategoryHeaders = {};
 			this._entries = [];
 		},
 
@@ -164,14 +162,14 @@ define(["dcl/dcl",
 						// Or run the handler in the parentCell context and pass the list ?
 						// TODO: Pass the parentCell INSTEAD of the entry index,
 						// as it contains itself the entry index and the entry ?
-						return handler.call(that, e, that._getCellEntryIndex(parentCell));
+						return handler.call(that, e, that._getEntryCellIndex(parentCell));
 					}
 				}
 			});
 		},
 
 		/*jshint unused:false */
-		addEntry: function (entry, entryIndex) {
+		addEntry: function (entry, index) {
 			/////////////////////////////////
 			// TODO: IMPLEMENT THIS
 			/////////////////////////////////
@@ -194,14 +192,14 @@ define(["dcl/dcl",
 			}
 		},
 
-		deleteEntry: function (entryIndex) {
-			var cell = this._getCellByEntryIndex(entryIndex);
+		deleteEntry: function (index) {
+			var cell = this._getEntryCellByIndex(index);
 			// Make sure that the cell is not selected before removing it
-			if (this.isSelected(entryIndex)) {
-				this.setSelected(entryIndex, false);
+			if (this.isSelected(index)) {
+				this.setSelected(index, false);
 			}
 			// Update the model
-			this._entries.splice(entryIndex, 1);
+			this._entries.splice(index, 1);
 			// Then update the rendering
 			if (cell) {
 				this._removeCell(cell);
@@ -211,11 +209,11 @@ define(["dcl/dcl",
 			/////////////////////////////////////////////////////////////////////
 		},
 
-		moveEntry: function (entryIndex, newIndex) {
+		moveEntry: function (fromIndex, toIndex) {
 			/////////////////////////////////
 			// TODO: IMPLEMENT THIS
 			/////////////////////////////////
-			console.log("TODO: move entry " + entryIndex + " to " + newIndex);
+			console.log("TODO: move entry " + fromIndex + " to " + toIndex);
 		},
 
 		getEntriesCount: function () {
@@ -239,9 +237,9 @@ define(["dcl/dcl",
 			if (this.selectionMode !== "none") {
 				for (var i = 0; i < entryIndexes.length; i++) {
 					entryIndex = entryIndexes[i];
-					cell = this._getCellByEntryIndex(entryIndex);
+					cell = this._getEntryCellByIndex(entryIndex);
 					if (cell) {
-						this._setSelectionStyle(cell, entryIndex);
+						domClass.toggle(cell, "duiSelected", this.isSelected(index));
 					}
 				}
 			}
@@ -266,7 +264,7 @@ define(["dcl/dcl",
 		_createCells: function (/*Array*/ entries, fromIndex, count) {
 			var currentIndex = fromIndex,
 				currentEntry, toIndex = fromIndex + count - 1,
-				previousEntry = fromIndex > 0 ? entries[firstEntryIndex - 1] : null;
+				previousEntry = fromIndex > 0 ? entries[fromIndex - 1] : null;
 			var documentFragment = document.createDocumentFragment();
 			for (; currentIndex <= toIndex; currentIndex++) {
 				currentEntry = entries[currentIndex];
@@ -284,14 +282,14 @@ define(["dcl/dcl",
 
 		_removeCell: function (cell) {
 			// Update category headers before removing the cell, if necessary
-			var cellIsCategoryHeader = this._cellRendersCategoryHeader(cell),
-			nextCell, previousCell;
+			var cellIsCategoryHeader = cell._isCategoryCell,
+				nextCell, previousCell;
 			if (this.categoryAttribute && !cellIsCategoryHeader) {
 				previousCell = this._getPreviousCell(cell);
 				// remove the previous category header if necessary
-				if (previousCell && this._cellRendersCategoryHeader(previousCell)) {
+				if (previousCell && previousCell._isCategoryCell) {
 					nextCell = this._getNextCell(cell);
-					if (!nextCell || (nextCell && this._cellRendersCategoryHeader(nextCell))) {
+					if (!nextCell || (nextCell && nextCell._isCategoryCell)) {
 						this._removeCell(previousCell);
 					}
 				}
@@ -300,41 +298,22 @@ define(["dcl/dcl",
 			cell.destroy();
 		},
 
-		_createEntryCell: function (entry, entryIndex) {
-			var renderedEntry = new this.entriesRenderer({tabindex: "-1"});
-			domClass.add(renderedEntry, this.baseClass + this._cssSuffixes.entry);
-			renderedEntry.startup();
-			renderedEntry._setEntryIndexAttr(entryIndex);
-			renderedEntry._setEntryAttr(entry);
-//			renderedEntry.set("entryIndex", entryIndex);
-//			renderedEntry.set("entry", entry);
-			//////////////////////////////////
-			// TODO: UPDATE OR REMOVE THIS ? (NOTIFY RENDERER OF ITS SELECTION STATUS ?)
-			//////////////////////////////////
-			this._setSelectionStyle(renderedEntry, entryIndex);
-			this._setCellCategoryHeader(renderedEntry, null); // TODO: IS IT NEEDED ?
-			return renderedEntry;
+		_createEntryCell: function (entry, index) {
+			var cell = new this.entriesRenderer({tabindex: "-1"});
+			domClass.add(cell, this.baseClass + this._cssSuffixes.entry);
+			cell.startup();
+			cell.entry = entry;
+			if (this.selectionMode !== "none") {
+				domClass.toggle(cell, "duiSelected", this.isSelected(index));
+			}
+			return cell;
 		},
 
 		_createCategoryCell: function (category) {
-			var renderedCategory = new this.categoriesRenderer({category: category, tabindex: "-1"});
-			domClass.add(renderedCategory, this.baseClass + this._cssSuffixes.category);
-			renderedCategory.startup();
-			this._setCellCategoryHeader(renderedCategory, category);
-			return renderedCategory;
-		},
-
-		/////////////////////////////////////////////////
-		// TODO: MOVE THIS TO THE ENTRY RENDERER ???
-		/////////////////////////////////////////////////
-		_setSelectionStyle: function (cell, entryIndex) {
-			if (this.selectionMode !== "none") {
-				if (this.isSelected(entryIndex)) {
-					domClass.add(cell, this.baseClass + this._cssSuffixes.selected);
-				} else {
-					domClass.remove(cell, this.baseClass + this._cssSuffixes.selected);
-				}
-			}
+			var cell = new this.categoriesRenderer({category: category, tabindex: "-1"});
+			domClass.add(cell, this.baseClass + this._cssSuffixes.category);
+			cell.startup();
+			return cell;
 		},
 
 		_getNextCell: function (cell) {
@@ -346,7 +325,7 @@ define(["dcl/dcl",
 		},
 
 		_getFirstCell: function () {
-			var firstCell = this._getCellByEntryIndex(0);
+			var firstCell = this._getEntryCellByIndex(0);
 			if (this.categoryAttribute) {
 				var previousCell = null;
 				if (firstCell) {
@@ -360,7 +339,7 @@ define(["dcl/dcl",
 		},
 
 		_getLastCell: function () {
-			var lastCell = this._getCellByEntryIndex(this.getEntriesCount() - 1);
+			var lastCell = this._getEntryCellByIndex(this.getEntriesCount() - 1);
 			if (this.categoryAttribute) {
 				var nextCell = null;
 				if (lastCell) {
@@ -373,26 +352,14 @@ define(["dcl/dcl",
 			return lastCell;
 		},
 
-		_getCellByEntryIndex: function (entryIndex) {
-			return query("." + this.baseClass + this._cssSuffixes.entry, this.containerNode)[entryIndex];
+		_getEntryCellByIndex: function (index) {
+			return query("." + this.baseClass + this._cssSuffixes.entry, this.containerNode)[index];
 		},
 
-		_getCellEntryIndex: function (cell) {
+		_getEntryCellIndex: function (cell) {
 			var index = query("." + this.baseClass + this._cssSuffixes.entry, this.containerNode).indexOf(cell);
 			return index < 0 ? null : index;
 			
-		},
-
-		_getCellCategoryHeader: function (cell) {
-			return this._cellCategoryHeaders[cell.id];
-		},
-
-		_setCellCategoryHeader: function (cell, categoryName) {
-			if (categoryName === null) {
-				delete this._cellCategoryHeaders[cell.id];
-			} else {
-				this._cellCategoryHeaders[cell.id] = categoryName;
-			}
 		},
 
 		_getParentCell: function (node) {
@@ -409,10 +376,6 @@ define(["dcl/dcl",
 			} else {
 				return null;
 			}
-		},
-
-		_cellRendersCategoryHeader: function (cell) {
-			return (this._getCellCategoryHeader(cell) != null);
 		},
 
 		/////////////////////////////////
@@ -568,7 +531,7 @@ define(["dcl/dcl",
 		_handleSelection: function (event) {
 			var entryIndex, entrySelected, eventCell;
 			eventCell = this._getParentCell(event.target || event.srcElement);
-			entryIndex = this._getCellEntryIndex(eventCell);
+			entryIndex = this._getEntryCellIndex(eventCell);
 			if (entryIndex != null) {
 				entrySelected = !this.isSelected(entryIndex);
 				this.setSelected(entryIndex, entrySelected);

@@ -11,18 +11,11 @@ define(["dcl/dcl",
 		_focusableChildren: null,
 		_focusedChild: null,
 
-		// The index of the entry to render
-		// TODO: REMOVE THIS ATTRIBUTE, AS IT IS NOT UPDATED WHEN THE LIST IS EDITED
-		entryIndex: null,
-		_setEntryIndexAttr: function (value) {
-			this._set("entryIndex", value);
-		},
-
 		// The entry to render
 		entry: null,
 		_setEntryAttr: function (value) {
 			this._set("entry", value);
-			this.renderEntry(value, this.entryIndex);
+			this.renderEntry(value);
 			this.label = value.label; // For text search in keyboard navigation
 		},
 
@@ -32,7 +25,7 @@ define(["dcl/dcl",
 
 		// Method that render the entry in the widget GUI
 		/*jshint unused:false */
-		renderEntry: function (entry, entryIndex) {
+		renderEntry: function (entry) {
 			// abstract method
 		},
 

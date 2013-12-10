@@ -131,7 +131,7 @@ define(["dcl/dcl",
 		},
 
 		_setRightEditNodeInnerHTML: function (entryIndex, innerHTML) {
-			var cell = this._getCellByEntryIndex(entryIndex);
+			var cell = this._getEntryCellByIndex(entryIndex);
 			if (cell) {
 				cell.children[2].innerHTML = innerHTML;
 			}
@@ -221,7 +221,7 @@ define(["dcl/dcl",
 				return;
 			}
 			var cell = this._getParentCell(event.target),
-				cellEntryIndex = this._getCellEntryIndex(cell);
+				cellEntryIndex = this._getEntryCellIndex(cell);
 			if (cell && this._isRightEditNodeDescendant(event.target)) {
 				if (cellEntryIndex === this._indexOfDeleteableEntry) {
 					return;
