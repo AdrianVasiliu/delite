@@ -156,16 +156,42 @@ define(["dcl/dcl",
 				if (domClass.contains(e.target, this.baseClass)) {
 					return;
 				} else {
-					parentCell = that._getParentCell(e.target);
+					parentCell = that.getParentCell(e.target);
 					if (parentCell) {
 						// TODO: Pass the parentCell too ?
 						// Or run the handler in the parentCell context and pass the list ?
 						// TODO: Pass the parentCell INSTEAD of the entry index,
 						// as it contains itself the entry index and the entry ?
-						return handler.call(that, e, that._getEntryCellIndex(parentCell));
+						return handler.call(that, e, that.getEntryCellIndex(parentCell));
 					}
 				}
 			});
+		},
+
+		getEntryCellByIndex: function (index) {
+			return query("." + this.baseClass + this._cssSuffixes.entry, this.containerNode)[index];
+		},
+
+		getEntryCellIndex: function (cell) {
+			var index = query("." + this.baseClass + this._cssSuffixes.entry, this.containerNode).indexOf(cell);
+			return index < 0 ? null : index;
+			
+		},
+
+		getParentCell: function (node) {
+			var currentNode = dom.byId(node);
+			while (currentNode) {
+				if (currentNode.parentNode && domClass.contains(currentNode.parentNode,
+						this.baseClass)) {
+					break;
+				}
+				currentNode = currentNode.parentNode;
+			}
+			if (currentNode) {
+				return currentNode;
+			} else {
+				return null;
+			}
 		},
 
 		/*jshint unused:false */
@@ -193,7 +219,7 @@ define(["dcl/dcl",
 		},
 
 		deleteEntry: function (index) {
-			var cell = this._getEntryCellByIndex(index);
+			var cell = this.getEntryCellByIndex(index);
 			// Make sure that the cell is not selected before removing it
 			if (this.isSelected(index)) {
 				this.setSelected(index, false);
@@ -237,7 +263,7 @@ define(["dcl/dcl",
 			if (this.selectionMode !== "none") {
 				for (var i = 0; i < indexes.length; i++) {
 					currentIndex = indexes[i];
-					cell = this._getEntryCellByIndex(currentIndex);
+					cell = this.getEntryCellByIndex(currentIndex);
 					if (cell) {
 						domClass.toggle(cell, "duiSelected", this.isSelected(currentIndex));
 					}
@@ -325,7 +351,7 @@ define(["dcl/dcl",
 		},
 
 		_getFirstCell: function () {
-			var firstCell = this._getEntryCellByIndex(0);
+			var firstCell = this.getEntryCellByIndex(0);
 			if (this.categoryAttribute) {
 				var previousCell = null;
 				if (firstCell) {
@@ -339,7 +365,7 @@ define(["dcl/dcl",
 		},
 
 		_getLastCell: function () {
-			var lastCell = this._getEntryCellByIndex(this.getEntriesCount() - 1);
+			var lastCell = this.getEntryCellByIndex(this.getEntriesCount() - 1);
 			if (this.categoryAttribute) {
 				var nextCell = null;
 				if (lastCell) {
@@ -350,32 +376,6 @@ define(["dcl/dcl",
 				}
 			}
 			return lastCell;
-		},
-
-		_getEntryCellByIndex: function (index) {
-			return query("." + this.baseClass + this._cssSuffixes.entry, this.containerNode)[index];
-		},
-
-		_getEntryCellIndex: function (cell) {
-			var index = query("." + this.baseClass + this._cssSuffixes.entry, this.containerNode).indexOf(cell);
-			return index < 0 ? null : index;
-			
-		},
-
-		_getParentCell: function (node) {
-			var currentNode = dom.byId(node);
-			while (currentNode) {
-				if (currentNode.parentNode && domClass.contains(currentNode.parentNode,
-						this.baseClass)) {
-					break;
-				}
-				currentNode = currentNode.parentNode;
-			}
-			if (currentNode) {
-				return currentNode;
-			} else {
-				return null;
-			}
 		},
 
 		/////////////////////////////////
@@ -483,7 +483,7 @@ define(["dcl/dcl",
 		},
 
 		_getFocusedCell: function () {
-			return this.focusedChild ? this._getParentCell(this.focusedChild) : null;
+			return this.focusedChild ? this.getParentCell(this.focusedChild) : null;
 		},
 
 		/////////////////////////////////
@@ -492,8 +492,8 @@ define(["dcl/dcl",
 
 		_handleSelection: function (event) {
 			var entryIndex, entrySelected, eventCell;
-			eventCell = this._getParentCell(event.target || event.srcElement);
-			entryIndex = this._getEntryCellIndex(eventCell);
+			eventCell = this.getParentCell(event.target || event.srcElement);
+			entryIndex = this.getEntryCellIndex(eventCell);
 			if (entryIndex != null) {
 				entrySelected = !this.isSelected(entryIndex);
 				this.setSelected(entryIndex, entrySelected);

@@ -131,7 +131,7 @@ define(["dcl/dcl",
 		},
 
 		_setRightEditNodeInnerHTML: function (entryIndex, innerHTML) {
-			var cell = this._getEntryCellByIndex(entryIndex);
+			var cell = this.getEntryCellByIndex(entryIndex);
 			if (cell) {
 				cell.children[2].innerHTML = innerHTML;
 			}
@@ -220,8 +220,8 @@ define(["dcl/dcl",
 			if (this._draggedCell) {
 				return;
 			}
-			var cell = this._getParentCell(event.target),
-				cellEntryIndex = this._getEntryCellIndex(cell);
+			var cell = this.getParentCell(event.target),
+				cellEntryIndex = this.getEntryCellIndex(cell);
 			if (cell && this._isRightEditNodeDescendant(event.target)) {
 				if (cellEntryIndex === this._indexOfDeleteableEntry) {
 					return;
