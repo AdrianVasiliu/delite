@@ -201,6 +201,14 @@ define(["dcl/dcl",
 			console.log("TODO: move entry " + entryIndex + " to " + newIndex);
 		},
 
+		getEntriesCount: function () {
+			return this._entries.length;
+		},
+
+		getEntry: function (index) {
+			return this._entries[index];
+		},
+
 		/////////////////////////////////
 		// Selection implementation
 		/////////////////////////////////
@@ -232,14 +240,6 @@ define(["dcl/dcl",
 
 		_toggleListLoadingStyle: function () {
 			domClass.toggle(this, this.baseClass + this._cssSuffixes.loading);
-		},
-
-		_getEntriesCount: function () {
-			return this._entries.length;
-		},
-
-		_getEntry: function (index) {
-			return this._entries[index];
 		},
 
 		/////////////////////////////////
@@ -365,7 +365,7 @@ define(["dcl/dcl",
 		},
 
 		_getLastCell: function () {
-			var lastCell = this._getCellByEntryIndex(this._getEntriesCount() - 1);
+			var lastCell = this._getCellByEntryIndex(this.getEntriesCount() - 1);
 			if (this.categoryAttribute) {
 				var nextCell = null;
 				if (lastCell) {

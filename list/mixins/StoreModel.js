@@ -227,7 +227,7 @@ define(["dcl/dcl",
 			var toDelete = nbOfEntriesToRemove;
 			this._lastLoaded -= nbOfEntriesToRemove;
 			for (; toDelete > 0; toDelete--) {
-				this.deleteEntry(this._getEntriesCount() - 1);
+				this.deleteEntry(this.getEntriesCount() - 1);
 			}
 			if (!this._nextPageLoader) {
 				this._createNextPageLoader();
@@ -243,7 +243,7 @@ define(["dcl/dcl",
 				}
 				this.addEntries(entries, "top");
 				if (this.maxPages) {
-					nbOfEntriesToRemove = this._getEntriesCount() - (this.maxPages * this.pageLength);
+					nbOfEntriesToRemove = this.getEntriesCount() - (this.maxPages * this.pageLength);
 					if (nbOfEntriesToRemove > 0) {
 						this._unloadLastEntries(nbOfEntriesToRemove);
 					}
@@ -287,7 +287,7 @@ define(["dcl/dcl",
 				this.focusChild(this._getLast());
 				this.addEntries(entries, "bottom");
 				if (this.maxPages) {
-					nbOfEntriesToRemove = this._getEntriesCount() - (this.maxPages * this.pageLength);
+					nbOfEntriesToRemove = this.getEntriesCount() - (this.maxPages * this.pageLength);
 					if (nbOfEntriesToRemove > 0) {
 						this._unloadFirstEntries(nbOfEntriesToRemove);
 					}
