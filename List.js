@@ -232,14 +232,14 @@ define(["dcl/dcl",
 			return item;
 		},
 
-		updateRenderers: function (entryIndexes) {
-			var entryIndex, cell;
+		updateRenderers: function (indexes) {
+			var currentIndex, cell;
 			if (this.selectionMode !== "none") {
-				for (var i = 0; i < entryIndexes.length; i++) {
-					entryIndex = entryIndexes[i];
-					cell = this._getEntryCellByIndex(entryIndex);
+				for (var i = 0; i < indexes.length; i++) {
+					currentIndex = indexes[i];
+					cell = this._getEntryCellByIndex(currentIndex);
 					if (cell) {
-						domClass.toggle(cell, "duiSelected", this.isSelected(index));
+						domClass.toggle(cell, "duiSelected", this.isSelected(currentIndex));
 					}
 				}
 			}
