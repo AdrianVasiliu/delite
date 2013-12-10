@@ -238,7 +238,7 @@ define(["dcl/dcl",
 			var firstCellBeforeUpdate = this._getFirst(), nbOfEntriesToRemove = 0;
 			var def = new Deferred();
 			try {
-				if (this._previousPageLoader && this._previousPageLoader.isLoading()) {
+				if (firstCellBeforeUpdate && this._previousPageLoader && this._previousPageLoader.isLoading()) {
 					this.focusChild(firstCellBeforeUpdate);
 				}
 				this.addEntries(entries, "first");
@@ -283,8 +283,11 @@ define(["dcl/dcl",
 		_onNextPageReady: function (/*array*/ entries) {
 			var nbOfEntriesToRemove = 0;
 			var def = new Deferred();
+			var lastChild = this._getLast();
 			try {
-				this.focusChild(this._getLast());
+				if (lastChild) {
+					this.focusChild(lastChild);
+				}
 				this.addEntries(entries, "last");
 				if (this.maxPages) {
 					nbOfEntriesToRemove = this.getEntriesCount() - (this.maxPages * this.pageLength);
