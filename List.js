@@ -177,6 +177,23 @@ define(["dcl/dcl",
 			/////////////////////////////////
 		},
 
+		addEntries: function (/*Array*/ entries, pos) {
+			if (pos === "first") {
+				if (this.containerNode.firstElementChild) {
+					this.containerNode.insertBefore(this._createCells(entries, 0, entries.length),
+							this.containerNode.firstElementChild);
+				} else {
+					this.containerNode.appendChild(this._createCells(entries, 0, entries.length));
+				}
+				this._entries = entries.concat(this._entries);
+			} else if (pos === "last") {
+				this.containerNode.appendChild(this._createCells(entries, 0, entries.length));
+				this._entries = this._entries.concat(entries);
+			} else {
+				console.log("addEntries: only first and last positions are supported.");
+			}
+		},
+
 		deleteEntry: function (entryIndex) {
 			var cell = this._getCellByEntryIndex(entryIndex);
 			// Make sure that the cell is not selected before removing it
@@ -235,7 +252,7 @@ define(["dcl/dcl",
 		/////////////////////////////////
 
 		_initContent: function (/*Array*/ entries) {
-			return this.addEntries(entries, "top");
+			return this.addEntries(entries, "first");
 		},
 
 		_toggleListLoadingStyle: function () {
@@ -245,24 +262,6 @@ define(["dcl/dcl",
 		/////////////////////////////////
 		// Private methods for cell life cycle
 		/////////////////////////////////
-
-		addEntries: function (/*Array*/ entries, pos) {
-			// TODO: use "first" / "last" instead of "top" / "bottom"
-			if (pos === "top") {
-				if (this.containerNode.firstElementChild) {
-					this.containerNode.insertBefore(this._createCells(entries, 0, entries.length),
-							this.containerNode.firstElementChild);
-				} else {
-					this.containerNode.appendChild(this._createCells(entries, 0, entries.length));
-				}
-				this._entries = entries.concat(this._entries);
-			} else if (pos === "bottom") {
-				this.containerNode.appendChild(this._createCells(entries, 0, entries.length));
-				this._entries = this._entries.concat(entries);
-			} else {
-				console.log("addEntries: only top and bottom positions are supported.");
-			}
-		},
 
 		_createCells: function (/*Array*/ entries, firstEntryIndex, count) {
 			var currentIndex = firstEntryIndex,

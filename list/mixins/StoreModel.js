@@ -241,7 +241,7 @@ define(["dcl/dcl",
 				if (this._previousPageLoader && this._previousPageLoader.isLoading()) {
 					this.focusChild(firstCellBeforeUpdate);
 				}
-				this.addEntries(entries, "top");
+				this.addEntries(entries, "first");
 				if (this.maxPages) {
 					nbOfEntriesToRemove = this.getEntriesCount() - (this.maxPages * this.pageLength);
 					if (nbOfEntriesToRemove > 0) {
@@ -285,7 +285,7 @@ define(["dcl/dcl",
 			var def = new Deferred();
 			try {
 				this.focusChild(this._getLast());
-				this.addEntries(entries, "bottom");
+				this.addEntries(entries, "last");
 				if (this.maxPages) {
 					nbOfEntriesToRemove = this.getEntriesCount() - (this.maxPages * this.pageLength);
 					if (nbOfEntriesToRemove > 0) {
