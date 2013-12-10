@@ -422,13 +422,18 @@ define(["dcl/dcl",
 		/////////////////////////////////
 
 		/*jshint unused:false */
-		_renderEntries: dcl.superCall(function (sup) {
+		_initContent: dcl.superCall(function (sup) {
 			return function (entries) {
+				var def = new Deferred();
 				when(this._loadNext(sup), lang.hitch(this, function () {
 					if (this.pageLength > 0 && this._entries.length === this._queryOptions.count) {
 						this._createNextPageLoader();
+						def.resolve();
 					}
+				}, function (error) {
+					def.reject(error);
 				}));
+				return def;
 			};
 		}),
 

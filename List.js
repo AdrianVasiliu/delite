@@ -17,7 +17,6 @@ define(["dcl/dcl",
 ], function (dcl, register, lang, when, on, query, dom, domConstruct, domClass, keys, Widget, Container,
 		Selection, KeyNav, DefaultEntryRenderer, DefaultCategoryRenderer) {
 
-	// TODO: use cell instead of node or cellNode. Other options, use itemNode instead of cell / cellNode / node.
 	var List = dcl([Widget, Container, Selection, KeyNav], {
 
 		/////////////////////////////////
@@ -130,11 +129,14 @@ define(["dcl/dcl",
 				}
 				sup.apply(this, arguments);
 				this._toggleListLoadingStyle();
-				// TODO: use when(this._renderEntries(), function () {
-				//		this._toggleListLoadingStyle();
-				//		this._initialized = true;
-				// }); AND REMOVE initit code from _renderEntries .????
-				this._renderEntries(this.entries);
+				when(this._initContent(this.entries), lang.hitch(this, function () {
+					this._toggleListLoadingStyle();
+					this._initialized = true;
+				}), function (error) {
+					 // WHAT TO DO WITH THE ERROR ?
+					console.log((error.message ? error.message : error) + ". See stack below.");
+					console.error(error);
+				});
 			};
 		}),
 
@@ -224,12 +226,8 @@ define(["dcl/dcl",
 		// Private methods
 		/////////////////////////////////
 
-		_renderEntries: function (/*Array*/ entries) {
-			this.addEntries(entries, "top");
-			if (!this._initialized) {
-				this._toggleListLoadingStyle();
-				this._initialized = true;
-			}
+		_initContent: function (/*Array*/ entries) {
+			return this.addEntries(entries, "top");
 		},
 
 		_toggleListLoadingStyle: function () {
