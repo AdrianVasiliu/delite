@@ -282,26 +282,22 @@ define(["dcl/dcl",
 			return documentFragment;
 		},
 
-		_removeCell: function (cell, resizeSpacer) {
+		_removeCell: function (cell) {
 			// Update category headers before removing the cell, if necessary
-			this._updateCategoryHeaderBeforeCellDisappear(cell, resizeSpacer);
-			// remove the cell
-			cell.destroy();
-		},
-
-		_updateCategoryHeaderBeforeCellDisappear: function (cell, resizeSpacer) {
 			var cellIsCategoryHeader = this._cellRendersCategoryHeader(cell),
-				nextCell, previousCell;
+			nextCell, previousCell;
 			if (this.categoryAttribute && !cellIsCategoryHeader) {
 				previousCell = this._getPreviousCell(cell);
 				// remove the previous category header if necessary
 				if (previousCell && this._cellRendersCategoryHeader(previousCell)) {
 					nextCell = this._getNextCell(cell);
 					if (!nextCell || (nextCell && this._cellRendersCategoryHeader(nextCell))) {
-						this._removeCell(previousCell, resizeSpacer);
+						this._removeCell(previousCell);
 					}
 				}
 			}
+			// remove the cell
+			cell.destroy();
 		},
 
 		_createEntryCell: function (entry, entryIndex) {
