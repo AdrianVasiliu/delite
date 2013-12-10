@@ -263,12 +263,12 @@ define(["dcl/dcl",
 		// Private methods for cell life cycle
 		/////////////////////////////////
 
-		_createCells: function (/*Array*/ entries, firstEntryIndex, count) {
-			var currentIndex = firstEntryIndex,
-				currentEntry, lastEntryIndex = firstEntryIndex + count - 1,
-				previousEntry = firstEntryIndex > 0 ? entries[firstEntryIndex - 1] : null;
+		_createCells: function (/*Array*/ entries, fromIndex, count) {
+			var currentIndex = fromIndex,
+				currentEntry, toIndex = fromIndex + count - 1,
+				previousEntry = fromIndex > 0 ? entries[firstEntryIndex - 1] : null;
 			var documentFragment = document.createDocumentFragment();
-			for (; currentIndex <= lastEntryIndex; currentIndex++) {
+			for (; currentIndex <= toIndex; currentIndex++) {
 				currentEntry = entries[currentIndex];
 				if (this.categoryAttribute) {
 					if (!previousEntry
