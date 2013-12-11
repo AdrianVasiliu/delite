@@ -118,8 +118,15 @@
 				}else{
 					editButton.style.display = "none";
 				}
+				dom.byId("editPanel").style.display = "";
 			}
-			var handler = on(dom.byId("buildButton"), 'click', lang.hitch(this, buildList));
+			// Remove entry
+			var removeEntry = function () {
+				list.deleteEntry(parseInt(dom.byId("entryIndexInput").value));
+			}
+			// Events
+			on(dom.byId("buildButton"), 'click', lang.hitch(this, buildList));
+			on(dom.byId("removeEntry"), 'click', lang.hitch(this, removeEntry));
 		});
 	</script>
 	<style>
@@ -234,6 +241,9 @@
 	<button id="editButton" style='display: none; margin-bottom: 15px;' disabled="disabled";></button>
 	<br>
 	<div id="list"></div>
-	<div style="height: 50px;"></div>
+	<p>
+	<div id="editPanel" style="display: none;">
+		<label for="entryIndexInput">Entry index:</label> <input id="entryIndexInput" type="number" value="0"> <button id="removeEntry">Remove</button>
+	</div>
 </body>
 </html>

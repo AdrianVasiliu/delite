@@ -147,10 +147,14 @@ define(["dcl/dcl",
 		/////////////////////////////////
 
 		/*jshint unused:false */
-		deleteEntry: dcl.before(function (entryIndex, deleteFromStore) {
-			if (deleteFromStore) {
-				this.store.remove(this.store.getIdentity(this.getEntryCellByIndex(entryIndex).entry));
-				this._lastLoaded--;
+		deleteEntry: dcl.before(function (entryIndex, doNotDeleteFromStore) {
+			var cell;
+			if (!doNotDeleteFromStore) {
+				cell = this.getEntryCellByIndex(entryIndex);
+				if (cell) {
+					this.store.remove(this.store.getIdentity(cell.entry));
+					this._lastLoaded--;
+				}
 			}
 		}),
 
@@ -215,7 +219,7 @@ define(["dcl/dcl",
 			var toDelete = nbOfEntriesToRemove;
 			this._firstLoaded += nbOfEntriesToRemove;
 			for (; toDelete > 0; toDelete--) {
-				this.deleteEntry(0);
+				this.deleteEntry(0, true);
 			}
 			if (!this._previousPageLoader) {
 				this._createPreviousPageLoader();
@@ -226,7 +230,7 @@ define(["dcl/dcl",
 			var toDelete = nbOfEntriesToRemove;
 			this._lastLoaded -= nbOfEntriesToRemove;
 			for (; toDelete > 0; toDelete--) {
-				this.deleteEntry(this.getEntriesCount() - 1);
+				this.deleteEntry(this.getEntriesCount() - 1, true);
 			}
 			if (!this._nextPageLoader) {
 				this._createNextPageLoader();

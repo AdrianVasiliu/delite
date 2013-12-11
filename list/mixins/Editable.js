@@ -200,7 +200,7 @@ define(["dcl/dcl",
 						if (this._indexOfDeleteableEntry === entryIndex) {
 							this._hideDeleteButton(entryIndex);
 							this._indexOfDeleteableEntry = -1;
-							this.deleteEntry(entryIndex, true);
+							this.deleteEntry(entryIndex);
 						}
 						break;
 					}
@@ -219,7 +219,7 @@ define(["dcl/dcl",
 					if (this._indexOfDeleteableEntry === entryIndex) {
 						this._hideDeleteButton(entryIndex);
 						this._indexOfDeleteableEntry = -1;
-						this.deleteEntry(entryIndex, true);
+						this.deleteEntry(entryIndex);
 					} else {
 						this._hideDeleteButton(this._indexOfDeleteableEntry);
 						this._showDeleteButton(entryIndex);
