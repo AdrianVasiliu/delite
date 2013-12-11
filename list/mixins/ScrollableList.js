@@ -9,7 +9,6 @@ define(["dcl/dcl",
 	return dcl(null, {
 		// summary:
 		//		ScrollableList wraps a Widget inside a scrollable div (viewport).
-		//		The height of this div is defined by the height parameter of the ScrollableList mixin.
 
 		/////////////////////////////////
 		// Private attributes
@@ -18,7 +17,6 @@ define(["dcl/dcl",
 		_isScrollable: true,
 		_viewportNode: null,
 		_scroll: 0, // current scroll on the y axis
-		_visibleHeight: null, // the height of the viewport, set by the resize method
 
 		/////////////////////////////////
 		// Public methods
@@ -42,10 +40,30 @@ define(["dcl/dcl",
 		},
 		
 		isTopScroll: function () {
+			// summary:
+			//		Returns true if container's scroll has reached the maximum at
+			//		the top of the content. Returns false otherwise.
+			// example:
+			// | scrollContainer.on("scroll", function () {
+			// |	if (scrollContainer.isTopScroll()) {
+			// |		console.log("Scroll reached the maximum at the top");
+			// |	}
+			// | }
+			// returns: Boolean
 			return this._viewportNode.scrollTop === 0;
 		},
 		
 		isBottomScroll: function () {
+			// summary:
+			//		Returns true if container's scroll has reached the maximum at
+			//		the bottom of the content. Returns false otherwise.
+			// example:
+			// | scrollContainer.on("scroll", function () {
+			// |	if (scrollContainer.isBottomScroll()) {
+			// |		console.log("Scroll reached the maximum at the bottom");
+			// |	}
+			// | }
+			// returns: Boolean
 			var scroller = this._viewportNode;
 			return scroller.offsetHeight + scroller.scrollTop >= scroller.scrollHeight;
 		},
@@ -64,10 +82,10 @@ define(["dcl/dcl",
 
 		getBottomOfNodeDistanceToBottomOfViewport: function (node) {
 			var viewportClientRect = this.getViewportClientRect();
-			return node.offsetTop
-				+ node.offsetHeight
-				- this.getCurrentScroll()
-				- (viewportClientRect.bottom - viewportClientRect.top);
+			return node.offsetTop +
+				node.offsetHeight -
+				this.getCurrentScroll() -
+				(viewportClientRect.bottom - viewportClientRect.top);
 		},
 
 		/////////////////////////////////
@@ -82,7 +100,7 @@ define(["dcl/dcl",
 				domConstruct.place(this._viewportNode, this, "after");
 			}
 			this._viewportNode.appendChild(this);
-			// listen to scroll initiated by the browser (when the user navigates the list using the TAB key)
+			// listen to scroll initiated by the browser (including when the user navigates the list using the TAB key)
 			this._viewportNode.addEventListener("scroll", lang.hitch(this, "_nsOnBrowserScroll"), true);
 		}),
 
