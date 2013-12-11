@@ -1,10 +1,11 @@
 define(["dcl/dcl",
 		"dui/register",
 		"dojo/_base/lang",
-		"dojo/dom-construct",
+		// "dojo/dom-construct",
+		"dojo/dom-class",
 		"dui/Widget",
 		"../../themes/load!../../themes/{{theme}}/ScrollableList" // for duiScrollable
-], function (dcl, register, lang, domConstruct, Widget) {
+], function (dcl, register, lang, /* domConstruct, */ domClass, Widget) {
 
 	return dcl(null, {
 		// summary:
@@ -14,16 +15,15 @@ define(["dcl/dcl",
 		// Private attributes
 		/////////////////////////////////
 
-		_isScrollable: true,
-		_viewportNode: null,
-		_scroll: 0, // current scroll on the y axis
+		_isScrollable: true, // Flag currently used in StoreModel and Editable. TODO: review/redesign.
+		_scroll: 0, // current scroll on the y axis TODO: review/redesign.
 
 		/////////////////////////////////
 		// Public methods
 		/////////////////////////////////
 
 		scrollBy: function (y) {
-			this._viewportNode.scrollTop += y;
+			this.scrollTop += y;
 		},
 
 		/*jshint unused:false */
@@ -36,7 +36,7 @@ define(["dcl/dcl",
 		},
 
 		getViewportClientRect: function () {
-			return this._viewportNode.getBoundingClientRect();
+			return this.getBoundingClientRect();
 		},
 		
 		isTopScroll: function () {
@@ -50,7 +50,7 @@ define(["dcl/dcl",
 			// |	}
 			// | }
 			// returns: Boolean
-			return this._viewportNode.scrollTop === 0;
+			return this.scrollTop === 0;
 		},
 		
 		isBottomScroll: function () {
@@ -64,8 +64,7 @@ define(["dcl/dcl",
 			// |	}
 			// | }
 			// returns: Boolean
-			var scroller = this._viewportNode;
-			return scroller.offsetHeight + scroller.scrollTop >= scroller.scrollHeight;
+			return this.offsetHeight + this.scrollTop >= this.scrollHeight;
 		},
 
 		isTopOfNodeBelowTopOfViewport: function (node) {
@@ -93,39 +92,12 @@ define(["dcl/dcl",
 		/////////////////////////////////
 
 		buildRendering: dcl.after(function () {
-			// Create a scrollable container and add the widget node to it
-			this._viewportNode = domConstruct.create("div", {class: "duiScrollable"});
-			register.dcl.mix(this._viewportNode, new Widget());
-			if (this.parentNode) {
-				domConstruct.place(this._viewportNode, this, "after");
-			}
-			this._viewportNode.appendChild(this);
-			// listen to scroll initiated by the browser (including when the user navigates the list using the TAB key)
-			this._viewportNode.addEventListener("scroll", lang.hitch(this, "_nsOnBrowserScroll"), true);
-		}),
-
-		enteredViewCallback: dcl.after(function () {
-			if (this.height) {
-				this._viewportNode.style.height = this.height;
-				this.style.height = "";
-				this.height = null;
-			} else {
-				// TODO: what is the default height ?
-			}
-		}),
-
-		placeAt: dcl.superCall(function (sup) {
-			return function (/* String|DomNode|Widget */ reference, /* String|Int? */ position) {
-				// The node to place is this._viewportNode, not this
-				return sup.apply(this._viewportNode, arguments);
-			};
+			domClass.add(this, "duiScrollable");
+			this.addEventListener("scroll", lang.hitch(this, "_nsOnBrowserScroll"), true);
 		}),
 
 		destroy: dcl.after(function () {
-			if (this._viewportNode) {
-				this._viewportNode.removeEventListener("scroll", lang.hitch(this, "_nsOnBrowserScroll"), true);
-				domConstruct.destroy(this._viewportNode);
-			}
+			this.removeEventListener("scroll", lang.hitch(this, "_nsOnBrowserScroll"), true);
 		}),
 
 		/////////////////////////////////
@@ -164,7 +136,7 @@ define(["dcl/dcl",
 
 		_nsOnBrowserScroll: function (event) {
 			var oldScroll = this._scroll;
-			this._scroll = this._viewportNode.scrollTop;
+			this._scroll = this.scrollTop;
 			this.onScroll(oldScroll - this._scroll);
 		}
 	});

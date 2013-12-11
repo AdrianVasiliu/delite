@@ -73,9 +73,6 @@
 .duiRoundRectList {
 	position: relative; /* needed for moving list items in editable mode */
      margin: 0 9px !important;
-	-webkit-transform: translate3d(0,0,0);
-	transform: translate3d(0,0,0);
-  	overflow: hidden;
   	padding: 0;
   	background-color: #ffffff;
   	border: 1px solid #adaaad;
@@ -183,9 +180,6 @@
 
 .duiEdgeToEdgeList {
 	position: relative; /* needed for moving list items in editable mode */
-	-webkit-transform: translate3d(0,0,0);
-	transform: translate3d(0,0,0);
-  	overflow: hidden;
   	padding: 0;
   	margin: 0 !important;
   	background-color: #ffffff;

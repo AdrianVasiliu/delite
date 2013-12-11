@@ -93,7 +93,8 @@
 			});
 			// create a list widget for the catalog, using the custom entries renderer
 			var ScrollableList = register("d-slist", [List, Scrollable]);
-			var list3 = new ScrollableList({id: 'list3', height: 600, entries: catalogModel, entriesRenderer: CatalogEntryRenderer}, 'list3');
+			var list3 = new ScrollableList({id: 'list3', entries: catalogModel, entriesRenderer: CatalogEntryRenderer}, 'list3');
+			list3.style.height = "600px";
 			// startup the list
 			list3.startup();
 

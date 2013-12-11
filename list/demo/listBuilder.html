@@ -62,11 +62,10 @@
 					selectionMode: 	dom.byId("selectionMode").value,
 					pageLength: parseInt(dom.byId("pageLength").value),
 					maxPages: parseInt(dom.byId("maxPages").value),
-					height: parseInt(dom.byId("height").value) + "px",
 					baseClass: dom.byId("listStyle").value,
 					autoLoad: dom.byId("autoLoad").value,
 					useMaskingPanel: dom.byId("useMaskingPanel").value
-				}
+				};
 				var editable = dom.byId("editable").value;
 				var editButton = dom.byId("editButton");
 				if(dom.byId("useCategory").value){
@@ -105,6 +104,7 @@
 						list = new StoreList(listParams);
 					}
 				}
+				list.style.height = parseInt(dom.byId("height").value) + "px";
 				list.store = createStore(parseInt(dom.byId("entriesCount").value), useIcon, useRightText, useRightIcon, useRightIcon2);
 				list.placeAt(dom.byId("list"));
 				list.startup();
@@ -154,7 +154,7 @@
 		}
 		::-webkit-scrollbar-thumb:hover {
 			background-color: #aaa;
-		}		
+		}
 	</style>
 </head>
 <body>
@@ -167,7 +167,7 @@
 			<option value="">No</option>
 		</select>
 		<label for="height">Height in px:</label>
-		<input id="height" type="number" value="200"></input>
+		<input id="height" type="number" value="200">
 		<label for="listStyle">Style:</label>
 		<select id="listStyle">
 			<option value="duiRoundRectList">Round rect</option>
@@ -202,7 +202,7 @@
 		</select>
 		<br>
 		<label for="entriesCount">Nb of entries:</label>
-		<input id="entriesCount" type="number" value="500"></input>
+		<input id="entriesCount" type="number" value="500">
 		<br>
 		<label for="useCategory">Categorized entries:</label>
 		<select id="useCategory">
@@ -218,10 +218,10 @@
 		</select>
 		<br>
 		<label for="pageLength">Page length:</label>
-		<input id="pageLength" type="number" value="20"></input>
+		<input id="pageLength" type="number" value="20">
 		<br>
 		<label for="maxPages">Max nb of pages:</label>
-		<input id="maxPages" type="number" value="2"></input>
+		<input id="maxPages" type="number" value="2">
 		<br>
 		<label for="useMaskingPanel">Mask on page update:</label>
 		<select id="useMaskingPanel">
@@ -238,7 +238,7 @@
 		<button id="buildButton">Build</button>
 	</div>
 	<p>
-	<button id="editButton" style='display: none; margin-bottom: 15px;' disabled="disabled";></button>
+	<button id="editButton" style='display: none; margin-bottom: 15px;' disabled="disabled"></button>
 	<br>
 	<div id="list"></div>
 	<p>
