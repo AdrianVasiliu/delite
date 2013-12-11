@@ -147,13 +147,10 @@ define(["dcl/dcl",
 		/////////////////////////////////
 
 		/*jshint unused:false */
-		deleteEntry: dcl.after(function (args, result) {
-			var entryIndex = args[0], deleteFromStore = args[1];
+		deleteEntry: dcl.before(function (entryIndex, deleteFromStore) {
 			if (deleteFromStore) {
-				/////////////////////////////////////////////////
-				// TODO: REMOVE FROM STORE (NEED THE ENTRY ID)
-				/////////////////////////////////////////////////
-				console.log("TODO: remove entry from store (AND UPDATE INTERNAL _firstLoaded / _lastLoaded ?)");
+				this.store.remove(this.store.getIdentity(this.getEntryCellByIndex(entryIndex).entry));
+				this._lastLoaded--;
 			}
 		}),
 

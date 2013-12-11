@@ -25,9 +25,8 @@
 			"dui/list/mixins/Editable",
 			"dui/list/mixins/StoreModel",
 			"dojo/dom",
-			"dojo/request",
-			"dojo/store/util/QueryResults"
-		], function(register, lang, domReady, on, List, Scrollable, Editable, StoreModel, dom, request, QueryResults){
+			"dojo/store/Memory"
+		], function(register, lang, domReady, on, List, Scrollable, Editable, StoreModel, dom, Memory){
 			domReady(function () {
 				document.body.dojoClick = false; // this is to avoid https://bugs.dojotoolkit.org/ticket/17578
 			});
@@ -38,35 +37,19 @@
 			var ScrollableEditableStoreList = register("d-seslist", [List, StoreModel, Scrollable, Editable], {});
 			// List model
 			var useIcon, useRightText, useRightIcon, useRightIcon2;
-			var entriesStore = {
-					entriesCount: 2000,
-					query: function(query, options){
-						var promise = request.get('./data.txt').then(lang.hitch(this,
-							function(response){
-								var i;
-								var category;
-								var start = options ? (options.start ? options.start : 0) : 0;;
-								var count = options && options.count;
-								var entries = [];
-								for(i=start; i < this.entriesCount; i++){
-									if (count && ((i - start) >= count)) {
-										break;
-									} else {
-										category = 'category ' + Math.floor(i / 10);
-										entries[i - start] = {category: category,
-															  label: 'this is list entry ' + i,
-															  icon: useIcon ? '../../mobile/tests/images/i-icon-' + (i % 10 + 1) + '.png' : null,
-															  rightText: useRightText ? 'right text ' + i : null,
-															  rightIcon: useRightIcon ? '../../mobile/tests/images/a-icon-1.png' : null,
-															  rightIcon2: useRightIcon2 ? '../../mobile/tests/images/b-icon-' + (i % 8 + 1) + '.png' : null}; 
-									}
-								}
-								return entries;
-							}
-						));
-						return new QueryResults(promise);
-					}	
-			};
+			var createStore = function (entriesCount, useIcon, useRightText, useRightIcon, useRightIcon2) {
+				var i = 0, data = [];
+				for (; i < entriesCount; i++) {
+					data.push({category: 'category ' + Math.floor(i / 10),
+							  id: 'ref' + i,
+							  label: 'this is list entry ' + i,
+							  icon: useIcon ? '../../mobile/tests/images/i-icon-' + (i % 10 + 1) + '.png' : null,
+							  rightText: useRightText ? 'right text ' + i : null,
+							  rightIcon: useRightIcon ? '../../mobile/tests/images/a-icon-1.png' : null,
+							  rightIcon2: useRightIcon2 ? '../../mobile/tests/images/b-icon-' + (i % 8 + 1) + '.png' : null});
+				}
+				return new Memory({data: data, idProperty: 'id'});				
+			}
 			// List
 			var list = null;
 			// Builder
@@ -109,7 +92,6 @@
 				}else{
 					useRightIcon2 = false;
 				};
-				entriesStore.entriesCount = parseInt(dom.byId("entriesCount").value);
 				if(dom.byId("scrollable").value){
 					if(editable){
 						list = new ScrollableEditableStoreList(listParams);
@@ -123,7 +105,7 @@
 						list = new StoreList(listParams);
 					}
 				}
-				list.store = entriesStore;
+				list.store = createStore(parseInt(dom.byId("entriesCount").value), useIcon, useRightText, useRightIcon, useRightIcon2);
 				list.placeAt(dom.byId("list"));
 				list.startup();
 				if(editable){

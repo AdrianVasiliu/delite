@@ -20,9 +20,7 @@ define(["dcl/dcl",
 		moveable: true, // Should be a statefull property
 
 		deleteable: true,  // Should be a statefull property
-
-		deleteFromStore: true,
-
+		
 		/////////////////////////////////
 		// Private attributes
 		/////////////////////////////////
@@ -196,12 +194,13 @@ define(["dcl/dcl",
 						this._showDeleteButton(entryIndex);
 						this._indexOfDeleteableEntry = entryIndex;
 						resetDeleteableEntry = false;
+						this.focusChild(this.getEntryCellByIndex(entryIndex));
 						break;
 					} else if (domClass.contains(node, "duiListEntryRightEdit")) {
 						if (this._indexOfDeleteableEntry === entryIndex) {
 							this._hideDeleteButton(entryIndex);
 							this._indexOfDeleteableEntry = -1;
-							this.deleteEntry(entryIndex, this.deleteFromStore);
+							this.deleteEntry(entryIndex, true);
 						}
 						break;
 					}
@@ -215,12 +214,12 @@ define(["dcl/dcl",
 		},
 
 		_onCellKeydown: function (evt, entryIndex) {
-			if (evt.keyCode === keys.DELETE && this.deleteable) {
+			if (entryIndex != null && evt.keyCode === keys.DELETE && this.deleteable) {
 				if (this._indexOfDeleteableEntry >= 0) {
 					if (this._indexOfDeleteableEntry === entryIndex) {
 						this._hideDeleteButton(entryIndex);
 						this._indexOfDeleteableEntry = -1;
-						this.deleteEntry(entryIndex, this.deleteFromStore);
+						this.deleteEntry(entryIndex, true);
 					} else {
 						this._hideDeleteButton(this._indexOfDeleteableEntry);
 						this._showDeleteButton(entryIndex);
