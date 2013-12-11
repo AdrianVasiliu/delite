@@ -1,5 +1,5 @@
 define(function(){ return '\
-.duiNativeScrollable {\
+.duiScrollable {\
   -webkit-overflow-scrolling: touch;\
   overflow-y: scroll;\
   overflow-x: hidden;\

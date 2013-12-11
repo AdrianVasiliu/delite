@@ -20,7 +20,7 @@
 		    "dui/register",
 			"dui/List",
 			"dui/list/mixins/Editable",
-			"dui/list/mixins/NativeScrollable"
+			"dui/list/mixins/ScrollableList"
 		], function (register, List, Editable, Scrollable) {
 			var ScrollableList = register("d-slist", [List, Scrollable], {});
 			var EditableList = register("d-editable-slist", [ScrollableList, Editable], {});

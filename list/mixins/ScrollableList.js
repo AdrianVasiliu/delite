@@ -3,13 +3,13 @@ define(["dcl/dcl",
 		"dojo/_base/lang",
 		"dojo/dom-construct",
 		"dui/Widget",
-		"../../themes/load!../../themes/{{theme}}/ScrollableList" // for duiNativeScrollable
+		"../../themes/load!../../themes/{{theme}}/ScrollableList" // for duiScrollable
 ], function (dcl, register, lang, domConstruct, Widget) {
 
 	return dcl(null, {
 		// summary:
-		//		NativeScrollable wraps a Widget inside a scrollable div (viewport).
-		//		The height of this div is defined by the height parameter of the NativeScrollable mixin.
+		//		ScrollableList wraps a Widget inside a scrollable div (viewport).
+		//		The height of this div is defined by the height parameter of the ScrollableList mixin.
 
 		/////////////////////////////////
 		// Private attributes
@@ -76,7 +76,7 @@ define(["dcl/dcl",
 
 		buildRendering: dcl.after(function () {
 			// Create a scrollable container and add the widget node to it
-			this._viewportNode = domConstruct.create("div", {class: "duiNativeScrollable"});
+			this._viewportNode = domConstruct.create("div", {class: "duiScrollable"});
 			register.dcl.mix(this._viewportNode, new Widget());
 			if (this.parentNode) {
 				domConstruct.place(this._viewportNode, this, "after");
