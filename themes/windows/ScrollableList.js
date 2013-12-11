@@ -13,7 +13,7 @@ define(function(){ return '\
   background-size: 27px 27px;\
   background-repeat: no-repeat;\
 }\
-.duiNativeScrollable {\
+.duiScrollable {\
   -webkit-overflow-scrolling: touch;\
   overflow-y: scroll;\
   overflow-x: hidden;\
