@@ -146,17 +146,33 @@ define(["dcl/dcl",
 		// Public methods from List
 		/////////////////////////////////
 
-		/*jshint unused:false */
-		deleteEntry: dcl.before(function (entryIndex, doNotDeleteFromStore) {
-			var cell;
-			if (!doNotDeleteFromStore) {
-				cell = this.getEntryCellByIndex(entryIndex);
+		deleteEntry: dcl.superCall(function (sup) {
+			return function (entryIndex, doNotDeleteFromStore) {
+				var cell = this.getEntryCellByIndex(entryIndex),
+					entry, entrySelected = false;
 				if (cell) {
-					this.store.remove(this.store.getIdentity(cell.entry));
-					this._lastLoaded--;
+					entry = cell.entry;
+					if (doNotDeleteFromStore) {
+						if (this.selectionMode !== "none") {
+							entrySelected = this.isSelected(entry);
+						}
+					} else {
+						// TODO: THE FOLLOWING STORE METHODS CAN RETURN A PROMISE...
+						this.store.remove(this.store.getIdentity(entry));
+						this._lastLoaded--;
+					}
+					sup.apply(this, arguments);
+					if (doNotDeleteFromStore  && this.selectionMode !== "none") {
+						this.setSelected(entry, entrySelected);
+					}
 				}
-			}
+			};
 		}),
+
+		getIdentity: function (entry) {
+			// TODO: THE STORE METHOD CAN RETURN A PROMISE
+			return this.store.getIdentity(entry);
+		},
 
 		/////////////////////////////////
 		// Private methods

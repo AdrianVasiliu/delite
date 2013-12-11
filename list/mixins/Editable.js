@@ -69,8 +69,9 @@ define(["dcl/dcl",
 		}),
 
 		enteredViewCallback: dcl.after(function () {
-			if (this.categoryAttribute) {
-				this.moveable = false; // moving entries not yet supported on categorized lists
+			if (this.categoryAttribute || (this.pageLength && this.autoLoad)) {
+				// moving entries not yet supported on categorized lists or on paginated lists with auto loading
+				this.moveable = false;
 			}
 			if (this.deleteable) {
 				this.onCellEvent("click", lang.hitch(this, "_onCellClick"));

@@ -168,6 +168,17 @@ define(["dcl/dcl",
 			});
 		},
 
+		getCellByEntry: function (entry) {
+			var cells = query("." + this.baseClass + this._cssSuffixes.entry, this.containerNode);
+			var cellIndex = cells.map(function (cell) {
+									return cell.entry;
+								})
+								.indexOf(entry);
+			if (cellIndex >= 0) {
+				return cells[cellIndex];
+			}
+		},
+
 		getEntryCellByIndex: function (index) {
 			return query("." + this.baseClass + this._cssSuffixes.entry, this.containerNode)[index];
 		},
@@ -175,7 +186,6 @@ define(["dcl/dcl",
 		getEntryCellIndex: function (cell) {
 			var index = query("." + this.baseClass + this._cssSuffixes.entry, this.containerNode).indexOf(cell);
 			return index < 0 ? null : index;
-			
 		},
 
 		getParentCell: function (node) {
@@ -220,10 +230,13 @@ define(["dcl/dcl",
 
 		deleteEntry: function (index) {
 			var cell = this.getEntryCellByIndex(index),
-				nextFocusCell;
-			// Make sure that the cell is not selected before removing it
-			if (this.isSelected(index)) {
-				this.setSelected(index, false);
+				nextFocusCell, entry;
+			if (cell) {
+				entry = cell.entry;
+				// Make sure that the entry is not selected before removing it
+				if (this.isSelected(entry)) {
+					this.setSelected(entry, false);
+				}
 			}
 			// Update focus if necessary
 			if (this._getFocusedCell() === cell) {
@@ -262,18 +275,18 @@ define(["dcl/dcl",
 		// Selection implementation
 		/////////////////////////////////
 
-		getIdentity: function (item) {
-			return item;
+		getIdentity: function (entry) {
+			return entry;
 		},
 
-		updateRenderers: function (indexes) {
-			var currentIndex, cell;
+		updateRenderers: function (entries) {
+			var i = 0, currentEntry, cell;
 			if (this.selectionMode !== "none") {
-				for (var i = 0; i < indexes.length; i++) {
-					currentIndex = indexes[i];
-					cell = this.getEntryCellByIndex(currentIndex);
+				for (; i < entries.length; i++) {
+					currentEntry = entries[i];
+					cell = this.getCellByEntry(currentEntry);
 					if (cell) {
-						domClass.toggle(cell, "duiSelected", this.isSelected(currentIndex));
+						domClass.toggle(cell, "duiSelected", this.isSelected(currentEntry));
 					}
 				}
 			}
@@ -338,7 +351,7 @@ define(["dcl/dcl",
 			cell.startup();
 			cell.entry = entry;
 			if (this.selectionMode !== "none") {
-				domClass.toggle(cell, "duiSelected", this.isSelected(index));
+				domClass.toggle(cell, "duiSelected", this.isSelected(entry));
 			}
 			return cell;
 		},
@@ -499,13 +512,15 @@ define(["dcl/dcl",
 		/////////////////////////////////
 
 		_handleSelection: function (event) {
-			var entryIndex, entrySelected, eventCell;
+			var entry, entrySelected, eventCell;
 			eventCell = this.getParentCell(event.target || event.srcElement);
-			entryIndex = this.getEntryCellIndex(eventCell);
-			if (entryIndex != null) {
-				entrySelected = !this.isSelected(entryIndex);
-				this.setSelected(entryIndex, entrySelected);
-				this.emit(entrySelected ? "entrySelected" : "entryDeselected", {entryIndex: entryIndex});
+			if (eventCell) {
+				entry = eventCell.entry;
+				if (entry) {
+					entrySelected = !this.isSelected(entry);
+					this.setSelected(entry, entrySelected);
+					this.emit(entrySelected ? "entrySelected" : "entryDeselected", {entry: entry});
+				}
 			}
 		}
 
