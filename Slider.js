@@ -123,7 +123,9 @@ define([
 				});
 			}
 			if (props.name) {
-				this.valueNode.name = this.name;
+				var name = this.name;
+				this.removeAttribute("name");
+				this.valueNode.setAttribute("name", name); // won't restore after a browser back operation since name changed nodes
 			}
 			if (props.max) {
 				this.focusNode.setAttribute("aria-valuemax", this.max);
@@ -318,8 +320,8 @@ define([
 
 				point, pixelValue, value,
 				node = this;
-			if (!isNaN(parseFloat(this.valueNode.value))) { // browser back button or value coded on INPUT
-				this.value = this.valueNode.value;
+			if (!isNaN(parseFloat(this.valueNode.value))) { // INPUT value
+				this.value = this.valueNode.value; // set this here in case refreshProperties runs before startup (Chrome)
 			}
 			this.own(
 				on(this, touch.press, beginDrag),
@@ -331,7 +333,13 @@ define([
 		},
 
 		startup: function () {
-			this.valueNode.setAttribute("value", this.value); // set the reset value once
+			var valueNodeValue = this.valueNode.value; // setting the DOM attribute can change the element value
+			if (this.valueNode.getAttribute("value") === null) {
+				this.valueNode.setAttribute("value", this.value); // set the reset value
+			}
+			if (!isNaN(parseFloat(valueNodeValue))) { // browser back button or value coded on INPUT
+				this.value = valueNodeValue; // the valueNode value has precedence over the widget markup value
+			}
 			// if the form is reset, then notify the widget to reposition the handles
 			if (this.valueNode.form) {
 				this.own(on(this.valueNode.form, "reset", lang.hitch(this, "defer",
