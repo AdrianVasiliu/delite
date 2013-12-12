@@ -1,22 +1,21 @@
 define(["dcl/dcl",
 		"dui/register",
 		"dojo/_base/lang",
-		// "dojo/dom-construct",
 		"dojo/dom-class",
 		"dui/Widget",
 		"../../themes/load!../../themes/{{theme}}/ScrollableList" // for duiScrollable
-], function (dcl, register, lang, /* domConstruct, */ domClass, Widget) {
+], function (dcl, register, lang, domClass, Widget) {
 
 	return dcl(null, {
 		// summary:
-		//		ScrollableList wraps a Widget inside a scrollable div (viewport).
+		//		ScrollableList adds scrolling capabilities to a List widget.
 
 		/////////////////////////////////
 		// Private attributes
 		/////////////////////////////////
 
 		_isScrollable: true, // Flag currently used in StoreModel and Editable. TODO: review/redesign.
-		_scroll: 0, // current scroll on the y axis TODO: review/redesign.
+		_scroll: 0, // scroll amount on the y axis at time of the latest "scroll" event. TODO: review/redesign.
 
 		/////////////////////////////////
 		// Public methods
@@ -26,19 +25,10 @@ define(["dcl/dcl",
 			this.scrollTop += y;
 		},
 
-		/*jshint unused:false */
-		onScroll: dcl.before(function (scroll) {
-			// abstract method
-		}),
-
 		getCurrentScroll: function () {
 			return this._scroll;
 		},
 
-		getViewportClientRect: function () {
-			return this.getBoundingClientRect();
-		},
-		
 		isTopScroll: function () {
 			// summary:
 			//		Returns true if container's scroll has reached the maximum at
@@ -67,24 +57,36 @@ define(["dcl/dcl",
 			return this.offsetHeight + this.scrollTop >= this.scrollHeight;
 		},
 
-		isTopOfNodeBelowTopOfViewport: function (node) {
-			return this.getTopOfNodeDistanceToTopOfViewport(node) >= 0;
+		isBelowTop: function (node) {
+			// summary:
+			//		Returns true if the top of the node is below or exactly at the 
+			//		top of the scrolling container. Returns false otherwise.
+			return this.getTopDistance(node) >= 0;
 		},
 
-		getTopOfNodeDistanceToTopOfViewport: function (node) {
+		getTopDistance: function (node) {
+			// summary:
+			//		Returns the distance between the top of the node and 
+			//		the top of the scrolling container.
 			return node.offsetTop - this.getCurrentScroll();
 		},
-
-		isBottomOfNodeBeforeBottomOfViewport: function (node) {
-			return this.getBottomOfNodeDistanceToBottomOfViewport(node) <= 0;
+		
+		isAboveBottom: function (node) {
+			// summary:
+			//		Returns true if the bottom of the node is above or exactly at the 
+			//		bottom of the scrolling container. Returns false otherwise.
+			return this.getBottomDistance(node) <= 0;
 		},
 
-		getBottomOfNodeDistanceToBottomOfViewport: function (node) {
-			var viewportClientRect = this.getViewportClientRect();
+		getBottomDistance: function (node) {
+			// summary:
+			//		Returns the distance between the bottom of the node and 
+			//		the bottom of the scrolling container.
+			var clientRect = this.getBoundingClientRect();
 			return node.offsetTop +
 				node.offsetHeight -
 				this.getCurrentScroll() -
-				(viewportClientRect.bottom - viewportClientRect.top);
+				(clientRect.bottom - clientRect.top);
 		},
 
 		/////////////////////////////////
@@ -93,11 +95,7 @@ define(["dcl/dcl",
 
 		buildRendering: dcl.after(function () {
 			domClass.add(this, "duiScrollable");
-			this.addEventListener("scroll", lang.hitch(this, "_nsOnBrowserScroll"), true);
-		}),
-
-		destroy: dcl.after(function () {
-			this.removeEventListener("scroll", lang.hitch(this, "_nsOnBrowserScroll"), true);
+			this.on("scroll", this._onBrowserScroll);
 		}),
 
 		/////////////////////////////////
@@ -108,7 +106,7 @@ define(["dcl/dcl",
 			return function () {
 				var cell = sup.apply(this, arguments);
 				while (cell) {
-					if (this.isTopOfNodeBelowTopOfViewport(cell)) {
+					if (this.isBelowTop(cell)) {
 						break;
 					}
 					cell = cell.nextElementSibling;
@@ -121,7 +119,7 @@ define(["dcl/dcl",
 			return function () {
 				var cell = sup.apply(this, arguments);
 				while (cell) {
-					if (this.isBottomOfNodeBeforeBottomOfViewport(cell)) {
+					if (this.isAboveBottom(cell)) {
 						break;
 					}
 					cell = cell.previousElementSibling;
@@ -134,10 +132,8 @@ define(["dcl/dcl",
 		// Event handlers
 		/////////////////////////////////
 
-		_nsOnBrowserScroll: function (event) {
-			var oldScroll = this._scroll;
+		_onBrowserScroll: dcl.before(function () {
 			this._scroll = this.scrollTop;
-			this.onScroll(oldScroll - this._scroll);
-		}
+		})
 	});
 });
