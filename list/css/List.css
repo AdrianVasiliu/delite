@@ -74,7 +74,6 @@
 	position: relative; /* needed for moving list items in editable mode */
     margin: 0 9px !important;
   	padding: 0;
-/*  	border: 1px solid #adaaad;*/
   	border-radius: 8px;
 }
 
