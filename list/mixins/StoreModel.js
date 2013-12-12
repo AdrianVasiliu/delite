@@ -1,14 +1,14 @@
 define(["dcl/dcl",
-        "dui/register",
-        "dojo/_base/lang",
-        "dojo/string",
-        "dojo/when",
-        "dojo/Deferred",
-        "dojo/dom",
-        "dojo/dom-construct",
-        "dojo/dom-class",
-        "dojo/sniff",
-        "dui/Widget",
+		"dui/register",
+		"dojo/_base/lang",
+		"dojo/string",
+		"dojo/when",
+		"dojo/Deferred",
+		"dojo/dom",
+		"dojo/dom-construct",
+		"dojo/dom-class",
+		"dojo/sniff",
+		"dui/Widget"
 ], function (dcl, register, lang, string, when, Deferred, dom, domConstruct, domClass, has, Widget) {
 
 	// TODO: SHOULD THIS WIDGET BE DEFINED IN ITS OWN SOURCE FILE (IN THIS CASE, A MORE GENERIC "ActionCell" WIDGET) ?
@@ -118,7 +118,7 @@ define(["dcl/dcl",
 		_previousPageLoader: null,
 		_firstLoaded: -1,
 		_lastLoaded: -1,
-		_noExtremity: true,
+		_noExtremity: true, // TODO: find a clearer while still short name...
 
 		/////////////////////////////////
 		// Widget lifecycle
@@ -284,7 +284,7 @@ define(["dcl/dcl",
 					try {
 						// scroll the currently focused child so that it is at the top of the screen
 						if (this._isScrollable) {
-							this.scrollBy(this.getTopOfNodeDistanceToTopOfViewport(this._getFocusedCell()));
+							this.scrollBy(this.getTopDistance(this._getFocusedCell()));
 						} else {
 							// TODO: try to scroll the page ?
 						}
@@ -336,7 +336,7 @@ define(["dcl/dcl",
 					try {
 						// scroll the currently focused child so that it is at the bottom of the screen
 						if (this._isScrollable) {
-							this.scrollBy(this.getBottomOfNodeDistanceToBottomOfViewport(this._getFocusedCell()));
+							this.scrollBy(this.getBottomDistance(this._getFocusedCell()));
 						} else {
 							// TODO: try to scroll the page
 						}
@@ -355,22 +355,21 @@ define(["dcl/dcl",
 		// Event handlers
 		/////////////////////////////////
 
-		onScroll: dcl.after(function () {
+		_onBrowserScroll: dcl.after(function () {
+			// Only called when the ScrollableList mixin is used. 
 			if (this.autoLoad) {
-				if (this._isScrollable) {
-					if (this.isTopScroll()) {
-						if (this._noExtremity && this._previousPageLoader) {
-							this._previousPageLoader._onClick();
-						}
-						this._noExtremity = false;
-					} else if (this.isBottomScroll()) {
-						if (this._noExtremity && this._nextPageLoader) {
-							this._nextPageLoader._onClick();
-						}
-						this._noExtremity = false;
-					} else {
-						this._noExtremity = true;
+				if (this.isTopScroll()) {
+					if (this._noExtremity && this._previousPageLoader) {
+						this._previousPageLoader._onClick();
 					}
+					this._noExtremity = false;
+				} else if (this.isBottomScroll()) {
+					if (this._noExtremity && this._nextPageLoader) {
+						this._nextPageLoader._onClick();
+					}
+					this._noExtremity = false;
+				} else {
+					this._noExtremity = true;
 				}
 			}
 		}),
@@ -415,19 +414,19 @@ define(["dcl/dcl",
 
 		_displayLoadingPanel: function () {
 			if (!this.autoLoad || !has("touch")) {
-				var viewportGeometry = this.getViewportClientRect();
+				var clientRect = this.clientRect();
 				var message = string.substitute(this.loadingMessage, this);
 				this._loadingPanel = domConstruct.create("div",
 														 {innerHTML: message,
 														  className: this.baseClass + "-loadingPanel",
 														  style: "position: absolute; line-height: "
-															+ (viewportGeometry.bottom - viewportGeometry.top)
+															+ (clientRect.bottom - clientRect.top)
 															+ "px; width: "
-															+ (viewportGeometry.right - viewportGeometry.left)
+															+ (clientRect.right - clientRect.left)
 															+ "px; top: "
-															+ (viewportGeometry.top + window.scrollY)
+															+ (clientRect.top + window.scrollY)
 															+ "px; left: "
-															+ (viewportGeometry.left + window.scrollX)
+															+ (clientRect.left + window.scrollX)
 															+ "px;" },
 														 document.body);
 			}

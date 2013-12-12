@@ -303,10 +303,10 @@ define(["dcl/dcl",
 				}
 			}
 			if (this._isScrollable) {
-				var viewportRect = this.getViewportClientRect();
-				if (clientY < viewportRect.top + 15) {
+				var clientRect = this.getBoundingClientRect();
+				if (clientY < clientRect.top + 15) {
 					this._editableAutoScroll(-15, clientY);
-				} else if (clientY > viewportRect.top + viewportRect.height - 15) {
+				} else if (clientY > clientRect.top + clientRect.height - 15) {
 					this._editableAutoScroll(15, clientY);
 				} else {
 					this._stopEditableAutoScroll();
