@@ -33,13 +33,15 @@
 							  rightIcon: '../../mobile/tests/images/a-icon-1.png',
 							  rightIcon2: '../../mobile/tests/images/b-icon-' + (i % 8 + 1) + '.png'});
 			}
-			var list4 = new ScrollableList({id:"list4", height:"200px", entries: [{label: 'entry 1'},{label: 'entry 2'}]}).placeAt("list4container");
+			var list4 = new ScrollableList({id:"list4", entries: [{label: 'entry 1'},{label: 'entry 2'}]}).placeAt("list4container");
 			list4.startup();
-			var list5 = new EditableList({id:"list5", height:"200px", entries: entries, selectionMode: "single"}).placeAt("list5container");
+			var list5 = new EditableList({id:"list5", entries: entries, selectionMode: "single"}).placeAt("list5container");
+			list5.style.height = "200px";
 			list5.startup();
-			var list6 = new EditableList({id:"list6", height:"200px", categoryAttribute: "category", entries: entries, selectionMode: "single"}).placeAt("list6container");
+			var list6 = new EditableList({id:"list6", categoryAttribute: "category", entries: entries, selectionMode: "single"}).placeAt("list6container");
+			list6.style.height = "200px";
 			list6.startup();
-			register.parse();			
+			register.parse();
 		});
 	</script>
 	<style>
@@ -70,7 +72,7 @@
 					  {label: "list entry 5"}]'></d-slist>
 	<br>
  	<h1>Markup list with 10 entries declared as markup, and selectionMode set to "multiple"</h1>
-	<d-slist id="list3" height="200px" selectionMode="multiple">
+	<d-slist id="list3" style="height: 200px" selectionMode="multiple">
 		<d-list-entry entry="{label: 'list entry 1', rightText: 'right text 1'}"></d-list-entry>
 		<d-list-entry entry="{label: 'list entry 2', rightText: 'right text 2'}"></d-list-entry>
 		<d-list-entry entry="{label: 'list entry 3', rightText: 'right text 3'}"></d-list-entry>
