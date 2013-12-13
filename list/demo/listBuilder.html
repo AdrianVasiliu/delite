@@ -16,9 +16,9 @@
 
 	<script type="text/javascript">
 		require([
-		    "dui/register",
-		    "dojo/_base/lang",
-		    "dojo/domReady",
+			"dui/register",
+			"dojo/_base/lang",
+			"dojo/domReady",
 			"dojo/on",
 			"dui/List",
 			"dui/list/mixins/ScrollableList",
@@ -33,8 +33,6 @@
 			// List mixins
 			var StoreList = register("d-slist", [List, StoreModel], {});
 			var EditableStoreList = register("d-eslist", [List, Editable, StoreModel], {});
-			var ScrollableStoreList = register("d-sslist", [List, StoreModel, Scrollable], {});
-			var ScrollableEditableStoreList = register("d-seslist", [List, StoreModel, Scrollable, Editable], {});
 			// List model
 			var useIcon, useRightText, useRightIcon, useRightIcon2;
 			var createStore = function (entriesCount, useIcon, useRightText, useRightIcon, useRightIcon2) {
@@ -64,6 +62,7 @@
 					maxPages: parseInt(dom.byId("maxPages").value),
 					baseClass: dom.byId("listStyle").value,
 					autoLoad: dom.byId("autoLoad").value,
+					scrollDisabled: !dom.byId("scrollable").value,
 					useMaskingPanel: dom.byId("useMaskingPanel").value
 				};
 				var editable = dom.byId("editable").value;
@@ -91,18 +90,10 @@
 				}else{
 					useRightIcon2 = false;
 				};
-				if(dom.byId("scrollable").value){
-					if(editable){
-						list = new ScrollableEditableStoreList(listParams);
-					}else{
-						list = new ScrollableStoreList(listParams);
-					}
+				if(editable){
+					list = new EditableStoreList(listParams);
 				}else{
-					if(editable){
-						list = new EditableStoreList(listParams);
-					}else{
-						list = new StoreList(listParams);
-					}
+					list = new StoreList(listParams);
 				}
 				list.style.height = parseInt(dom.byId("height").value) + "px";
 				list.store = createStore(parseInt(dom.byId("entriesCount").value), useIcon, useRightText, useRightIcon, useRightIcon2);
@@ -141,9 +132,10 @@
 			font-size: 17px;
 			background-color: #c5ccd3;
 		}
+		/* TODO: styling of scrollbars is here only temporarily */
+		/*
 		::-webkit-scrollbar {
 			width: 12px;
-			/* display: none; */
 		}
 		::-webkit-scrollbar-track {
 			background-color: #eaeaea;
@@ -155,6 +147,7 @@
 		::-webkit-scrollbar-thumb:hover {
 			background-color: #aaa;
 		}
+		*/
 	</style>
 </head>
 <body>

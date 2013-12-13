@@ -1,34 +1,45 @@
 define(["dcl/dcl",
-		"dui/register",
-		"dojo/_base/lang",
+		"../../register",
 		"dojo/dom-class",
-		"dui/Widget",
+		"../../Widget",
+		"../../Invalidating",
 		"../../themes/load!../../themes/{{theme}}/ScrollableList" // for duiScrollable
-], function (dcl, register, lang, domClass, Widget) {
+], function (dcl, register, domClass, Widget, Invalidating) {
 
-	return dcl(null, {
+	return dcl(Invalidating, {
 		// summary:
 		//		ScrollableList adds scrolling capabilities to a List widget.
+
+		// scrollDisabled: Boolean
+		//		If true, the scrolling capabilities are disabled. The default value is false.
+		scrollDisabled: false,
 
 		/////////////////////////////////
 		// Private attributes
 		/////////////////////////////////
 
-		_isScrollable: true, // Flag currently used in StoreModel and Editable. TODO: review/redesign.
-		_scroll: 0, // scroll amount on the y axis at time of the latest "scroll" event. TODO: review/redesign.
+		// _scroll: Number
+		//		The scroll amount on the y axis at time of the latest "scroll" event. 
+		_scroll: 0, // TODO: review/redesign
 
 		/////////////////////////////////
 		// Public methods
 		/////////////////////////////////
 
 		scrollBy: function (y) {
+			// summary:
+			//		Scrolls by the given amount on the y axis.
 			this.scrollTop += y;
 		},
 
-		getCurrentScroll: function () {
+		getScroll: function () {
+			// summary:
+			//		Returns the scroll amount on the y axis at the time of the latest
+			//		"scroll" event.
+			// returns: Number
 			return this._scroll;
 		},
-
+		
 		isTopScroll: function () {
 			// summary:
 			//		Returns true if container's scroll has reached the maximum at
@@ -68,7 +79,7 @@ define(["dcl/dcl",
 			// summary:
 			//		Returns the distance between the top of the node and 
 			//		the top of the scrolling container.
-			return node.offsetTop - this.getCurrentScroll();
+			return node.offsetTop - this.getScroll();
 		},
 		
 		isAboveBottom: function (node) {
@@ -85,7 +96,7 @@ define(["dcl/dcl",
 			var clientRect = this.getBoundingClientRect();
 			return node.offsetTop +
 				node.offsetHeight -
-				this.getCurrentScroll() -
+				this.getScroll() -
 				(clientRect.bottom - clientRect.top);
 		},
 
@@ -93,9 +104,19 @@ define(["dcl/dcl",
 		// Widget methods updated by this mixin
 		/////////////////////////////////
 
+		preCreate: function () {
+			this.addInvalidatingProperties("scrollDisabled");
+		},
+
+		refreshRendering: function(){
+			if (!this.scrollDisabled) {
+				domClass.add(this, "duiScrollable");
+				this.on("scroll", this._scrollListHandler);
+			}
+		},
+		
 		buildRendering: dcl.after(function () {
-			domClass.add(this, "duiScrollable");
-			this.on("scroll", this._onBrowserScroll);
+			this.invalidateRendering();
 		}),
 
 		/////////////////////////////////
@@ -132,7 +153,7 @@ define(["dcl/dcl",
 		// Event handlers
 		/////////////////////////////////
 
-		_onBrowserScroll: dcl.before(function () {
+		_scrollListHandler: dcl.before(function () {
 			this._scroll = this.scrollTop;
 		})
 	});

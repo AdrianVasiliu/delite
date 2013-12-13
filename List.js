@@ -1,23 +1,24 @@
 define(["dcl/dcl",
-        "./register",
-        "dojo/_base/lang",
-        "dojo/when",
-        "dojo/on",
-        "dojo/query",
-        "dojo/dom",
-        "dojo/dom-construct",
-        "dojo/dom-class",
-        "dojo/keys",
-        "dui/Widget",
-        "dui/Container",
-        "dui/Selection",
-        "dui/KeyNav",
-        "./list/DefaultEntryRenderer",
-        "./list/DefaultCategoryRenderer"
+	"./register",
+	"dojo/_base/lang",
+	"dojo/when",
+	"dojo/on",
+	"dojo/query",
+	"dojo/dom",
+	"dojo/dom-construct",
+	"dojo/dom-class",
+	"dojo/keys",
+	"dui/Widget",
+	"dui/Container",
+	"dui/Selection",
+	"dui/KeyNav",
+	"./list/DefaultEntryRenderer",
+	"./list/DefaultCategoryRenderer",
+	"./list/mixins/ScrollableList"
 ], function (dcl, register, lang, when, on, query, dom, domConstruct, domClass, keys, Widget, Container,
-		Selection, KeyNav, DefaultEntryRenderer, DefaultCategoryRenderer) {
+		Selection, KeyNav, DefaultEntryRenderer, DefaultCategoryRenderer, ScrollableList) {
 
-	var List = dcl([Widget, Container, Selection, KeyNav], {
+	var List = dcl([Widget, Container, Selection, ScrollableList, KeyNav], {
 
 		/////////////////////////////////
 		// Public attributes

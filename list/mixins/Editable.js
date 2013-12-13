@@ -302,24 +302,22 @@ define(["dcl/dcl",
 					this._dropPosition++;
 				}
 			}
-			if (this._isScrollable) {
-				var clientRect = this.getBoundingClientRect();
-				if (clientY < clientRect.top + 15) {
-					this._editableAutoScroll(-15, clientY);
-				} else if (clientY > clientRect.top + clientRect.height - 15) {
-					this._editableAutoScroll(15, clientY);
-				} else {
-					this._stopEditableAutoScroll();
-				}
+			var clientRect = this.getBoundingClientRect();
+			if (clientY < clientRect.top + 15) {
+				this._editableAutoScroll(-15, clientY);
+			} else if (clientY > clientRect.top + clientRect.height - 15) {
+				this._editableAutoScroll(15, clientY);
+			} else {
+				this._stopEditableAutoScroll();
 			}
 		},
 
 		_editableAutoScroll: function (rate, clientY) {
 			this._editableAutoScrollID = setTimeout(lang.hitch(this, function () {
-				var oldScroll = this._scroll;
+				var oldScroll = this.getScroll();
 				this.scrollBy(rate);
 				setTimeout(lang.hitch(this, function () {
-					var realRate = this._scroll - oldScroll;
+					var realRate = this.getScroll() - oldScroll;
 					if (realRate !== 0) {
 						if (this._placeHolder) {
 							this._placeHolderClientRect = this._placeHolder.getBoundingClientRect();
@@ -381,9 +379,7 @@ define(["dcl/dcl",
 					top: ""
 				});
 			}
-			if (this._isScrollable) {
-				this.disableTouchScroll = draggable;
-			}
+			this.disableTouchScroll = draggable;
 		},
 		
 		_placePlaceHolder: function (refNode, pos) {
