@@ -17,13 +17,11 @@
 	<script type="text/javascript">
 		var entries = 
 		require([
-		    "dui/register",
+			"dui/register",
 			"dui/List",
-			"dui/list/mixins/Editable",
-			"dui/list/mixins/ScrollableList"
-		], function (register, List, Editable, Scrollable) {
-			var ScrollableList = register("d-slist", [List, Scrollable], {});
-			var EditableList = register("d-editable-slist", [ScrollableList, Editable], {});
+			"dui/list/mixins/Editable"
+		], function (register, List, Editable) {
+			var EditableList = register("d-editable-list", [List, Editable], {});
 			var i = 0, entries = [];
 			for (; i < 30; i++) {
 				entries.push({category: 'category ' + Math.floor(i / 10),
@@ -33,7 +31,7 @@
 							  rightIcon: '../../mobile/tests/images/a-icon-1.png',
 							  rightIcon2: '../../mobile/tests/images/b-icon-' + (i % 8 + 1) + '.png'});
 			}
-			var list4 = new ScrollableList({id:"list4", entries: [{label: 'entry 1'},{label: 'entry 2'}]}).placeAt("list4container");
+			var list4 = new List({id:"list4", entries: [{label: 'entry 1'},{label: 'entry 2'}]}).placeAt("list4container");
 			list4.startup();
 			var list5 = new EditableList({id:"list5", entries: entries, selectionMode: "single"}).placeAt("list5container");
 			list5.style.height = "200px";
@@ -65,14 +63,14 @@
  	<br>
  	<br>
  	<h1>Markup list with 5 entries declared as a JSON array in the markup</h1>
-	<d-slist id="list2" entries='[{label: "list entry 1"},
+	<d-list id="list2" entries='[{label: "list entry 1"},
 					  {label: "list entry 2"},
 					  {label: "list entry 3"},
 					  {label: "list entry 4"},
-					  {label: "list entry 5"}]'></d-slist>
+					  {label: "list entry 5"}]'></d-list>
 	<br>
  	<h1>Markup list with 10 entries declared as markup, and selectionMode set to "multiple"</h1>
-	<d-slist id="list3" style="height: 200px" selectionMode="multiple">
+	<d-list id="list3" style="height: 200px" selectionMode="multiple">
 		<d-list-entry entry="{label: 'list entry 1', rightText: 'right text 1'}"></d-list-entry>
 		<d-list-entry entry="{label: 'list entry 2', rightText: 'right text 2'}"></d-list-entry>
 		<d-list-entry entry="{label: 'list entry 3', rightText: 'right text 3'}"></d-list-entry>
@@ -83,7 +81,7 @@
 		<d-list-entry entry="{label: 'list entry 8', rightText: 'right text 8'}"></d-list-entry>
 		<d-list-entry entry="{label: 'list entry 9', rightText: 'right text 9'}"></d-list-entry>
 		<d-list-entry entry="{label: 'list entry 10', rightText: 'right text 10'}"></d-list-entry>
-	</d-slist>
+	</d-list>
 	<br>
 	<h1>Programmatic list with 2 entries declared as a JSON array</h1>
 	<div id="list4container"></div>

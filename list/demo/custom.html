@@ -14,13 +14,12 @@
 		require([
 			"dui/register",
 			"dui/List",
-			"dui/list/mixins/ScrollableList",
 			"dui/list/mixins/StoreModel",
 			"dojo/dom-class",
 	        "dui/list/AbstractEntryRenderer",
-	        "dui/_TemplatedMixin",
+	        "dui/_TemplatedMixin", // TODO: no longer exists. Needes rewrite.
 	        "dojox/mobile/common"
-		], function(register, List, Scrollable, StoreModel, domClass, _EntryRendererBase, _TemplatedMixin){
+		], function(register, List, StoreModel, domClass, _EntryRendererBase, _TemplatedMixin){
 			
  			// the model that contains the list entries from the catalog
 			var catalogModel = [];
@@ -92,8 +91,7 @@
 				}
 			});
 			// create a list widget for the catalog, using the custom entries renderer
-			var ScrollableList = register("d-slist", [List, Scrollable]);
-			var list3 = new ScrollableList({id: 'list3', entries: catalogModel, entriesRenderer: CatalogEntryRenderer}, 'list3');
+			var list3 = new List({id: 'list3', entries: catalogModel, entriesRenderer: CatalogEntryRenderer}, 'list3');
 			list3.style.height = "600px";
 			// startup the list
 			list3.startup();

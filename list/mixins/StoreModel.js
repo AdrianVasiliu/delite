@@ -102,9 +102,10 @@ define(["dcl/dcl",
 		beforeLoadingMessage: "",
 
 		loadingMessage: "Loading ${pageLength} more entries...",
-
-		// If true, automatically loads next/previous page when 
-		// scrolling reaches the top/bottom
+		
+		// autoLoad: Boolean
+		//		If true, automatically loads the next or previous page when
+		//		the scrolling reaches the bottom or the top of the list content.
 		autoLoad: false,
 
 		useMaskingPanel: true, // not needed on desktop / high performance devices
@@ -283,11 +284,7 @@ define(["dcl/dcl",
 				this.defer(lang.hitch(this, function () {
 					try {
 						// scroll the currently focused child so that it is at the top of the screen
-						if (this._isScrollable) {
-							this.scrollBy(this.getTopDistance(this._getFocusedCell()));
-						} else {
-							// TODO: try to scroll the page ?
-						}
+						this.scrollBy(this.getTopDistance(this._getFocusedCell()));
 						def.resolve();
 					} catch (error) {
 						def.reject(error);
@@ -335,11 +332,7 @@ define(["dcl/dcl",
 				this.defer(lang.hitch(this, function () {
 					try {
 						// scroll the currently focused child so that it is at the bottom of the screen
-						if (this._isScrollable) {
-							this.scrollBy(this.getBottomDistance(this._getFocusedCell()));
-						} else {
-							// TODO: try to scroll the page
-						}
+						this.scrollBy(this.getBottomDistance(this._getFocusedCell()));
 						def.resolve();
 					} catch (error) {
 						def.reject(error);
@@ -355,8 +348,7 @@ define(["dcl/dcl",
 		// Event handlers
 		/////////////////////////////////
 
-		_onBrowserScroll: dcl.after(function () {
-			// Only called when the ScrollableList mixin is used. 
+		_scrollListHandler: dcl.after(function () {
 			if (this.autoLoad) {
 				if (this.isTopScroll()) {
 					if (this._noExtremity && this._previousPageLoader) {
@@ -382,7 +374,7 @@ define(["dcl/dcl",
 			this._nextPageLoader = new LoaderWidget({parentClass: this.baseClass,
 				clickToLoadMessage: string.substitute(this.beforeLoadingMessage, this),
 				loadingMessage: string.substitute(this.loadingMessage, this)});
-			if (this._isScrollable && this.useMaskingPanel && this.maxPages > 0) {
+			if (this.useMaskingPanel && this.maxPages > 0) {
 				this._nextPageLoader.beforeLoading = lang.hitch(this, this._displayLoadingPanel);
 				this._nextPageLoader.afterLoading = lang.hitch(this, this._hideLoadingPanel);
 			}
@@ -399,7 +391,7 @@ define(["dcl/dcl",
 			this._previousPageLoader = new LoaderWidget({parentClass: this.baseClass,
 				clickToLoadMessage: string.substitute(this.beforeLoadingMessage, this),
 				loadingMessage: string.substitute(this.loadingMessage, this)});
-			if (this._isScrollable && this.useMaskingPanel && this.maxPages > 0) {
+			if (this.useMaskingPanel && this.maxPages > 0) {
 				this._previousPageLoader.beforeLoading = lang.hitch(this, this._displayLoadingPanel);
 				this._previousPageLoader.afterLoading = lang.hitch(this, this._hideLoadingPanel);
 			}
