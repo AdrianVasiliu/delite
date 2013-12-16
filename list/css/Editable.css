@@ -3,13 +3,6 @@
 	padding-top: 6px;
 	padding-right: 8px;
 }
-.duiEntryNode{
-    -webkit-box-flex: 1;
-    -moz-box-flex: 1;
-    -webkit-flex: 1;
-    -ms-flex: 1;
-	flex: 1;
-}
 .duiListEntryRightEdit{
 	color: grey;
 	padding-top: 6px;
@@ -33,13 +26,6 @@
 	border-top-width: 3px !important;
 	border-top-style: dotted;
 	border-top-color: #a4b0b9;
-}
-.duiRoundRectList-entry{
-  display: -webkit-box;
-  display: -moz-box;
-  display: -ms-flexbox;
-  display: -webkit-flex;
-  display: flex;
 }
 .duiRoundRectList-deleteButton {
 	position: relative;
