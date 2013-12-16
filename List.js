@@ -111,6 +111,7 @@ define(["dcl/dcl",
 			this._enteredView = true;
 			this.setAttribute("tabindex", "0");
 			this.tabIndex = "0";
+			domClass.add(this, this.baseClass);
 			// END OF WORKAROUND
 
 			// This is not a workaround and should be defined here,
