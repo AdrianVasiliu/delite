@@ -8,8 +8,9 @@ define(["dcl/dcl",
 		"dojo/dom-construct",
 		"dojo/dom-class",
 		"dojo/sniff",
+		"dojo/store/Observable",
 		"dui/Widget"
-], function (dcl, register, lang, string, when, Deferred, dom, domConstruct, domClass, has, Widget) {
+], function (dcl, register, lang, string, when, Deferred, dom, domConstruct, domClass, has, Observable, Widget) {
 
 	// TODO: SHOULD THIS WIDGET BE DEFINED IN ITS OWN SOURCE FILE (IN THIS CASE, A MORE GENERIC "ActionCell" WIDGET) ?
 	var LoaderWidget = register("d-list-loader", [HTMLElement, dcl([Widget], {
@@ -120,6 +121,8 @@ define(["dcl/dcl",
 		_firstLoaded: -1,
 		_lastLoaded: -1,
 		_noExtremity: true, // TODO: find a clearer while still short name...
+		_pages: null,
+		_pageObserverHandles: null,
 
 		/////////////////////////////////
 		// Widget lifecycle
@@ -130,6 +133,9 @@ define(["dcl/dcl",
 				this.beforeLoadingMessage = this.autoLoad ? "Loading ${pageLength} more entries..."
 						: "Click to load ${pageLength} more entries";
 			}
+			this.store = new Observable(this.store); // TODO: we shouldn't update this.store value. Either uses a private value or ask the user to wrap the store into an observable
+			this._pages = [];
+			this._pageObserverHandles = [];
 		}),
 
 		destroy: dcl.after(function () {
@@ -179,7 +185,15 @@ define(["dcl/dcl",
 		// Private methods
 		/////////////////////////////////
 
-		_loadNext: function (/*Function*/onDataReadyHandler) {
+		_observePage: function (object, removedFrom, insertedInto) {
+			console.log("Observation:");
+			console.log(object);
+			console.log("removed from " + removedFrom);
+			console.log("insertedInto " + insertedInto);
+			console.log(this._pages);
+		},
+
+		_loadNextPage: function (/*Function*/onDataReadyHandler) {
 			var def = new Deferred();
 			if (!this._queryOptions) {
 				this._queryOptions = this.queryOptions ? lang.clone(this.queryOptions) : {};
@@ -194,10 +208,12 @@ define(["dcl/dcl",
 				this._queryOptions.start = this._lastLoaded + 1;
 				this._queryOptions.count = this.pageLength;
 			}
-			when(this.store.query(this.query, this._queryOptions), lang.hitch(this, function (result) {
-				var nbOfEntries = result.length;
+			when(this.store.query(this.query, this._queryOptions), lang.hitch(this, function (page) {
+				var nbOfEntries = page.length;
 				this._lastLoaded = this._queryOptions.start + nbOfEntries - 1;
-				when(lang.hitch(this, onDataReadyHandler)(result), function () {
+				this._pages.push(page);
+				this._pageObserverHandles.push(page.observe(lang.hitch(this, "_observePage"), true));
+				when(lang.hitch(this, onDataReadyHandler)(page), function () {
 					def.resolve();
 				},
 				function (error) {
@@ -209,7 +225,7 @@ define(["dcl/dcl",
 			return def;
 		},
 
-		_loadPrevious: function (/*Function*/onDataReadyHandler) {
+		_loadPreviousPage: function (/*Function*/onDataReadyHandler) {
 			var def = new Deferred();
 			this._queryOptions.count = this.pageLength;
 			this._queryOptions.start = this._firstLoaded - this.pageLength;
@@ -217,10 +233,12 @@ define(["dcl/dcl",
 				this._queryOptions.count += this._queryOptions.start;
 				this._queryOptions.start = 0;
 			}
-			when(this.store.query(this.query, this._queryOptions), lang.hitch(this, function (result) {
-				if (result.length) {
+			when(this.store.query(this.query, this._queryOptions), lang.hitch(this, function (page) {
+				if (page.length) {
 					this._firstLoaded = this._queryOptions.start;
-					when(lang.hitch(this, onDataReadyHandler)(result), function () {
+					this._pages.unshift(page);
+					this._pageObserverHandles.unshift(page.observe(lang.hitch(this, "_observePage"), true));
+					when(lang.hitch(this, onDataReadyHandler)(page), function () {
 						def.resolve();
 					}, function (error) {
 						def.reject(error);
@@ -232,41 +250,54 @@ define(["dcl/dcl",
 			return def;
 		},
 
-		_unloadFirstEntries: function (nbOfEntriesToRemove) {
-			var toDelete = nbOfEntriesToRemove;
-			this._firstLoaded += nbOfEntriesToRemove;
-			for (; toDelete > 0; toDelete--) {
-				this.deleteEntry(0, true);
-			}
-			if (!this._previousPageLoader) {
-				this._createPreviousPageLoader();
-			}
-		},
-
-		_unloadLastEntries: function (nbOfEntriesToRemove) {
-			var toDelete = nbOfEntriesToRemove;
-			this._lastLoaded -= nbOfEntriesToRemove;
-			for (; toDelete > 0; toDelete--) {
-				this.deleteEntry(this.getEntriesCount() - 1, true);
-			}
-			if (!this._nextPageLoader) {
-				this._createNextPageLoader();
+		_unloadPage: function (pos) {
+			var page, nbOfEntriesToRemove;
+			if (pos === "first") {
+				page = this._pages.shift();
+				this._pageObserverHandles.shift().remove();
+				nbOfEntriesToRemove = page.length;
+				this._firstLoaded += nbOfEntriesToRemove;
+				for (; nbOfEntriesToRemove > 0; nbOfEntriesToRemove--) {
+					this.deleteEntry(0, true);
+				}
+				if (!this._previousPageLoader) {
+					this._createPreviousPageLoader();
+				}
+				// if the next page is also empty, unload it too
+				if (this._pages.length && !this._pages[0].length) {
+					this._unloadPage(pos);
+				}
+			} else if (pos === "last") {
+				page = this._pages.pop();
+				this._pageObserverHandles.pop().remove();
+				nbOfEntriesToRemove = page.length;
+				this._lastLoaded -= nbOfEntriesToRemove;
+				for (; nbOfEntriesToRemove > 0; nbOfEntriesToRemove--) {
+					this.deleteEntry(this.getEntriesCount() - 1, true);
+				}
+				if (!this._nextPageLoader) {
+					this._createNextPageLoader();
+				}
+				// if the previous page is also empty, unload it too
+				if (this._pages.length && !this._pages[this._pages.length - 1].length) {
+					this._unloadPage(pos);
+				}
+			} else {
+				console.log("StoreModel._unloadPage: only 'first' and 'last' positions are supported");
+				return;
 			}
 		},
 
 		_onPreviousPageReady: function (/*array*/ entries) {
-			var firstCellBeforeUpdate = this._getFirst(), nbOfEntriesToRemove = 0;
+			var firstCellBeforeUpdate = this._getFirst();
 			var def = new Deferred();
 			try {
 				if (firstCellBeforeUpdate && this._previousPageLoader && this._previousPageLoader.isLoading()) {
 					this.focusChild(firstCellBeforeUpdate);
 				}
 				this.addEntries(entries, "first");
-				if (this.maxPages) {
-					nbOfEntriesToRemove = this.getEntriesCount() - (this.maxPages * this.pageLength);
-					if (nbOfEntriesToRemove > 0) {
-						this._unloadLastEntries(nbOfEntriesToRemove);
-					}
+				if (this.maxPages && this._pages.length > this.maxPages) {
+					this._unloadPage("last");
 				}
 				if (this._firstLoaded ===
 					(this.queryOptions && this.queryOptions.start ? this.queryOptions.start : 0)) {
@@ -297,7 +328,6 @@ define(["dcl/dcl",
 		},
 
 		_onNextPageReady: function (/*array*/ entries) {
-			var nbOfEntriesToRemove = 0;
 			var def = new Deferred();
 			var lastChild = this._getLast();
 			try {
@@ -305,11 +335,8 @@ define(["dcl/dcl",
 					this.focusChild(lastChild);
 				}
 				this.addEntries(entries, "last");
-				if (this.maxPages) {
-					nbOfEntriesToRemove = this.getEntriesCount() - (this.maxPages * this.pageLength);
-					if (nbOfEntriesToRemove > 0) {
-						this._unloadFirstEntries(nbOfEntriesToRemove);
-					}
+				if (this.maxPages && this._pages.length > this.maxPages) {
+					this._unloadPage("first");
 				}
 				if (this._nextPageLoader) {
 					if (entries.length !== this._queryOptions.count) {
@@ -379,7 +406,7 @@ define(["dcl/dcl",
 				this._nextPageLoader.afterLoading = lang.hitch(this, this._hideLoadingPanel);
 			}
 			this._nextPageLoader.performLoading = lang.hitch(this, function () {
-				return this._loadNext(this._onNextPageReady);
+				return this._loadNextPage(this._onNextPageReady);
 			});
 			this._nextPageLoader.startup();
 			if (!this.autoLoad || !has("touch")) {
@@ -396,7 +423,7 @@ define(["dcl/dcl",
 				this._previousPageLoader.afterLoading = lang.hitch(this, this._hideLoadingPanel);
 			}
 			this._previousPageLoader.performLoading = lang.hitch(this, function () {
-				return this._loadPrevious(this._onPreviousPageReady);
+				return this._loadPreviousPage(this._onPreviousPageReady);
 			});
 			this._previousPageLoader.startup();
 			if (!this.autoLoad || !has("touch")) {
@@ -438,7 +465,7 @@ define(["dcl/dcl",
 		_initContent: dcl.superCall(function (sup) {
 			return function (entries) {
 				var def = new Deferred();
-				when(this._loadNext(sup), lang.hitch(this, function () {
+				when(this._loadNextPage(sup), lang.hitch(this, function () {
 					if (this.pageLength > 0 && this._entries.length === this._queryOptions.count) {
 						this._createNextPageLoader();
 					}
