@@ -298,6 +298,16 @@ define([
 
 			this._enteredView = true;
 
+			// When Widget extends Invalidating some/all of this code should probably be moved to refreshRendering()
+
+			// baseClass is a single class name or occasionally a space-separated list of names.
+			if (this.baseClass) {
+				domClass.add(this, this.baseClass.split(" "));
+			}
+			if (!this.isLeftToRight()) {
+				domClass.add(this, "d-rtl");
+			}
+
 			// Since safari masks all custom setters for tabIndex on the prototype, call them here manually.
 			// For details see:
 			//		https://bugs.webkit.org/show_bug.cgi?id=36423
@@ -347,9 +357,14 @@ define([
 				var obj;
 
 				try {
-					/* jshint evil:true */
-					// This is only called when complex parameters are used in markup, ex: constraints="max: 3, min: 2"
 					// TODO: remove this code if it isn't being used, so we don't scare people that are afraid of eval.
+					/* jshint evil:true */
+					// This will only be executed when complex parameters are used in markup
+					// <my-tag constraints="max: 3, min: 2"></my-tag>
+					// This can be avoided by using such complex paramaters only progammatically or by not using
+					// them at all.
+					// This is harmless if you make sure the JavaScript code that is passed to the attribute
+					// is harmless.
 					obj = eval("(" + (value[0] === "{" ? "" : "{") + value + (value[0] === "{" ? "" : "}") + ")");
 				}
 				catch (e) {
@@ -386,6 +401,12 @@ define([
 					break;
 				case "function":
 					/* jshint evil:true */
+					// This will only be executed if you have properties that are of function type if your widget
+					// and that you set them in your tag attributes:
+					// <my-tag whatever="myfunc"></my-tag>
+					// This can be avoided by setting the function progammatically or by not setting it at all.
+					// This is harmless if you make sure the JavaScript code that is passed to the attribute
+					// is harmless.
 					props[name] = lang.getObject(value, false) || new Function(value);
 				}
 				delete widget[name]; // make sure custom setters fire
@@ -419,26 +440,13 @@ define([
 			this.watch = Stateful.prototype.watch;
 		},
 
-		buildRendering: dcl.after(function () {
+		buildRendering: function () {
 			// summary:
 			//		Construct the UI for this widget, filling in subnodes and/or text inside of this.
 			//		Most widgets will leverage dui/handlebars! to implement this method.
 			// tags:
 			//		protected
-
-			// baseClass is a single class name or occasionally a space-separated list of names.
-			// Add those classes to the DOMNode.  If RTL mode then also add with Rtl suffix.
-			// TODO: baseClass no longer needed?   just use tag name itself, right?
-			if (this.baseClass) {
-				var classes = this.baseClass.split(" ");
-				if (!this.isLeftToRight()) {
-					classes = classes.concat(classes.map(function (name) {
-						return name + "Rtl";
-					}));
-				}
-				domClass.add(this, classes);
-			}
-		}),
+		},
 
 		postCreate: function () {
 			// summary:
