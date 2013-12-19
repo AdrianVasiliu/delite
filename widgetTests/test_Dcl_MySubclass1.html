@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>MySubclass1 test</title>
+
+	<!-- For testing purposes.  Real applications should load the AMD loader directly -->
+	<script type="text/javascript" src="../tests/boilerplate.js"></script>
+
+	<script type="text/javascript">
+	require([
+			"dui/register",
+			"dui/MySubclass1",
+			"dojo/domReady!"
+		], function (register) {
+			register.parse();
+	});
+	</script>
+
+</head>
+<body>
+	<d-mysubclass1>This is the custom element registered by MySubclass1</d-mysubclass1>
+</body>
+</html>
