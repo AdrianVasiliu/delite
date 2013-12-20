@@ -20,5 +20,13 @@ define([
 		}
 		*/
 	});
+	
+	// The line below calls dui/register.register() which throws an error at this line
+	// of dui/register:
+	//
+	// Run introspection to add ES5 getters/setters. [...]
+	// proto._introspect(proto._getProps());
+	//
+	// because _getProps is undefined.
 	return register("d-mysubclass2", [HTMLElement, MySubclass2]);
 });
