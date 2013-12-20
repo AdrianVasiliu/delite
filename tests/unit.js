@@ -23,5 +23,8 @@ define([
 	"./SidePane-push",
 	"./SidePane-reveal",
 	"./SidePane-overlay",
-	"./ViewStack"
+	"./ViewStack",
+	"./Scrollable",
+	"./ScrollableContainer-markup",
+	"./ScrollableContainer-prog"
 ]);
