@@ -4,7 +4,7 @@ define([
 	"dojo/dom-geometry",
 	"dojo/dom-class",
 	"../register",
-	"dojo/text!../widgetTests/test_Sidepane-push.html",
+	"dojo/text!../widgetTests/test_SidePane-push.html",
 	"dui/css!../themes/defaultapp.css",
 	"dui/SidePane"
 ], function (registerSuite, assert, domGeom, domClass, register, html) {
