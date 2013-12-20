@@ -16,7 +16,20 @@ define([
 		// summary:
 		//		A mixin which adds scrolling capabilities to a widget.
 		// description:
-		//		TODO
+		//		When mixed into a widget, this mixin adds to it scrolling capabilities
+		//		based on the overflow: scroll CSS property.
+		//		By default, the scrolling capabilities are added to the widget 
+		//		node itself. The host widget can chose the node thanks to the property
+		//		'scrollableNode'. 
+		//		During interactive or programmatic scrolling, native "scroll"
+		//		events are emitted, and can be listen as follows (here, 
+		//		'scrollWidget' is the widget into which this mixin is mixed): 
+		// | scrollWidget.on("scroll", function () {
+		// |	...
+		// | }
+		//		For widgets that customize the 'scrollableNode' property,
+		//		the events should be listen on widget.scrollableNode.
+		//		TODO: improve the doc.
 
 		// scrollDirection: String
 		//		The direction of the interactive scroll. Possible values are:
@@ -71,10 +84,10 @@ define([
 				domStyle.set(scrollableNode, "overflowY", ""); // restore the default
 			} // else: do nothing for unsupported values
 		},
-
-		buildRendering: dcl.after(function () {
+		
+		buildRendering: function () {
 			this.invalidateRendering();
-		}),
+		},
 		
 		isTopScroll: function () {
 			// summary:
@@ -153,10 +166,10 @@ define([
 			//		Duration of scrolling animation in milliseconds. If 0 or unspecified,
 			//		scrolls without animation. 
 			var to = {};
-			if (by.x) {
+			if (by.x !== undefined) {
 				to.x = this.scrollableNode.scrollLeft + by.x;
 			}
-			if (by.y) {
+			if (by.y !== undefined) {
 				to.y = this.scrollableNode.scrollTop + by.y;
 			}
 			this.scrollTo(to, duration);
@@ -175,16 +188,16 @@ define([
 			var self = this;
 			var scrollableNode = this.scrollableNode;
 			if (!duration || duration <= 0) { // shortcut
-				if (to.x) {
+				if (to.x !== undefined) {
 					scrollableNode.scrollLeft = to.x;
 				}
-				if (to.y) {
+				if (to.y !== undefined) {
 					scrollableNode.scrollTop = to.y;
 				}
 			} else {
 				var from = {
-					x: to.x ? scrollableNode.scrollLeft : undefined,
-					y: to.y ? scrollableNode.scrollTop : undefined
+					x: to.x !== undefined ? scrollableNode.scrollLeft : undefined,
+					y: to.y !== undefined ? scrollableNode.scrollTop : undefined
 				};
 				var animation = function () {
 					if (self._animation && self._animation.status() === "playing") {
@@ -206,10 +219,10 @@ define([
 							anim.curve = new baseFx._Line(from, to);
 						},
 						onAnimate: function (val) {
-							if (val.x) {
+							if (val.x !== undefined) {
 								scrollableNode.scrollLeft = val.x;
 							}
-							if (val.y) {
+							if (val.y !== undefined) {
 								scrollableNode.scrollTop = val.y;
 							}
 						},
