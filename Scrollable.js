@@ -64,25 +64,16 @@ define([
 			scrollDirection = this.scrollDirection;
 			
 			if (scrollDirection === "none") {
-				domClass.remove(this.scrollableNode, "d-scrollable");
+				domClass.remove(scrollableNode, "d-scrollable");
 			} else {
-				domClass.add(this.scrollableNode, "d-scrollable");
+				domClass.add(scrollableNode, "d-scrollable");
 			}
-			dom.setSelectable(this.scrollableNode, false);
+			dom.setSelectable(scrollableNode, false);
 			
-			if (scrollDirection === "horizontal") {
-				domStyle.set(scrollableNode, "overflowX", "scroll");
-				domStyle.set(scrollableNode, "overflowY", ""); // restore the default
-			} else if (scrollDirection === "vertical") {
-				domStyle.set(scrollableNode, "overflowX", ""); // restore the default
-				domStyle.set(scrollableNode, "overflowY", "scroll");
-			} else if (scrollDirection === "both") {
-				domStyle.set(scrollableNode, "overflowX", "scroll");
-				domStyle.set(scrollableNode, "overflowY", "scroll");
-			} else if (scrollDirection === "none") {
-				domStyle.set(scrollableNode, "overflowX", ""); // restore the default
-				domStyle.set(scrollableNode, "overflowY", ""); // restore the default
-			} // else: do nothing for unsupported values
+			domStyle.set(scrollableNode, "overflowX", 
+				/^(both|horizontal)$/.test(scrollDirection) ? "scroll" : "");
+			domStyle.set(scrollableNode, "overflowY", 
+				/^(both|vertical)$/.test(scrollDirection) ? "scroll" : "");
 		},
 		
 		buildRendering: function () {
@@ -151,9 +142,11 @@ define([
 		getCurrentScroll: function () {
 			// summary:
 			//		Returns the current amount of scroll, as an object with x and y properties
-			//		for the horizontal and vertical scroll amount. TODO: improve the doc.
+			//		for the horizontal and vertical scroll amount.
+			//		This is a convenience method and it is not supposed to be overridden. 
+			//		TODO: improve the doc.
 			// returns: Object
-			return {x: this.scrollLeft, y: this.scrollTop};
+			return {x: this.scrollableNode.scrollLeft, y: this.scrollableNode.scrollTop};
 		},
 		
 		scrollBy: function (by, duration) {
