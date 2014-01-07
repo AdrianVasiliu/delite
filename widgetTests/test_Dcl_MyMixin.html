@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>MyClass test</title>
+
+	<!-- For testing purposes.  Real applications should load the AMD loader directly -->
+	<script type="text/javascript" src="../tests/boilerplate.js"></script>
+
+	<script type="text/javascript">
+	require([
+			"dcl/dcl",
+			"dui/register",
+			"dui/Widget",
+			"dui/MyMixin",
+			"dojo/domReady!"
+		], function (dcl, register, Widget, MyMixin) {
+			
+			var MyImp1 = register("my-impl1", [HTMLElement, Widget, MyMixin], {
+			});
+			MyImp1.prototype.buildRendering = dcl.superCall(function (sup) {
+				console.log("MyImp1.buildRendering");
+				sup.apply(this, arguments);
+			});
+			
+			console.log("new MyImp1");
+			var imp1 = new MyImp1();
+			console.log("MyImp1.startup()");
+			imp1.startup();
+			
+			// So far so good, the code above works. But the code below fails with the error:
+			// Uncaught TypeError: Object #<Super> has no method 'invalidateRendering' 
+			// at the call of sup.apply. Apparently, it would be a dui/register or dcl issue:
+			// the function defined for the buildRendering property (in this example) 
+			// gets called too early, before injection into the widget instance.  
+			// Call stack: register calls dcl/mini.buildStubs() which for some reason (?)
+			// executes the function of the "buildRendering" property of the object
+			// passed as last argument to register(). That is the function gets executed
+			// before the instanciation (before the line "new MyImp2()")!
+			
+			var MyImp2 = register("my-imp2", [HTMLElement, Widget, MyMixin], {
+				// Going this way leads to the function being called before its 
+				// injection into the widget instance, thus 'this' is wrong at that time! 
+				// TODO: investigate (dcl issue? reproducible outside intern context?)
+				buildRendering: dcl.superCall(function (sup) {
+					sup.apply(this, arguments); // => throws error
+				})
+			});
+			
+			console.log("new MyImp2");
+			var imp2 = new MyImp2();
+			console.log("MyImp2.startup()");
+			imp2.startup();
+	});
+	</script>
+
+</head>
+<body>
+	Nothing. See the console.
+</body>
+</html>
