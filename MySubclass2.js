@@ -27,6 +27,6 @@ define([
 	// Run introspection to add ES5 getters/setters. [...]
 	// proto._introspect(proto._getProps());
 	//
-	// because _getProps is undefined.
+	// because proto._getProps is undefined.
 	return register("d-mysubclass2", [HTMLElement, MySubclass2]);
 });

@@ -1,21 +1,16 @@
 define([
-	"dcl/dcl",
-	"./Invalidating"
-], function (dcl, Invalidating) {
+	"dcl/dcl"
+], function (dcl) {
 
 	// module:
 	//		dui/Scrollable
 	
-	return dcl(Invalidating, {
+	return dcl(null, {
 		// summary:
 		//		A mixin for testing purposes.
 
 		aProp: null,
 		
-		preCreate: function () {
-			this.addInvalidatingProperties("aProp");
-		},
-
 		refreshRendering: function () {
 			console.log("MyMixin.refreshRendering");
 		},
@@ -23,7 +18,6 @@ define([
 		/*
 		buildRendering: dcl.after(function () {
 			console.log("MyMixin.buildRendering, variant with dcl.after");
-			this.invalidateRendering();
 		})
 		*/
 		/*
@@ -31,13 +25,11 @@ define([
 			return function () {
 				sup.apply(this, arguments);
 				console.log("MyMixin.buildRendering, variant with dcl.superCall");
-				this.invalidateRendering();
 			};
 		})
 		*/
 		buildRendering: function () {
 			console.log("MyMixin.buildRendering, variant without dcl.after or dcl/superCall");
-			this.invalidateRendering();
 		}
 	});
 });
