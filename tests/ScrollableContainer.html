@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" 
+		content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>ScrollableContainer</title>
+
+	<!-- TODO: understand the impact of LinearLayout on the horizontal sizing of ScrollableContainer -->
+	
+	<link rel="stylesheet" href="../../delite/themes/defaultapp.css">
+	
+	<!-- For testing purposes. Real applications should load the AMD loader directly -->
+	<script type="text/javascript" src="../../delite/tests/boilerplate.js"></script>
+
+	<script type="text/javascript">
+		var jqueryScrollBy, scrollBy, onScroll, log, clearMsgArea;
+		require([
+			"delite/register",
+			"delite/ScrollableContainer",
+			"deliteful/LinearLayout",
+			"deliteful/Button",
+			"dojo/domReady!"
+		], function (register) {
+			register.parse();
+			
+			var reachedTop = false, reachedBottom = false,
+				reachedLeft = false, reachedRight = false;
+			var scrollableContainer = document.getElementById("scrollContainer");
+			var list = "<ul>";
+			for (var i = 1; i <= 500; i++) {
+				list += "<li>Item " + i + "</li>";
+			}
+			list += "</ul>";
+			scrollableContainer.innerHTML = list;
+			
+			scrollBy = function() {
+				scrollableContainer.scrollBy({x: 10000, y: 10000}, 1000);
+			};
+			onScroll = function () {
+				if (scrollableContainer.isBottomScroll()) {
+					// scrolled to bottom
+					if (!reachedBottom) { 
+						log("event: scroll-reached-bottom");
+						reachedBottom = true;
+					}
+				} else if (scrollableContainer.isTopScroll()) {
+					// scrolled to top
+					if (!reachedTop) { 
+						log("event: scroll-reached-top");
+						reachedTop = true;
+					}
+				} else {
+					reachedBottom = false;
+					reachedTop = false;
+				}
+				if (scrollableContainer.isRightScroll()) {
+					// scrolled to bottoms
+					if (!reachedRight) { 
+						log("event: scroll-reached-right");
+						reachedRight = true;
+					}
+				} else if (scrollableContainer.isLeftScroll()) {
+					// scrolled to top
+					if (!reachedRight) { 
+						log("event: scroll-reached-left");
+						reachedLeft = true;
+					}
+				} else {
+					reachedRight = false;
+					reachedLeft = false;
+				}
+			};
+			
+			log = function (str) {
+				var msgArea = document.getElementById("msgArea");
+				msgArea.innerHTML += str + "\n"; 
+				// Automatic scroll such that the last line is visible
+				msgArea.scrollTop = msgArea.scrollHeight;
+			};
+			
+			clearMsgArea = function () {
+				document.getElementById("msgArea").innerHTML = "";
+			};
+		});
+	</script>
+
+	<style type="text/css">
+	ul {
+		padding: 0;
+		margin: 0;
+	}
+	li {
+		padding: 0 0.5em;
+		height: 2em;
+		list-style-type: none;
+		line-height: 2em;
+		-webkit-tap-highlight-color: rgba(255, 255, 255, 0);
+		border-bottom: 1px solid #222222;
+		font-size: 2em;
+		cursor: pointer;
+	}
+	li:hover {
+		background-color: #61C6EB;
+	}
+	li:active {
+		background-color: #007fea;
+	}
+	d-linear-layout d-scrollable-container {
+		display: block;
+		width: 100%;
+		height: 100%;
+	}
+	</style>
+</head>
+<body>
+	<d-linear-layout style="height: 100%">
+		<d-linear-layout vertical="false">
+			<!-- Button to test the programmatic scroll API of ScrollableContainer -->
+			<button is="d-button" onclick="scrollBy();">
+				scrollBy (using JQuery effect)
+			</button>
+			<textarea id="msgArea" readonly class="fill"></textarea>
+			<button is="d-button" onclick="clearMsgArea();">Clear</button>
+		</d-linear-layout>
+		<d-scrollable-container id="scrollContainer" scrollDirection="both" 
+			style="background-color: green" class="fill"
+			onScroll="onScroll();">
+		</d-scrollable-container>
+	</d-linear-layout>
+</body>
+</html>

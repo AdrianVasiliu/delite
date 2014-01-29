@@ -1,14 +1,12 @@
 define([
 	"dcl/dcl",
-	"dojo/dom",
-	"dojo/dom-style",
-	"dojo/dom-class",
-	"dojo/_base/fx",
-	"dojo/fx/easing",
 	"delite/Widget",
 	"delite/Invalidating",
+	"jquery/src/core", // for $
+	"jquery/src/effects", // for "animate()"
+	"jquery/src/attributes", // for "toggleClass()" and "css()"
 	"delite/themes/load!./Scrollable/themes/{{theme}}/Scrollable_css"
-], function (dcl, dom, domStyle, domClass, baseFx, easing, Widget, Invalidating) {
+], function (dcl, Widget, Invalidating, $) {
 
 	// module:
 	//		delite/Scrollable
@@ -61,23 +59,27 @@ define([
 				this.scrollableNode = this; // If unspecified, defaults to 'this'.
 			}
 
-			domClass.toggle(this.scrollableNode, "d-scrollable", this.scrollDirection !== "none");
+			// Replaced:
+			// domClass.toggle(this.scrollableNode, "d-scrollable", this.scrollDirection !== "none");
+			// by:
+			$(this.scrollableNode).toggleClass("d-scrollable", this.scrollDirection !== "none");
 
-			dom.setSelectable(this.scrollableNode, false);
-
-			domStyle.set(this.scrollableNode, "overflowX",
+			// dom.setSelectable(this.scrollableNode, false);
+			// JQuery used to have $.fn.disableSelection()/enableSelection() but these
+			// were removed since JQuery 1.9. Hence, as a replacement, I added the 
+			// corresponding style declarations to the CSS of the widget.
+			// (The handling of this might anyway further change later.)
+			
+			// Replaced the use of domStyle.set by:
+			$(this.scrollableNode).css("overflowX",
 				/^(both|horizontal)$/.test(this.scrollDirection) ? "scroll" : "");
-			domStyle.set(this.scrollableNode, "overflowY",
+			$(this.scrollableNode).css("overflowY",
 				/^(both|vertical)$/.test(this.scrollDirection) ? "scroll" : "");
 		}),
 
 		buildRendering: dcl.after(function () {
 			this.invalidateRendering();
 		}),
-
-		destroy: function () {
-			this._stopAnimation();
-		},
 
 		isTopScroll: function () {
 			// summary:
@@ -175,67 +177,13 @@ define([
 			// duration:
 			//		Duration of scrolling animation in milliseconds. If 0 or unspecified,
 			//		scrolls without animation.
-			var scrollableNode = this.scrollableNode;
-			this._stopAnimation();
-			if (!duration || duration <= 0) { // shortcut
-				if (to.x !== undefined) {
-					scrollableNode.scrollLeft = to.x;
-				}
-				if (to.y !== undefined) {
-					scrollableNode.scrollTop = to.y;
-				}
-			} else {
-				var from = {
-					x: to.x !== undefined ? scrollableNode.scrollLeft : undefined,
-					y: to.y !== undefined ? scrollableNode.scrollTop : undefined
-				};
-				var self = this;
-				var anim = function () {
-					// dojo/_base/fx._Line cannot be used for animating several
-					// properties at once (scrollTop and scrollLeft in our case). 
-					// Hence, using instead a custom function:
-					var Curve = function (/*int*/ start, /*int*/ end) {
-						this.start = start;
-						this.end = end;
-					};
-					Curve.prototype.getValue = function (/*float*/ n) {
-						return {
-							x: ((to.x - from.x) * n) + from.x,
-							y: ((to.y - from.y) * n) + from.y
-						};
-					};
-					var animation = new baseFx.Animation({
-						beforeBegin: function () {
-							if (this.curve) {
-								delete this.curve;
-							}
-							animation.curve = new Curve(from, to);
-						},
-						onAnimate: function (val) {
-							if (val.x !== undefined) {
-								scrollableNode.scrollLeft = val.x;
-							}
-							if (val.y !== undefined) {
-								scrollableNode.scrollTop = val.y;
-							}
-						},
-						easing: easing.expoInOut, // TODO: IMPROVEME
-						duration: duration,
-						rate: 20 // TODO: IMPROVEME
-					});
-					self._animation = animation;
-					return animation; // dojo/_base/fx/Animation
-				};
-				anim().play();
-			}
-		},
-
-		_stopAnimation: function () {
-			// summary:
-			//		Stops the scrolling animation if it is currently playing. 
-			if (this._animation && this._animation.status() === "playing") {
-				this._animation.stop();
-			}
+			$(this.scrollableNode).animate(
+				{
+					scrollLeft: to.x !== undefined ? to.x : this.scrollableNode.scrollLeft,
+					scrollTop: to.y !== undefined ? to.y : this.scrollableNode.scrollTop
+				}, 
+				duration
+			);
 		}
 	});
 });

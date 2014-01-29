@@ -73,7 +73,8 @@ require = {
 		{name: 'delite', location: 'delite'},
 		{name: 'deliteful', location: 'deliteful'},
 		{name: 'dojox', location: 'dojox'},
-		{name: 'doh', location: 'util/doh'}
+		{name: 'doh', location: 'util/doh'},
+		{name:"sizzle", location:"jquery/src/sizzle/dist", main: "sizzle"} // needed by JQuery
 	],
 	locale: locale || "en-us",
 	config: {
