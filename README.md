@@ -18,6 +18,8 @@ dojo-core API (dom.setSelectable) with no JQuery equivalent (nowadays).
 * delite/tests/boilerplate.js: added loader's packages directive for Sizzle 
 (needed by JQuery).
 
+The full list of differences: https://github.com/AdrianVasiliu/delite/commit/44856feba4ad03f3142a38eea8e03a4643eb2821
+
 # How to test
 
 * Clone https://github.com/AdrianVasiliu/delite.git and switch to its scrollable-jquery branch.
