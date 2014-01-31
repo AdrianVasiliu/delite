@@ -80,6 +80,11 @@ define([
 		buildRendering: dcl.after(function () {
 			this.invalidateRendering();
 		}),
+		
+		destroy: function () {
+			// Stop jquery's animation if any is ongoing (and clear the queue of queued animations).
+			$(this.scrollableNode).stop(true/* clear queue*/, false/*jumpToEnd*/);
+		},
 
 		isTopScroll: function () {
 			// summary:
