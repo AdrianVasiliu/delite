@@ -1,3 +1,4 @@
+/** @module delite/Container */
 define([
 	"dcl/dcl",
 	"dojo/dom-construct", // domConstruct.place
@@ -7,7 +8,12 @@ define([
 	// module:
 	//		delite/Container
 
-	return dcl(Widget, {
+	/**
+	 * Widget that contains a set of widget children.
+	 * @class module:delite/Container
+	 * @augments {module:delite/Widget}
+	 */
+	return dcl(Widget, /** @lends module:delite/Container# */{
 		// summary:
 		//		Widget that contains a set of widget children.
 
@@ -18,6 +24,15 @@ define([
 			}
 		}),
 
+		/**
+		 * @summary
+		 * Makes the given widget or DOM node a child of this widget.
+		 * @description
+		 * Inserts specified child widget or DOM node as a child of this widget's
+		 * container node, and possibly does other processing (such as layout).
+		 * @param {DOMNode} widget
+		 * @param {int?} insertIndex 
+		 */
 		addChild: function (/*DOMNode*/ widget, /*int?*/ insertIndex) {
 			// summary:
 			//		Makes the given widget or DOM node a child of this widget.
@@ -59,6 +74,12 @@ define([
 			}
 		},
 
+		/**
+		 * Removes the passed widget instance from this widget but does
+		 * not destroy it.  You can also pass in an integer indicating
+		 * the index within the container to remove (ie, removeChild(5) removes the sixth widget).
+		 * @param {Element|int} widget
+		 */
 		removeChild: function (/*Element|int*/ widget) {
 			// summary:
 			//		Removes the passed widget instance from this widget but does
@@ -77,12 +98,18 @@ define([
 			}
 		},
 
+		/**
+		 * Returns true if widget has child widgets, i.e. if this.containerNode contains widgets.
+		 */
 		hasChildren: function () {
 			// summary:
 			//		Returns true if widget has child widgets, i.e. if this.containerNode contains widgets.
 			return this.getChildren().length > 0;	// Boolean
 		},
 
+		/**
+		 * Gets the index of the child in this container or -1 if not found
+		 */
 		getIndexOfChild: function (/*DOMNode*/ child) {
 			// summary:
 			//		Gets the index of the child in this container or -1 if not found
@@ -104,6 +131,10 @@ define([
 			return node;	// Element
 		},
 
+		/**
+		 * Returns null if this is the first child of the parent,
+		 * otherwise returns the next element sibling to the "left".  
+		 */
 		getPreviousSibling: function (/*Element*/ node) {
 			// summary:
 			//		Returns null if this is the first child of the parent,
@@ -112,6 +143,10 @@ define([
 			return this._getSibling(node, "previous"); // Element
 		},
 
+		/**
+		 * Returns null if this is the last child of the parent,
+		 * otherwise returns the next element sibling to the "right".
+		 */
 		getNextSibling: function (/*Element*/ node) {
 			// summary:
 			//		Returns null if this is the last child of the parent,

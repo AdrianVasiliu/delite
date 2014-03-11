@@ -1,3 +1,4 @@
+/** @module delite/CustomElement */
 define([
 	"dcl/dcl",
 	"dojo/_base/lang",
@@ -12,7 +13,18 @@ define([
 
 	var div = document.createElement("div");
 
-	return dcl([Stateful, Destroyable], {
+	/**
+	 * @summary 
+	 * Base class for all custom elements.
+	 * @description
+	 * Use this class rather that Widget for non-visual custom elements.
+	 * Custom elements can provide custom setters/getters for properties, which are called automatically
+	 * when the value is set.  For an attribute XXX, define methods _setXXXAttr() and/or _getXXXAttr()
+	 * @class module:delite/CustomElement
+	 * @augments {module:delite/Stateful}
+	 * @augments {module:delite/Destroyable}
+	 */
+	return dcl([Stateful, Destroyable], /** @lends module:delite/CustomElement# */{
 		// summary:
 		//		Base class for all custom elements.
 		//		Use this class rather that Widget for non-visual custom elements.
@@ -50,6 +62,9 @@ define([
 			return list;
 		},
 
+		/**
+		 * Some doc. 
+		 */
 		createdCallback: dcl.advise({
 			before: function () {
 				// Get parameters that were specified declaratively on the widget DOMNode.
@@ -171,6 +186,17 @@ define([
 			domConstruct.destroy(this);
 		},
 
+		/**
+		 * @summary
+		 * Signal that a synthetic event occurred, ex:
+		 * <pre><code>
+		 * myWidget.emit("attrmodified-selectedChildWidget", {}).
+		 * </code></pre>
+		 * @description
+		 * Emits an event of specified type, based on eventObj.
+		 * Also calls onType() method, if present, and returns value from that method.
+		 * Modifies eventObj by adding missing parameters (bubbles, cancelable, widget).
+		 */
 		emit: function (/*String*/ type, /*Object?*/ eventObj) {
 			// summary:
 			//		Signal that a synthetic event occurred, ex:
@@ -210,6 +236,9 @@ define([
 			return ret;
 		},
 
+		/**
+		 * Call specified function when event occurs, ex: myWidget.on("click", function () { ... }).
+		 */
 		on: function (/*String|Function*/ type, /*Function*/ func) {
 			// summary:
 			//		Call specified function when event occurs, ex: myWidget.on("click", function () { ... }).
@@ -223,6 +252,13 @@ define([
 			return this.own(on(this, type, func))[0];
 		},
 
+		/**
+		 * Wrapper to setTimeout to avoid deferred functions executing
+		 * after the originating widget has been destroyed.
+		 * Returns an object handle with a remove method (that returns null) (replaces clearTimeout).
+ 		 * @param {Object} fcn Function reference.
+ 		 * @param {Object} delay Delay, defaults to 0.
+		 */
 		defer: function (fcn, delay) {
 			// summary:
 			//		Wrapper to setTimeout to avoid deferred functions executing
@@ -260,6 +296,10 @@ define([
 
 		// Utility functions previously in registry.js
 
+		/**
+		 * Search subtree under root returning custom elements found.
+ 		 * @param {Element?} root Node to search under.
+		 */
 		findCustomElements: function (root) {
 			// summary:
 			//		Search subtree under root returning custom elements found.

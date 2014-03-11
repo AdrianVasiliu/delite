@@ -1,3 +1,4 @@
+/** @module delite/Stateful */
 define(["dcl/dcl"], function (dcl) {
 
 	// module:
@@ -24,7 +25,39 @@ define(["dcl/dcl"], function (dcl) {
 		return ret;
 	}
 
-	var Stateful = dcl(null, {
+	/**
+	 * @summary 
+	 * Base class for objects that provide named properties with optional getter/setter
+	 * control and the ability to watch for property changes.
+	 * @description
+	 * The class also provides the functionality to auto-magically manage getters
+	 * and setters for class attributes/properties.  Note though that expando properties
+	 * (i.e. properties added to an instance but not in the prototype) are not supported.
+	 * <p>
+	 * Getters and Setters should follow the format of _setXxxAttr or _getXxxAttr where
+	 * the xxx is a name of the attribute to handle.  So an attribute of "foo"
+	 * would have a custom getter of _getFooAttr and a custom setter of _setFooAttr.
+	 * Setters must save and announce the new property value by calling this._set("foo", val),
+	 * and getters should access the property value as this._fooAttr.
+	 * </p>
+	 * @example <caption>Example 1</caption>
+	 * var MyClass = dcl(Stateful, { foo: "initial" });
+	 * var obj = new MyClass();
+	 * obj.watch("foo", function(){
+	 * 	console.log("foo changed to " + this.foo);
+	 * });
+	 * obj.foo = bar;
+	 * // Stateful by default interprets the first parameter passed to
+	 * // the constructor as a set of properties to set on the widget 
+	 * // immediately after it is created.
+	 * 
+	 * @example <caption>Example 2</caption>
+	 * var MyClass = dcl(Stateful, { foo: "initial" });
+	 * var obj = new MyClass({ foo: "special"});
+	 * 
+	 * @class module:delite/Stateful
+	 */
+	var Stateful = dcl(null, /** @lends module:delite/Stateful# */{
 		// summary:
 		//		Base class for objects that provide named properties with optional getter/setter
 		//		control and the ability to watch for property changes.
@@ -118,6 +151,9 @@ define(["dcl/dcl"], function (dcl) {
 			}
 		}),
 
+		/**
+		 * Called after Object is created to process parameters passed to constructor.
+		 */
 		processConstructorParameters: function (args) {
 			// summary:
 			//		Called after Object is created to process parameters passed to constructor
@@ -126,6 +162,14 @@ define(["dcl/dcl"], function (dcl) {
 			}
 		},
 
+		/**
+		 * Set a hash of properties on a Stateful instance
+		 * @example
+		 * myObj.mix({
+		 * 	foo: "Howdy",
+		 *	bar: 3
+		 * })
+		 */
 		mix: function (/*Object*/ hash) {
 			// summary:
 			//		Set a hash of properties on a Stateful instance
@@ -175,6 +219,9 @@ define(["dcl/dcl"], function (dcl) {
 			return this[propNames(name).p];
 		},
 
+		/**
+		 * Watches a property for changes.
+		 */
 		watch: function (/*String?*/ name, /*Function*/ callback) {
 			// summary:
 			//		Watches a property for changes

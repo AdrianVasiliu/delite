@@ -1,6 +1,12 @@
+/** @module delite/Invalidating */
 define(["dcl/dcl", "dojo/_base/lang", "./Stateful"], function (dcl, lang, Stateful) {
 
-	return dcl(Stateful, {
+	/**
+	 * Mixin for classes (usually widgets) that watch a set of invalidating properties.
+	 * @class module:delite/Invalidating
+	 * @augments {module:delite/Stateful}
+	 */
+	return dcl(Stateful, /** @lends module:delite/Invalidating# */{
 		// summary:
 		//		Mixin for classes (usually widgets) that watch a set of invalidating properties
 		//		and delay to the next execution frame the refresh following the changes of
@@ -28,11 +34,25 @@ define(["dcl/dcl", "dojo/_base/lang", "./Stateful"], function (dcl, lang, Statef
 		// invalidProperties: Boolean
 		//		Whether at least one property is invalid. This is readonly information, one must call
 		//		invalidateProperties() to modify this flag.
+		
+		/**
+		 * Whether at least one property is invalid. This is readonly information, one must call
+		 * invalidateProperties() to modify this flag.
+		 * @type {boolean}
+		 * @default false
+		 */
 		invalidProperties: false,
 		
 		// invalidRenderering: Boolean
 		//		Whether the rendering is invalid. This is readonly information, one must call
 		//		invalidateRendering() to modify this flag.
+		
+		/**
+		 * Whether the rendering is invalid. This is readonly information, one must call
+		 * invalidateRendering() to modify this flag.
+		 * @type {boolean}
+		 * @default false
+		 */
 		invalidRendering: false,
 
 		// if we are not a Widget, setup the listeners at construction time
@@ -58,6 +78,11 @@ define(["dcl/dcl", "dojo/_base/lang", "./Stateful"], function (dcl, lang, Statef
 			this._invalidatedProperties = {};
 		},
 
+		/**
+		 * Adds the properties listed as arguments to the properties watched for triggering invalidation.
+		 * This method must be called during the startup lifecycle before buildRendering() completes,
+		 * usually in preCreate().
+		 */
 		addInvalidatingProperties: function () {
 			// summary:
 			//		Adds the properties listed as arguments to the properties watched for triggering invalidation.
@@ -94,6 +119,9 @@ define(["dcl/dcl", "dojo/_base/lang", "./Stateful"], function (dcl, lang, Statef
 			}
 		},
 		
+		/**
+		 * Invalidates the property for the next execution frame.
+		 */
 		invalidateProperty: function (name) {
 			// summary:
 			//		Invalidates the property for the next execution frame.
@@ -122,6 +150,9 @@ define(["dcl/dcl", "dojo/_base/lang", "./Stateful"], function (dcl, lang, Statef
 			}
 		},
 		
+		/**
+		 * Invalidates the rendering for the next execution frame.
+		 */
 		invalidateRendering: function (name) {
 			// summary:
 			//		Invalidates the rendering for the next execution frame.
@@ -162,6 +193,9 @@ define(["dcl/dcl", "dojo/_base/lang", "./Stateful"], function (dcl, lang, Statef
 			}
 		},
 		
+		/**
+		 * Immediately validates the rendering.
+		 */
 		validateRendering: function () {
 			// summary:
 			//		Immediately validates the rendering.
@@ -185,6 +219,9 @@ define(["dcl/dcl", "dojo/_base/lang", "./Stateful"], function (dcl, lang, Statef
 			}
 		},
 		
+		/**
+		 * Immediately validates the properties and the rendering.
+		 */
 		validate: function () {
 			// summary:
 			//		Immediately validates the properties and the rendering.
@@ -197,6 +234,9 @@ define(["dcl/dcl", "dojo/_base/lang", "./Stateful"], function (dcl, lang, Statef
 			this.validateRendering();
 		},
 		
+		/**
+		 * Actually refreshes the properties. 
+		 */
 		refreshProperties: function (/*jshint unused: vars */props) {
 			// summary:
 			//		Actually refreshes the properties. 
@@ -217,6 +257,9 @@ define(["dcl/dcl", "dojo/_base/lang", "./Stateful"], function (dcl, lang, Statef
 			//		protected
 		},
 		
+		/**
+		 * Actually refreshes the rendering.
+		 */
 		refreshRendering: function (/*jshint unused: vars */props) {
 			// summary:
 			//		Actually refreshes the rendering.

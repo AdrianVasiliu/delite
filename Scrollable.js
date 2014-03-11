@@ -1,3 +1,4 @@
+/** @module delite/Scrollable */
 define([
 	"dcl/dcl",
 	"dojo/dom",
@@ -12,7 +13,31 @@ define([
 	// module:
 	//		delite/Scrollable
 
-	return dcl([Widget, Invalidating], {
+	/**
+	 * A mixin which adds scrolling capabilities to a widget.
+	 * When mixed into a widget, this mixin brings scrolling capabilities
+	 * based on the overflow: auto CSS property.
+	 * By default, the scrolling capabilities are added to the widget
+	 * node itself. The host widget can chose the node thanks to the property
+	 * 'scrollableNode' which must be set at latest in its buildRendering()
+	 * method.
+	 * During interactive or programmatic scrolling, native "scroll"
+	 * events are emitted, and can be listen as follows (here,
+	 * 'scrollWidget' is the widget into which this mixin is mixed):
+	 * <pre>
+	 * <code>
+	 * scrollWidget.on("scroll", function () {
+	 * ...
+	 * }
+	 * </code>
+	 * </pre>
+	 * For widgets that customize the 'scrollableNode' property,
+     * the events should be listen on widget.scrollableNode.
+	 * @class module:delite/Scrollable
+	 * @augments {module:delite/Widget}
+	 * @augments {module:delite/Invalidating}
+	 */
+	return dcl([Widget, Invalidating], /** @lends module:delite/Scrollable# */{
 		// summary:
 		//		A mixin which adds scrolling capabilities to a widget.
 		// description:
@@ -41,6 +66,16 @@ define([
 		//		Note that scrolling programmatically using scrollTo() is
 		//		possible on both horizontal and vertical directions independently
 		//		on the value of scrollDirection.
+		
+		/**
+		 * The direction of the interactive scroll. Possible values are:
+		 * "vertical", "horizontal", "both, and "none". The default value is "vertical".
+		 * Note that scrolling programmatically using scrollTo() is
+		 * possible on both horizontal and vertical directions independently
+		 * on the value of scrollDirection.
+		 * @type {string}
+		 * @default "vertical"
+		 */
 		scrollDirection: "vertical",
 
 		// scrollableNode: [readonly] DomNode
@@ -49,6 +84,16 @@ define([
 		//		itself ('this').
 		//		Note that this property can be set only at construction time, at latest
 		//		in the buildRendering() method of the widget into which this class is mixed.
+		
+		/**
+		 * Designates the descendant node of this widget which is made scrollable.
+		 * The default value is 'null'. If not set, defaults to this widget
+		 * itself ('this').
+		 * Note that this property can be set only at construction time, at latest
+		 * in the buildRendering() method of the widget into which this class is mixed.
+		 * @type {DomNode}
+		 * @default null
+		 */
 		scrollableNode: null,
 
 		preCreate: function () {
@@ -85,6 +130,17 @@ define([
 			this._stopAnimation();
 		},
 
+		/**
+		 * Returns true if container's scroll has reached the maximum at
+		 * the top of the content. Returns false otherwise. 
+		 * @example
+		 * scrollContainer.on("scroll", function () {
+		 *   if (scrollContainer.isTopScroll()) {
+		 *     console.log("Scroll reached the maximum at the top");
+		 *   }
+		 * }
+		 * @returns {boolean}
+		 */
 		isTopScroll: function () {
 			// summary:
 			//		Returns true if container's scroll has reached the maximum at
@@ -99,6 +155,11 @@ define([
 			return this.scrollableNode.scrollTop === 0;
 		},
 
+		/**
+		 * Returns true if container's scroll has reached the maximum at
+		 * the top of the content. Returns false otherwise. 
+		 * @returns {boolean}
+		 */
 		isBottomScroll: function () {
 			// summary:
 			//		Returns true if container's scroll has reached the maximum at
@@ -153,6 +214,13 @@ define([
 			return {x: this.scrollableNode.scrollLeft, y: this.scrollableNode.scrollTop};
 		},
 
+		/**
+		 * Scrolls by the given amount.
+ 		 * @param {object} by The scroll amount. An object with x and/or y properties, for example
+		 *  {x:0, y:-5} or {y:-29}.
+		 * @param {number} duration Duration of scrolling animation in milliseconds. 
+		 *  If 0 or unspecified, scrolls without animation.
+		 */
 		scrollBy: function (by, duration) {
 			// summary:
 			//		Scrolls by the given amount.
