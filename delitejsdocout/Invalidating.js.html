@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: Invalidating.js</title>
+    
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+    
+    <h1 class="page-title">Source: Invalidating.js</h1>
+    
+    
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/** @module delite/Invalidating */
+define(["dcl/dcl", "dojo/_base/lang", "./Stateful"], function (dcl, lang, Stateful) {
+
+	/**
+	 * Mixin for classes (usually widgets) that watch a set of invalidating properties.
+	 * @class module:delite/Invalidating
+	 * @augments {module:delite/Stateful}
+	 */
+	return dcl(Stateful, /** @lends module:delite/Invalidating# */{
+		// summary:
+		//		Mixin for classes (usually widgets) that watch a set of invalidating properties
+		//		and delay to the next execution frame the refresh following the changes of
+		//		the values of these properties. The receiving class must extend delite/Widget
+		//		or dojo/Evented.
+		// description:
+		//		Once a set of properties have been declared subject to invalidation using the method
+		//		addInvalidatingProperties(), changes of the values of these properties possibly
+		//		end up calling refreshProperties() and in all cases refreshRendering(),
+		//		thus allowing the receiving class to refresh itself based on the new values.
+
+		_renderHandle: null,
+
+		// _invalidatingProperties: [private] Object
+		//		A hash of properties to watch in order to trigger the invalidation of these properties
+		//		and/or the rendering invalidation.
+		//		This list must be initialized by the time buildRendering() completes, usually in preCreate(),
+		//		using addInvalidatingProperties(). Default value is null.
+		_invalidatingProperties: null,
+		
+		// _invalidatedProperties: [private] Object
+		//		A hash of invalidated properties either to refresh them or to refresh the rendering.
+		_invalidatedProperties: null,
+		
+		// invalidProperties: Boolean
+		//		Whether at least one property is invalid. This is readonly information, one must call
+		//		invalidateProperties() to modify this flag.
+		
+		/**
+		 * Whether at least one property is invalid. This is readonly information, one must call
+		 * invalidateProperties() to modify this flag.
+		 * @type {boolean}
+		 * @default false
+		 */
+		invalidProperties: false,
+		
+		// invalidRenderering: Boolean
+		//		Whether the rendering is invalid. This is readonly information, one must call
+		//		invalidateRendering() to modify this flag.
+		
+		/**
+		 * Whether the rendering is invalid. This is readonly information, one must call
+		 * invalidateRendering() to modify this flag.
+		 * @type {boolean}
+		 * @default false
+		 */
+		invalidRendering: false,
+
+		// if we are not a Widget, setup the listeners at construction time
+		constructor: dcl.after(function () {
+			this._initializeInvalidating();
+		}),
+
+		// if we are on a Widget, listen for any changes to properties after the widget has been rendered,
+		// including when declarative properties (ex: iconClass=xyz) are applied.
+		buildRendering: dcl.after(function () {
+			// tags:
+			//		protected
+			this._initializeInvalidating();
+		}),
+
+		_initializeInvalidating: function () {
+			if (this._invalidatingProperties) {
+				var props = Object.keys(this._invalidatingProperties);
+				for (var i = 0; i &lt; props.length; i++) {
+					this.watch(props[i], lang.hitch(this, this._invalidatingProperties[props[i]]));
+				}
+			}
+			this._invalidatedProperties = {};
+		},
+
+		/**
+		 * Adds the properties listed as arguments to the properties watched for triggering invalidation.
+		 * This method must be called during the startup lifecycle before buildRendering() completes,
+		 * usually in preCreate().
+		 */
+		addInvalidatingProperties: function () {
+			// summary:
+			//		Adds the properties listed as arguments to the properties watched for triggering invalidation.
+			// 		This method must be called during the startup lifecycle before buildRendering() completes,
+			//		usually in preCreate().
+			// description:
+			//		This can be used to trigger invalidation for rendering or for both property and rendering. When
+			//		no invalidation mechanism is specified, only the rendering refresh will be triggered, that is only
+			//		the refreshRendering() method will be called.
+			//		This method can either be called with a list of properties to invalidate the rendering as follows:
+			//			this.addInvalidatingProperties("foo", "bar", ...);
+			//		or with an hash of keys/values, the keys being the properties to invalidate and the values
+			//		being the invalidation method (either rendering or property and rendering):
+			//			this.addInvalidatingProperties({
+			//				"foo": "invalidateProperty",
+			//				"bar": "invalidateRendering"
+			//			});
+			// tags:
+			//		protected
+			if (this._invalidatingProperties == null) {
+				this._invalidatingProperties = {};
+			}
+			for (var i = 0; i &lt; arguments.length; i++) {
+				if (typeof arguments[i] === "string") {
+					// we just want the rendering to be refreshed
+					this._invalidatingProperties[arguments[i]] = "invalidateRendering";
+				} else {
+					// we just merge key/value objects into our list of invalidating properties
+					var props = Object.keys(arguments[i]);
+					for (var j = 0; j &lt; props.length; j++) {
+						this._invalidatingProperties[props[j]] = arguments[i][props[j]];
+					}
+				}
+			}
+		},
+		
+		/**
+		 * Invalidates the property for the next execution frame.
+		 */
+		invalidateProperty: function (name) {
+			// summary:
+			//		Invalidates the property for the next execution frame.
+			// name: String?
+			//		The name of the property to invalidate. If absent, the revalidation
+			//		is performed without a particular property being invalidated, that is
+			//		the argument passed to refreshProperties() does not contain is called without any argument.
+			// tags:
+			//		protected
+			if (name) {
+				this._invalidatedProperties[name] = true;
+			}
+			if (!this.invalidProperties) {
+				this.invalidProperties = true;
+				// if we have a pending render, let's cancel it to execute it post properties refresh
+				if (this._renderHandle) {
+					// TODO: if we switch to defer() use remove() here
+					clearTimeout(this._renderHandle);
+					this.invalidRendering = false;
+					this._renderHandle = null;
+				}
+				// TODO: should be defer but we might change this mechanism to a centralized one, so keep it like
+				// that for now. If we don't come up with a centralized one, move defer to Destroyable and require
+				// the Destroyable mixin.
+				setTimeout(lang.hitch(this, "validateProperties"), 0);
+			}
+		},
+		
+		/**
+		 * Invalidates the rendering for the next execution frame.
+		 */
+		invalidateRendering: function (name) {
+			// summary:
+			//		Invalidates the rendering for the next execution frame.
+			// name: String?
+			//		The name of the property to invalidate. If absent then the revalidation is asked without a
+			//		particular property being invalidated, that is refreshRendering() is called without
+			//		any argument.
+			// tags:
+			//		protected
+			if (name) {
+				this._invalidatedProperties[name] = true;
+			}
+			if (!this.invalidRendering) {
+				this.invalidRendering = true;
+				// TODO: should be defer but we might change this mechanism to a centralized one, so keep it like
+				// that for now. If we don't come up with a centralized one, move defer to Destroyable and require
+				// the Destroyable mixin.
+				this._renderHandle = setTimeout(lang.hitch(this, "validateRendering"), 0);
+			}
+		},
+		
+		validateProperties: function () {
+			// summary:
+			//		Immediately validates the properties.
+			// description:
+			//		Does nothing if no invalidating property is invalid.
+			//		You generally do not call that method yourself.
+			// tags:
+			//		protected
+			if (this.invalidProperties) {
+				var props = lang.clone(this._invalidatedProperties);
+				this.invalidProperties = false;
+				this.refreshProperties(this._invalidatedProperties);
+				this.emit("refresh-properties-complete",
+					{ invalidatedProperties: props, bubbles: true, cancelable: false });
+				// if there are properties still marked invalid pursue further with rendering refresh
+				this.invalidateRendering();
+			}
+		},
+		
+		/**
+		 * Immediately validates the rendering.
+		 */
+		validateRendering: function () {
+			// summary:
+			//		Immediately validates the rendering.
+			// description:
+			//		Does nothing if the rendering is not invalid.
+			//		You generally do not call that method yourself.
+			// tags:
+			//		protected
+			if (this.invalidRendering) {
+				var props = lang.clone(this._invalidatedProperties);
+				this.invalidRendering = false;
+				this.refreshRendering(this._invalidatedProperties);
+				// do not fully delete invalidateProperties because someone might have set a property in
+				// its refreshRendering method (not wise but who knows what people are doing) and a new cycle
+				// should start with that properties listed as invalid instead of a blank set of properties
+				for (var key in props) {
+					delete this._invalidatedProperties[key];
+				}
+				this.emit("refresh-rendering-complete",
+					{ invalidatedProperties: props, bubbles: true, cancelable: false });
+			}
+		},
+		
+		/**
+		 * Immediately validates the properties and the rendering.
+		 */
+		validate: function () {
+			// summary:
+			//		Immediately validates the properties and the rendering.
+			// description:
+			//		The method calls validateProperties() then validateRendering().
+			//		You generally do not call that method yourself.
+			// tags:
+			//		protected
+			this.validateProperties();
+			this.validateRendering();
+		},
+		
+		/**
+		 * Actually refreshes the properties. 
+		 */
+		refreshProperties: function (/*jshint unused: vars */props) {
+			// summary:
+			//		Actually refreshes the properties. 
+			// description:
+			//		The default implementation does nothing. A class using this mixin
+			//		should implement this method if it needs to react to changes
+			//		of the value of an invalidating property, except for modifying the
+			//		DOM in which case refreshRendering() should be used instead.
+			//		Typically, this method should be overriden for implementing
+			//		the reconciliation of properties, for instance for adjusting 
+			//		interdependent properties such as "min", "max", and "value". 
+			//		The mixin calls this method before refreshRendering().
+			// props: Object
+			//		A hash of invalidated properties. This hash will then be passed further down to the
+			//		refreshRendering() method. As such any modification to this hash will be 
+			//		visible in refreshRendering().
+			// tags:
+			//		protected
+		},
+		
+		/**
+		 * Actually refreshes the rendering.
+		 */
+		refreshRendering: function (/*jshint unused: vars */props) {
+			// summary:
+			//		Actually refreshes the rendering.
+			// description:
+			//		The default implementation does nothing. A class using this mixin
+			//		should implement this method if it needs to modify the DOM in reaction 
+			//		to changes of the value of invalidating properties.
+			//		The mixin calls this method after refreshProperties().
+			// props: Object
+			//		A hash of invalidated properties.
+			// tags:
+			//		protected
+		}
+	});
+});
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Index</a></h2><h3>Modules</h3><ul><li><a href="Container.html">delite/Container</a></li><li><a href="CustomElement.html">delite/CustomElement</a></li><li><a href="Destroyable.html">delite/Destroyable</a></li><li><a href="Invalidating.html">delite/Invalidating</a></li><li><a href="Scrollable.html">delite/Scrollable</a></li><li><a href="Stateful.html">delite/Stateful</a></li><li><a href="Widget.html">delite/Widget</a></li></ul>
+</nav>
+
+<br clear="both">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-alpha4</a> on Tue Mar 11 2014 17:44:16 GMT+0100 (Romance Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

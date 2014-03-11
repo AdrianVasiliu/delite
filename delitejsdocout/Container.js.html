@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: Container.js</title>
+    
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+    
+    <h1 class="page-title">Source: Container.js</h1>
+    
+    
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/** @module delite/Container */
+define([
+	"dcl/dcl",
+	"dojo/dom-construct", // domConstruct.place
+	"./Widget"
+], function (dcl, domConstruct, Widget) {
+
+	// module:
+	//		delite/Container
+
+	/**
+	 * Widget that contains a set of widget children.
+	 * @class module:delite/Container
+	 * @augments {module:delite/Widget}
+	 */
+	return dcl(Widget, /** @lends module:delite/Container# */{
+		// summary:
+		//		Widget that contains a set of widget children.
+
+		buildRendering: dcl.after(function () {
+			if (!this.containerNode) {
+				// All widgets with descendants must set containerNode.
+				this.containerNode = this;
+			}
+		}),
+
+		/**
+		 * @summary
+		 * Makes the given widget or DOM node a child of this widget.
+		 * @description
+		 * Inserts specified child widget or DOM node as a child of this widget's
+		 * container node, and possibly does other processing (such as layout).
+		 * @param {DOMNode} widget
+		 * @param {int?} insertIndex 
+		 */
+		addChild: function (/*DOMNode*/ widget, /*int?*/ insertIndex) {
+			// summary:
+			//		Makes the given widget or DOM node a child of this widget.
+			// description:
+			//		Inserts specified child widget or DOM node as a child of this widget's
+			//		container node, and possibly does other processing (such as layout).
+
+			// I want to just call domConstruct.place(widget, this.containerNode, insertIndex), but the counting
+			// is thrown off by text nodes and comment nodes that show up when constructed by markup.
+			// In the future consider stripping those nodes on construction, either in the parser or this widget code.
+			var refNode = this.containerNode;
+			if (insertIndex > 0) {
+				// Old-school way to get nth child; dojo.query would be easier but Container was weened from dojo.query
+				// in #10087 to minimize download size.  Not sure if that's still and issue with new smaller dojo/query.
+				refNode = refNode.firstChild;
+				while (insertIndex > 0) {
+					if (refNode.nodeType === 1) {
+						insertIndex--;
+					}
+					refNode = refNode.nextSibling;
+				}
+				if (refNode) {
+					insertIndex = "before";
+				} else {
+					// to support addChild(child, n-1) where there are n children (should add child at end)
+					refNode = this.containerNode;
+					insertIndex = "last";
+				}
+			}
+
+			domConstruct.place(widget, refNode, insertIndex);
+
+			// If I've been started but the child widget hasn't been started,
+			// start it now.  Make sure to do this after widget has been
+			// inserted into the DOM tree, so it can see that it's being controlled by me,
+			// so it doesn't try to size itself.
+			if (this._started &amp;&amp; !widget._started &amp;&amp; dcl.isInstanceOf(widget, Widget)) {
+				widget.startup();
+			}
+		},
+
+		/**
+		 * Removes the passed widget instance from this widget but does
+		 * not destroy it.  You can also pass in an integer indicating
+		 * the index within the container to remove (ie, removeChild(5) removes the sixth widget).
+		 * @param {Element|int} widget
+		 */
+		removeChild: function (/*Element|int*/ widget) {
+			// summary:
+			//		Removes the passed widget instance from this widget but does
+			//		not destroy it.  You can also pass in an integer indicating
+			//		the index within the container to remove (ie, removeChild(5) removes the sixth widget).
+
+			if (typeof widget === "number") {
+				widget = this.getChildren()[widget];
+			}
+
+			if (widget) {
+				var node = widget;
+				if (node &amp;&amp; node.parentNode) {
+					HTMLElement.prototype.removeChild.call(node.parentNode, node); // detach but don't destroy
+				}
+			}
+		},
+
+		/**
+		 * Returns true if widget has child widgets, i.e. if this.containerNode contains widgets.
+		 */
+		hasChildren: function () {
+			// summary:
+			//		Returns true if widget has child widgets, i.e. if this.containerNode contains widgets.
+			return this.getChildren().length > 0;	// Boolean
+		},
+
+		/**
+		 * Gets the index of the child in this container or -1 if not found
+		 */
+		getIndexOfChild: function (/*DOMNode*/ child) {
+			// summary:
+			//		Gets the index of the child in this container or -1 if not found
+			return this.getChildren().indexOf(child);	// int
+		},
+
+		_getSibling: function (/*Element*/ node, /*String*/ which) {
+			// summary:
+			//		Returns next or previous sibling of specified node
+			// node:
+			//		The node
+			// which:
+			//		Either "next" or "previous"
+			// tags:
+			//		private
+			do {
+				node = node[which + "Sibling"];
+			} while (node &amp;&amp; node.nodeType !== 1);
+			return node;	// Element
+		},
+
+		/**
+		 * Returns null if this is the first child of the parent,
+		 * otherwise returns the next element sibling to the "left".  
+		 */
+		getPreviousSibling: function (/*Element*/ node) {
+			// summary:
+			//		Returns null if this is the first child of the parent,
+			//		otherwise returns the next element sibling to the "left".
+
+			return this._getSibling(node, "previous"); // Element
+		},
+
+		/**
+		 * Returns null if this is the last child of the parent,
+		 * otherwise returns the next element sibling to the "right".
+		 */
+		getNextSibling: function (/*Element*/ node) {
+			// summary:
+			//		Returns null if this is the last child of the parent,
+			//		otherwise returns the next element sibling to the "right".
+
+			return this._getSibling(node, "next"); // Element
+		}
+	});
+});
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Index</a></h2><h3>Modules</h3><ul><li><a href="Container.html">delite/Container</a></li><li><a href="CustomElement.html">delite/CustomElement</a></li><li><a href="Destroyable.html">delite/Destroyable</a></li><li><a href="Invalidating.html">delite/Invalidating</a></li><li><a href="Scrollable.html">delite/Scrollable</a></li><li><a href="Stateful.html">delite/Stateful</a></li><li><a href="Widget.html">delite/Widget</a></li></ul>
+</nav>
+
+<br clear="both">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-alpha4</a> on Tue Mar 11 2014 17:44:16 GMT+0100 (Romance Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

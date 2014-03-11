@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: Scrollable.js</title>
+    
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+    
+    <h1 class="page-title">Source: Scrollable.js</h1>
+    
+    
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/** @module delite/Scrollable */
+define([
+	"dcl/dcl",
+	"dojo/dom",
+	"dojo/dom-class",
+	"dojo/_base/fx",
+	"dojo/fx/easing",
+	"delite/Widget",
+	"delite/Invalidating",
+	"delite/themes/load!./Scrollable/themes/{{theme}}/Scrollable_css"
+], function (dcl, dom, domClass, baseFx, easing, Widget, Invalidating) {
+
+	// module:
+	//		delite/Scrollable
+
+	/**
+	 * A mixin which adds scrolling capabilities to a widget.
+	 * When mixed into a widget, this mixin brings scrolling capabilities
+	 * based on the overflow: auto CSS property.
+	 * By default, the scrolling capabilities are added to the widget
+	 * node itself. The host widget can chose the node thanks to the property
+	 * 'scrollableNode' which must be set at latest in its buildRendering()
+	 * method.
+	 * During interactive or programmatic scrolling, native "scroll"
+	 * events are emitted, and can be listen as follows (here,
+	 * 'scrollWidget' is the widget into which this mixin is mixed):
+	 * &lt;pre>
+	 * &lt;code>
+	 * scrollWidget.on("scroll", function () {
+	 * ...
+	 * }
+	 * &lt;/code>
+	 * &lt;/pre>
+	 * For widgets that customize the 'scrollableNode' property,
+     * the events should be listen on widget.scrollableNode.
+	 * @class module:delite/Scrollable
+	 * @augments {module:delite/Widget}
+	 * @augments {module:delite/Invalidating}
+	 */
+	return dcl([Widget, Invalidating], /** @lends module:delite/Scrollable# */{
+		// summary:
+		//		A mixin which adds scrolling capabilities to a widget.
+		// description:
+		//		When mixed into a widget, this mixin brings scrolling capabilities
+		//		based on the overflow: auto CSS property.
+		//		By default, the scrolling capabilities are added to the widget
+		//		node itself. The host widget can chose the node thanks to the property
+		//		'scrollableNode' which must be set at latest in its buildRendering()
+		//		method.
+		//		During interactive or programmatic scrolling, native "scroll"
+		//		events are emitted, and can be listen as follows (here,
+		//		'scrollWidget' is the widget into which this mixin is mixed):
+		// | scrollWidget.on("scroll", function () {
+		// |	...
+		// | }
+		//		For widgets that customize the 'scrollableNode' property,
+		//		the events should be listen on widget.scrollableNode.
+		//		TODO: improve the doc.
+
+		// TODO: optional styling of the scrollbar for browsers which by default do not provide
+		//	a scroll indicator.
+
+		// scrollDirection: String
+		//		The direction of the interactive scroll. Possible values are:
+		//		"vertical", "horizontal", "both, and "none". The default value is "vertical".
+		//		Note that scrolling programmatically using scrollTo() is
+		//		possible on both horizontal and vertical directions independently
+		//		on the value of scrollDirection.
+		
+		/**
+		 * The direction of the interactive scroll. Possible values are:
+		 * "vertical", "horizontal", "both, and "none". The default value is "vertical".
+		 * Note that scrolling programmatically using scrollTo() is
+		 * possible on both horizontal and vertical directions independently
+		 * on the value of scrollDirection.
+		 * @type {string}
+		 * @default "vertical"
+		 */
+		scrollDirection: "vertical",
+
+		// scrollableNode: [readonly] DomNode
+		//		Designates the descendant node of this widget which is made scrollable.
+		//		The default value is 'null'. If not set, defaults to this widget
+		//		itself ('this').
+		//		Note that this property can be set only at construction time, at latest
+		//		in the buildRendering() method of the widget into which this class is mixed.
+		scrollableNode: null,
+
+		preCreate: function () {
+			this.addInvalidatingProperties("scrollDirection");
+		},
+
+		postCreate: function () {
+			this.invalidateRendering("scrollDirection");
+		},
+		
+		buildRendering: dcl.after(function () {
+			// Do it using after advice to give a chance to a custom widget to
+			// set the scrollableNode at latest in an overridden buildRendering().
+			if (!this.scrollableNode) {
+				this.scrollableNode = this; // If unspecified, defaults to 'this'.
+			}
+			dom.setSelectable(this.scrollableNode, false);
+		}),
+		
+		refreshRendering: dcl.superCall(function (sup) {
+			return function (props) {
+				sup.call(this, props);
+				if (props &amp;&amp; props.scrollDirection) {
+					domClass.toggle(this.scrollableNode, "d-scrollable", this.scrollDirection !== "none");
+					domClass.toggle(this.scrollableNode, "d-scrollable-h",
+						/^(both|horizontal)$/.test(this.scrollDirection));
+					domClass.toggle(this.scrollableNode, "d-scrollable-v",
+						/^(both|vertical)$/.test(this.scrollDirection));
+				}
+			};
+		}),
+		
+		destroy: function () {
+			this._stopAnimation();
+		},
+
+		/**
+		 * Returns true if container's scroll has reached the maximum at
+		 * the top of the content. Returns false otherwise. 
+		 * @example
+		 * scrollContainer.on("scroll", function () {
+		 *   if (scrollContainer.isTopScroll()) {
+		 *     console.log("Scroll reached the maximum at the top");
+		 *   }
+		 * }
+		 * @returns {boolean}
+		 */
+		isTopScroll: function () {
+			// summary:
+			//		Returns true if container's scroll has reached the maximum at
+			//		the top of the content. Returns false otherwise.
+			// example:
+			// | scrollContainer.on("scroll", function () {
+			// |	if (scrollContainer.isTopScroll()) {
+			// |		console.log("Scroll reached the maximum at the top");
+			// |	}
+			// | }
+			// returns: Boolean
+			return this.scrollableNode.scrollTop === 0;
+		},
+
+		/**
+		 * Returns true if container's scroll has reached the maximum at
+		 * the top of the content. Returns false otherwise. 
+		 * @returns {boolean}
+		 */
+		isBottomScroll: function () {
+			// summary:
+			//		Returns true if container's scroll has reached the maximum at
+			//		the bottom of the content. Returns false otherwise.
+			// example:
+			// | scrollContainer.on("scroll", function () {
+			// |	if (scrollContainer.isBottomScroll()) {
+			// |		console.log("Scroll reached the maximum at the bottom");
+			// |	}
+			// | }
+			// returns: Boolean
+			var scrollableNode = this.scrollableNode;
+			return scrollableNode.offsetHeight + scrollableNode.scrollTop >=
+				scrollableNode.scrollHeight;
+		},
+
+		isLeftScroll: function () {
+			// summary:
+			//		Returns true if container's scroll has reached the maximum at
+			//		the left of the content. Returns false otherwise.
+			// example:
+			// | scrollContainer.on("scroll", function () {
+			// |	if (scrollContainer.isLeftScroll()) {
+			// |		console.log("Scroll reached the maximum at the left");
+			// |	}
+			// | }
+			// returns: Boolean
+			return this.scrollableNode.scrollLeft === 0;
+		},
+
+		isRightScroll: function () {
+			// summary:
+			//		Returns true if container's scroll has reached the maximum at
+			//		the right of the content. Returns false otherwise.
+			// example:
+			// | scrollContainer.on("scroll", function () {
+			// |	if (scrollContainer.isRightScroll()) {
+			// |		console.log("Scroll reached the maximum at the right");
+			// |	}
+			// | }
+			// returns: Boolean
+			var scrollableNode = this.scrollableNode;
+			return scrollableNode.offsetWidth + scrollableNode.scrollLeft >= scrollableNode.scrollWidth;
+		},
+
+		getCurrentScroll: function () {
+			// summary:
+			//		Returns the current amount of scroll, as an object with x and y properties
+			//		for the horizontal and vertical scroll amount.
+			//		This is a convenience method and it is not supposed to be overridden.
+			// returns: Object
+			return {x: this.scrollableNode.scrollLeft, y: this.scrollableNode.scrollTop};
+		},
+
+		/**
+		 * Scrolls by the given amount.
+ 		 * @param {object} by The scroll amount. An object with x and/or y properties, for example
+		 *  {x:0, y:-5} or {y:-29}.
+		 * @param {number} duration Duration of scrolling animation in milliseconds. 
+		 *  If 0 or unspecified, scrolls without animation.
+		 */
+		scrollBy: function (by, duration) {
+			// summary:
+			//		Scrolls by the given amount.
+			// by:
+			//		The scroll amount. An object with x and/or y properties, for example
+			//		{x:0, y:-5} or {y:-29}.
+			// duration:
+			//		Duration of scrolling animation in milliseconds. If 0 or unspecified,
+			//		scrolls without animation.
+			var to = {};
+			if (by.x !== undefined) {
+				to.x = this.scrollableNode.scrollLeft + by.x;
+			}
+			if (by.y !== undefined) {
+				to.y = this.scrollableNode.scrollTop + by.y;
+			}
+			this.scrollTo(to, duration);
+		},
+
+		scrollTo: function (to, /*Number?*/duration) {
+			// summary:
+			//		Scrolls to the given position.
+			// to:
+			//		The scroll destination position. An object with x and/or y properties,
+			//		for example {x:0, y:-5} or {y:-29}.
+			// duration:
+			//		Duration of scrolling animation in milliseconds. If 0 or unspecified,
+			//		scrolls without animation.
+			var scrollableNode = this.scrollableNode;
+			this._stopAnimation();
+			if (!duration || duration &lt;= 0) { // shortcut
+				if (to.x !== undefined) {
+					scrollableNode.scrollLeft = to.x;
+				}
+				if (to.y !== undefined) {
+					scrollableNode.scrollTop = to.y;
+				}
+			} else {
+				var from = {
+					x: to.x !== undefined ? scrollableNode.scrollLeft : undefined,
+					y: to.y !== undefined ? scrollableNode.scrollTop : undefined
+				};
+				var self = this;
+				var anim = function () {
+					// dojo/_base/fx._Line cannot be used for animating several
+					// properties at once (scrollTop and scrollLeft in our case). 
+					// Hence, using instead a custom function:
+					var Curve = function (/*int*/ start, /*int*/ end) {
+						this.start = start;
+						this.end = end;
+					};
+					Curve.prototype.getValue = function (/*float*/ n) {
+						return {
+							x: ((to.x - from.x) * n) + from.x,
+							y: ((to.y - from.y) * n) + from.y
+						};
+					};
+					var animation = new baseFx.Animation({
+						beforeBegin: function () {
+							if (this.curve) {
+								delete this.curve;
+							}
+							animation.curve = new Curve(from, to);
+						},
+						onAnimate: function (val) {
+							if (val.x !== undefined) {
+								scrollableNode.scrollLeft = val.x;
+							}
+							if (val.y !== undefined) {
+								scrollableNode.scrollTop = val.y;
+							}
+						},
+						easing: easing.expoInOut, // TODO: IMPROVEME
+						duration: duration,
+						rate: 20 // TODO: IMPROVEME
+					});
+					self._animation = animation;
+					return animation; // dojo/_base/fx/Animation
+				};
+				anim().play();
+			}
+		},
+
+		_stopAnimation: function () {
+			// summary:
+			//		Stops the scrolling animation if it is currently playing. 
+			if (this._animation &amp;&amp; this._animation.status() === "playing") {
+				this._animation.stop();
+			}
+		}
+	});
+});
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Index</a></h2><h3>Modules</h3><ul><li><a href="Container.html">delite/Container</a></li><li><a href="CustomElement.html">delite/CustomElement</a></li><li><a href="Destroyable.html">delite/Destroyable</a></li><li><a href="Invalidating.html">delite/Invalidating</a></li><li><a href="Scrollable.html">delite/Scrollable</a></li><li><a href="Stateful.html">delite/Stateful</a></li><li><a href="Widget.html">delite/Widget</a></li></ul>
+</nav>
+
+<br clear="both">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-alpha4</a> on Tue Mar 11 2014 17:44:16 GMT+0100 (Romance Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
