@@ -73,7 +73,7 @@ define([
 		 * Note that scrolling programmatically using scrollTo() is
 		 * possible on both horizontal and vertical directions independently
 		 * on the value of scrollDirection.
-		 * @type {string}
+		 * @member {string}
 		 * @default "vertical"
 		 */
 		scrollDirection: "vertical",
@@ -91,7 +91,7 @@ define([
 		 * itself ('this').
 		 * Note that this property can be set only at construction time, at latest
 		 * in the buildRendering() method of the widget into which this class is mixed.
-		 * @type {DomNode}
+		 * @member {DomNode}
 		 * @default null
 		 */
 		scrollableNode: null,

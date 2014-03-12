@@ -38,7 +38,7 @@ define(["dcl/dcl", "dojo/_base/lang", "./Stateful"], function (dcl, lang, Statef
 		/**
 		 * Whether at least one property is invalid. This is readonly information, one must call
 		 * invalidateProperties() to modify this flag.
-		 * @type {boolean}
+		 * @member {boolean}
 		 * @default false
 		 */
 		invalidProperties: false,
@@ -50,7 +50,7 @@ define(["dcl/dcl", "dojo/_base/lang", "./Stateful"], function (dcl, lang, Statef
 		/**
 		 * Whether the rendering is invalid. This is readonly information, one must call
 		 * invalidateRendering() to modify this flag.
-		 * @type {boolean}
+		 * @member {boolean}
 		 * @default false
 		 */
 		invalidRendering: false,

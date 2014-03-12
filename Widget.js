@@ -50,10 +50,22 @@ define([
 		/**
 		 * This widget or a widget it contains has focus, or is "active" because
 		 * it was recently clicked.
-		 * @type {boolean}
+		 * @member {boolean}
 		 * @default false
 		 */
 		focused: false,
+		
+		/** 
+		 * Designates where children of the source DOM node will be placed.
+		 * "Children" in this case refers to both DOM nodes and widgets.
+		 * <p>
+		 * containerNode must be defined for any widget that accepts innerHTML
+		 * (like ContentPane or BorderContainer or even Button), and conversely
+		 * is undefined for widgets that don't, like TextBox.
+		 * </p>
+ 		 * @member {DomNode} module:delite/Widget#containerNode
+ 		 * @default undefined
+ 		 */
 		
 		/*=====
 		 // containerNode: [readonly] DomNode
@@ -77,7 +89,7 @@ define([
 		/**
 		 * Convenience pointer to register class.   Used by buildRendering() functions produced from
 		 * handlebars! / template.
-		 * @type {delite/register}
+		 * @member {delite/register}
 		 */
 		register: register,
 
@@ -333,7 +345,7 @@ define([
 		 * shorthand mechanism to put an existing (or newly created) Widget
 		 * somewhere in the dom, and allow chaining.
 		 * @param {String|DomNode|Widget} reference Widget, DOMNode, or id of widget or DOMNode
-		 * @param {String|Int?} position If reference is a widget (or id of widget), and that widget has an ".addChild" method,
+		 * @param [String|Int] position If reference is a widget (or id of widget), and that widget has an ".addChild" method,
 		 * it will be called passing this widget instance into that method, supplying the optional
 		 * position index passed.  In this case position (if specified) should be an integer.
 		 * <p>

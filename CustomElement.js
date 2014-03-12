@@ -298,7 +298,7 @@ define([
 
 		/**
 		 * Search subtree under root returning custom elements found.
- 		 * @param {Element?} root Node to search under.
+ 		 * @param [Element] root Node to search under.
 		 */
 		findCustomElements: function (root) {
 			// summary:
