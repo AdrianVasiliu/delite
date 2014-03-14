@@ -30,8 +30,8 @@ define([
 		 * @description
 		 * Inserts specified child widget or DOM node as a child of this widget's
 		 * container node, and possibly does other processing (such as layout).
-		 * @param {DOMNode} widget
-		 * @param {int} [insertIndex]
+		 * @param {DOMNode} widget A description for widget
+		 * @param {int} [insertIndex] A description for insertIndex
 		 */
 		addChild: function (widget, insertIndex) {
 		// addChild: function (/*DOMNode*/ widget, /*int?*/ insertIndex) {

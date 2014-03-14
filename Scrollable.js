@@ -36,6 +36,7 @@ define([
 	 * @class module:delite/Scrollable
 	 * @augments {module:delite/Widget}
 	 * @augments {module:delite/Invalidating}
+	 * @mixin
 	 */
 	return dcl([Widget, Invalidating], /** @lends module:delite/Scrollable# */{
 		// summary:

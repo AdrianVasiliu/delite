@@ -5,6 +5,7 @@ define(["dcl/dcl", "dojo/_base/lang", "./Stateful"], function (dcl, lang, Statef
 	 * Mixin for classes (usually widgets) that watch a set of invalidating properties.
 	 * @class module:delite/Invalidating
 	 * @augments {module:delite/Stateful}
+	 * @mixin
 	 */
 	return dcl(Stateful, /** @lends module:delite/Invalidating# */{
 		// summary:

@@ -15,6 +15,7 @@ define([
 	 * dojo/Stateful::watch, or any class (including widgets) with a destroy() or remove() method.
 	 * Then call destroy() later to destroy this instance and release the resources.
 	 * @class module:delite/Destroyable
+	 * @mixin
 	 */
 	var Destroyable = dcl(null, /** @lends module:delite/Destroyable# */{
 		// summary:

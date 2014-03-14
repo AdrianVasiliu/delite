@@ -14,7 +14,7 @@ define([
 	var div = document.createElement("div");
 
 	/**
-	 * @summary 
+	 * @summary
 	 * Base class for all custom elements.
 	 * @description
 	 * Use this class rather that Widget for non-visual custom elements.
