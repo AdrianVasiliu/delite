@@ -48,6 +48,9 @@ define([
 				assert.equal(store.renderItems.length, 2);
 				assert.deepEqual(store.renderItems[0], { id: "foo", name: "Foo2" });
 				assert.deepEqual(store.renderItems[1], { id: "fb", name: "FB" });
+				
+				myStore.setData([]); // Clear all items in the store
+				assert.equal(store.renderItems.length, 0); // Currently failing (dstore issue?)
 			}));
 			store.startup();
 			// use empty model to easy comparison
