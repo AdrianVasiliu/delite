@@ -61,6 +61,173 @@ define([
 			assert.strictEqual(node.myButton2.tagName.toLowerCase(), "button", "node.myButton2");
 		},
 
+		"binding case 1: bind target = widget properties with same name as native props": function () {
+			console.log("============================");
+			console.log("case 1: bind target = widget properties with different name than native props");
+			var MyWidget = register("handlebars-broken-binding", [HTMLElement, Widget], {
+				foo: 0,
+				size: 0,
+				multiple: false,
+				buildRendering: handlebars.compile(
+					"<template><select data-attach-point='select' foo='{{foo}}' " +
+					"size='{{size}}' multiple='{{multiple}}'></select></template>"
+				)
+			});
+			
+			var myWidget = new MyWidget({}); // default values
+			var select = myWidget.select;
+			console.log("*** default values on the widget: foo: 0, size: 0, multiple: false");
+			console.log("(default values) widget.foo: " + myWidget.foo);
+			console.log("(default values) widget.size: " + myWidget.size);
+			console.log("(default values) widget.multiple: " + myWidget.multiple);
+			console.log("(default values) widget.select.getAttribute('foo'): " +
+				select.getAttribute("foo"));
+			console.log("(default values) widget.select.getAttribute('size'): " +
+				select.getAttribute("size"));
+			console.log("(default values) widget.select.getAttribute('multiple'): " +
+				select.getAttribute("multiple"));
+			console.log("(default values) widget.select.foo: " +
+				select.foo);
+			console.log("(default values) widget.select.size: " +
+				select.size);
+			console.log("(default values) widget.select.multiple: " +
+				select.multiple);
+			// assert.strictEqual(select.getAttribute("foo"), "0", "foo");
+			// assert.strictEqual(select.getAttribute("size"), "0", "size");
+			
+			myWidget = new MyWidget({ // custom values
+				foo: 2,
+				size: 2,
+				multiple: true
+			});
+			
+			select = myWidget.select;
+			console.log("*** custom values on the widget (ctor args): foo: 2, size: 2, multiple: true");
+			console.log("(custom values as ctor args) widget.foo: " + myWidget.foo);
+			console.log("(custom values as ctor args) widget.size: " + myWidget.size);
+			console.log("(custom values as ctor args) widget.multiple: " + myWidget.multiple);
+			console.log("(custom values as ctor args) widget.select.getAttribute('foo'): " +
+				select.getAttribute("foo"));
+			console.log("(custom values as ctor args) widget.select.getAttribute('size'): " +
+				select.getAttribute("size"));
+			console.log("(custom values as ctor args) widget.select.getAttribute('multiple'): " +
+				select.getAttribute("multiple"));
+			console.log("(custom values as ctor args) widget.select.foo: " +
+				select.foo);
+			console.log("(custom values as ctor args) widget.select.size: " +
+				select.size);
+			console.log("(custom values as ctor args) widget.select.multiple: " +
+				select.multiple);
+			
+			/*jshint multistr: true */
+			var html = "<handlebars-broken-binding id='myWidget1' foo='6' size='6' multiple='true'> \
+				</handlebars-broken-binding>";
+			var container = document.createElement("div");
+			document.body.appendChild(container);
+			container.innerHTML = html;
+			register.parse(container);
+			myWidget = document.getElementById("myWidget1");
+			select = myWidget.select;
+			console.log("*** custom values on the widget (markup): foo: 6, size: 6, multiple: true");
+			console.log("(custom values in markup) widget.foo: " + myWidget.foo);
+			console.log("(custom values in markup) widget.size: " + myWidget.size);
+			console.log("(custom values in markup) widget.multiple: " + myWidget.multiple);
+			console.log("(custom values in markup) widget.select.getAttribute('foo'): " +
+				select.getAttribute("foo"));
+			console.log("(custom values in markup) widget.select.getAttribute('size'): " +
+				select.getAttribute("size"));
+			console.log("(custom values in markup) widget.select.getAttribute('multiple'): " +
+				select.getAttribute("multiple"));
+			console.log("(custom values in markup) widget.select.foo: " +
+				select.foo);
+			console.log("(custom values in markup) widget.select.size: " +
+				select.size);
+			console.log("(custom values in markup) widget.select.multiple: " +
+				select.multiple);
+		},
+		
+		"binding case 2: bind target = widget properties with different name than native props": function () {
+			console.log("============================");
+			console.log("case 2: bind target = widget properties with different name than native props");
+			var MyWidget = register("handlebars-broken-binding2", [HTMLElement, Widget], {
+				foo: 0,
+				sizee: 0, // different than size
+				multiplee: false, // different than multiple
+				buildRendering: handlebars.compile(
+					"<template><select data-attach-point='select' foo='{{foo}}' " +
+					"size='{{sizee}}' multiple='{{multiplee}}'></select></template>"
+				)
+			});
+			
+			var myWidget = new MyWidget({}); // default values
+			var select = myWidget.select;
+			console.log("(default values) widget.foo: " + myWidget.foo);
+			console.log("(default values) widget.sizee: " + myWidget.sizee);
+			console.log("(default values) widget.multiplee: " + myWidget.multiplee);
+			console.log("(default values) widget.select.getAttribute('foo'): " +
+				select.getAttribute("foo"));
+			console.log("(default values) widget.select.getAttribute('size'): " +
+				select.getAttribute("size"));
+			console.log("(default values) widget.select.getAttribute('multiple'): " +
+				select.getAttribute("multiple"));
+			console.log("(default values) widget.select.foo: " +
+				select.foo);
+			console.log("(default values) widget.select.size: " +
+				select.size);
+			console.log("(default values) widget.select.multiple: " +
+				select.multiple);
+			// assert.strictEqual(select.getAttribute("foo"), "0", "foo");
+			// assert.strictEqual(select.getAttribute("size"), "0", "size");
+			
+			myWidget = new MyWidget({ // custom values
+				foo: 2,
+				sizee: 2,
+				multiplee: true
+			});
+			
+			select = myWidget.select;
+			console.log("(custom values as ctor args) widget.foo: " + myWidget.foo);
+			console.log("(custom values as ctor args) widget.sizee: " + myWidget.sizee);
+			console.log("(custom values as ctor args) widget.multiplee: " + myWidget.multiplee);
+			console.log("(custom values as ctor args) widget.select.getAttribute('foo'): " +
+				select.getAttribute("foo"));
+			console.log("(custom values as ctor args) widget.select.getAttribute('size'): " +
+				select.getAttribute("size"));
+			console.log("(custom values as ctor args) widget.select.getAttribute('multiple'): " +
+				select.getAttribute("multiple"));
+			console.log("(custom values as ctor args) widget.select.foo: " +
+				select.foo);
+			console.log("(custom values as ctor args) widget.select.size: " +
+				select.size);
+			console.log("(custom values as ctor args) widget.select.multiple: " +
+				select.multiple);
+			
+			/*jshint multistr: true */
+			var html = "<handlebars-broken-binding2 id='myWidget2' foo='6' sizee='6' multiplee='true'> \
+				</handlebars-broken-binding2>";
+			var container = document.createElement("div");
+			document.body.appendChild(container);
+			container.innerHTML = html;
+			register.parse(container);
+			myWidget = document.getElementById("myWidget2");
+			select = myWidget.select;
+			console.log("(custom values in markup) widget.foo: " + myWidget.foo);
+			console.log("(custom values in markup) widget.sizee: " + myWidget.sizee);
+			console.log("(custom values in markup) widget.multiplee: " + myWidget.multiplee);
+			console.log("(custom values in markup) widget.select.getAttribute('foo'): " +
+				select.getAttribute("foo"));
+			console.log("(custom values in markup) widget.select.getAttribute('size'): " +
+				select.getAttribute("size"));
+			console.log("(custom values in markup) widget.select.getAttribute('multiple'): " +
+				select.getAttribute("multiple"));
+			console.log("(custom values in markup) widget.select.foo: " +
+				select.foo);
+			console.log("(custom values in markup) widget.select.size: " +
+				select.size);
+			console.log("(custom values in markup) widget.select.multiple: " +
+				select.multiple);
+		},
+			
 		"special props": function () {
 			var SpecialPropsWidget = register("handlebars-special-props", [HTMLElement, Widget], {
 				inputClass: "originalClass",	// attribute called "class" but property called "className"
@@ -78,6 +245,8 @@ define([
 			assert.strictEqual(input.className, "originalClass",
 				"class set even though property is called className, not class");
 			assert.strictEqual(input.getAttribute("role"), "originalRole", "role set as attribute");
+			// assert.strictEqual(input.getAttribute("foo"), "0", "foo");
+			// assert.strictEqual(input.getAttribute("sizee"), "0", "sizee");
 
 			mySpecialPropsWidget.mix({
 				inputClass: "newClass",

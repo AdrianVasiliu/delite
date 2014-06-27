@@ -1,13 +1,13 @@
 // Listing of all the infrastructure unit tests
 define([
-	"./css",
+	/* "./css",
 	"./theme",
 	"./Destroyable",
 	"./DisplayContainer",
 	"./register",
 	"./CustomElement",
-	"./Widget",
-	"./handlebars",
+	"./Widget", */
+	"./handlebars"/*,
 	"./HasDropDown",
 	"./CssState",
 	"./Container",
@@ -19,5 +19,5 @@ define([
 	"./StoreMap",
 	"./Store",
 	"./Scrollable",
-	"./Invalidating"
+	"./Invalidating"*/
 ]);
