@@ -7,8 +7,11 @@ define([
 	"delite/register",
 	"delite/HasDropDown",
 	"delite/Widget",
+	// requiring delite/focus for testing delite issue #267 (behavior of
+	// delite/popup used in conjunction with delite/focus)
+	"delite/focus",
 	"../helpers"
-], function (registerSuite, assert, domGeom, keys, on, register, HasDropDown, Widget, helpers) {
+], function (registerSuite, assert, domGeom, keys, on, register, HasDropDown, Widget, focus, helpers) {
 	var container, SimplePopup, SimpleDropDownButton, NonFocusableDropDownButton, popup, dd, ndd;
 
 	// TODO: convert this to functional test; no need to simulate clicks and keystrokes.
@@ -72,7 +75,6 @@ define([
 
 				postCreate: register.after(function () {
 					this.dropDown = new SimplePopup({
-						id: this.id + "_popup",
 						label: this.popupLabel
 					});
 				})
@@ -92,7 +94,6 @@ define([
 
 				postCreate: register.after(function () {
 					this.dropDown = new SimplePopup({
-						id: this.id + "_popup",
 						label: "popup from non-focusable"
 					});
 				})
@@ -103,7 +104,6 @@ define([
 		basic: function () {
 			// setup
 			dd = new SimpleDropDownButton({
-				id: "dd",
 				label: "show dropdown - ltr"
 			}).placeAt(container);
 			popup = dd.dropDown;
@@ -116,7 +116,12 @@ define([
 			assert(Math.abs(anchorPos.x - dropDownPos.x) < 1, "drop down and anchor left aligned");
 			assert(Math.abs(anchorPos.w - dropDownPos.w) < 1, "drop down same width as anchor");
 			assert.ok(helpers.isVisible(popup), "popup visible");
-
+			
+			// Test for delite #267 (behavior of delite/popup used in conjunction
+			// with delite/focus)
+			click(popup);
+			assert.notOk(helpers.isHidden(popup), "clicking the popup should not hide it");
+			
 			// close
 			dd.closeDropDown();
 			assert.ok(helpers.isHidden(popup), "popup hidden");
@@ -126,6 +131,11 @@ define([
 			assert.ok(!!popup, "popup exists");
 			assert.ok(helpers.isVisible(popup), "popup visible again");
 
+			// Test for delite #267 ((behavior of delite/popup used in conjunction
+			// with delite/focus)
+			click(popup);
+			assert.notOk(helpers.isHidden(popup), "clicking the popup should not hide it");
+			
 			// close 2
 			dd.closeDropDown();
 			assert.ok(helpers.isHidden(popup), "popup hidden again");
@@ -134,7 +144,6 @@ define([
 		rtl: function () {
 			// setup
 			dd = new SimpleDropDownButton({
-				id: "rdd",
 				dir: "rtl",
 				label: "show dropdown - rtl"
 			}).placeAt(container);
@@ -156,7 +165,7 @@ define([
 
 		"non focusable": function () {
 			// setup
-			ndd = new NonFocusableDropDownButton({id: "ndd"}).placeAt(container);
+			ndd = new NonFocusableDropDownButton().placeAt(container);
 			popup = ndd.dropDown;
 			assert.ok(!!popup, "popup exists");
 
@@ -164,6 +173,11 @@ define([
 			click(ndd);
 			assert.ok(helpers.isVisible(popup), "popup visible");
 
+			// Test for delite #267 (behavior of delite/popup used in conjunction
+			// with delite/focus)
+			click(popup);
+			assert.notOk(helpers.isHidden(popup), "clicking the popup should not hide it");
+			
 			// close
 			ndd.closeDropDown();
 		},
@@ -171,7 +185,6 @@ define([
 		"alignment - left": function () {
 			var d = this.async(1000);
 			var ltr = new SimpleDropDownButton({
-				id: "ltr",
 				label: "show non-auto-width dropdown - ltr",
 				autoWidth: false
 			}).placeAt(container);
@@ -188,7 +201,6 @@ define([
 		"alignment - right": function () {
 			var d = this.async(1000);
 			var rtl = new SimpleDropDownButton({
-				id: "rtl",
 				dir: "rtl",
 				label: "show non-auto-width dropdown - rtl",
 				autoWidth: false
@@ -206,7 +218,7 @@ define([
 
 		destroy: function () {
 			// setup
-			dd = new SimpleDropDownButton({id: "dd2"}).placeAt(container);
+			dd = new SimpleDropDownButton().placeAt(container);
 			popup = dd.dropDown;
 			assert.ok(!!popup, "popup exists");
 
