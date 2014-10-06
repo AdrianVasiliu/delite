@@ -35,10 +35,11 @@
 			"delite/keys",
 			"delite/register",
 			"delite/HasDropDown",
+			"delite/KeyNav",
 			"delite/Widget",
 			"dpointer/events",	// since I'm using touch-action
 			"requirejs-domready/domReady!"
-		], function (Deferred, keys, register, HasDropDown, Widget) {
+		], function (Deferred, keys, register, HasDropDown, KeyNav, Widget) {
 
 			// A trivial popup widget
 			var SimpleTooltipDialog = register("simple-tooltip-dialog", [HTMLElement, Widget], {
@@ -62,7 +63,7 @@
 			});
 
 			// Base class for focusable and non-focusable menus
-			var MenuBase = register.dcl(Widget, {
+			var MenuBase = register.dcl([Widget, KeyNav], {
 				// Since this is a menu, we don't want to automatically get focus on open, unless it's
 				// opened via the keyboard
 				focusOnOpen: false,
@@ -80,7 +81,7 @@
 					this.on("click", this.emit.bind(this, "change"));
 
 					for (var i = 1; i < 4; i++) {
-						this.innerHTML += "<div index='" + i +
+						this.innerHTML += "<div tabindex: \"-1\" index='" + i +
 								"'>choice #" + this["choice" + i] + "</div>";
 					}
 				},
@@ -89,6 +90,29 @@
 					// If user does mouse down on dropdown button, then mouse up on menu, handle
 					// as click on menu.
 					this.emit("change");
+				},
+				descendantSelector: function (child) {
+					return child !== this;
+				},
+				downArrowKeyHandler: function () {
+					console.log("arrow down");
+					if (!this.navigatedDescendant) {
+						alert("navigatedDescendant not yet set!!");
+					}
+					var nextChild = this.getNext(this.navigatedDescendant, 1);
+					if (nextChild) {
+						this.navigateTo(nextChild);
+					}
+				},
+				upArrowKeyHandler: function () {
+					console.log("arrow up");
+					if (!this.navigatedDescendant) {
+						alert("navigatedDescendant not yet set!!");
+					}
+					var previousChild = this.getNext(this.navigatedDescendant, -1);
+					if (previousChild) {
+						this.navigateTo(previousChild);
+					}
 				}
 			});
 
@@ -100,6 +124,7 @@
 					Array.prototype.forEach.call(this.children, function (child) {
 						child.setAttribute("tabindex", "-1");
 					});
+					/*
 					this.on("keydown", function (evt) {
 						if(evt.keyCode == keys.ENTER || evt.keyCode == keys.SPACE) {
 							this.emit("change");
@@ -109,6 +134,7 @@
 							this.focus((this.selected && this.selected.previousSibling) || this.lastChild);
 						}
 					}.bind(this));
+					*/
 				},
 
 				focus: function (selected) {
@@ -139,7 +165,7 @@
 				},
 
 				postRender: function () {
-					this.on("keydown", this._keydownHandler.bind(this));
+					// this.on("keydown", this._keydownHandler.bind(this));
 				},
 
 				_keydownHandler: function (evt) {
@@ -186,7 +212,7 @@
 					}));
 				}
 			});
-
+			
 			// A button that shows a popup, but spends 1000ms the first time pretending to load the popup.
 			// Also used for testing that things work even when id's not specified.
 			var DelayedDropDownButton = register("delayed-drop-down-button", [SimpleDropDownButton], {
@@ -258,13 +284,14 @@
 			new ComboBox({
 				id: "combobox"
 			}).placeAt(document.body);
-
+			
 			// Set global variable to signal that the test page is ready
 			ready = true;
 		});
 	</script>
 </head>
 <body>
+	Bof bof
 	<input id=input value="for focus testing">
 </body>
 </html>
