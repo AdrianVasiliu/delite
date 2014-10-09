@@ -29,16 +29,31 @@
 	<script type="text/javascript" src="../boilerplate.js"></script>
 	<script language="JavaScript" type="text/javascript">
 		var ready = false; // set to true when the test page is ready
-
+		
 		require([
 			"dojo/Deferred",
 			"delite/keys",
 			"delite/register",
 			"delite/HasDropDown",
 			"delite/Widget",
+			"delite/Viewport",
 			"dpointer/events",	// since I'm using touch-action
 			"requirejs-domready/domReady!"
-		], function (Deferred, keys, register, HasDropDown, Widget) {
+		], function (Deferred, keys, register, HasDropDown, Widget, Viewport) {
+			
+			var showBox = function () { 
+				var box = Viewport.getBox(document);
+				var effectiveBox = Viewport.getEffectiveBox(document);
+				console.log("         box: w=" + box.w + " h=" + box.h + 
+					" t= " + box.t + " l="+ box.l);
+				console.log("effectiveBox: w=" + effectiveBox.w + " h=" + effectiveBox.h + 
+					" t= " + effectiveBox.t + " l="+ effectiveBox.l);
+			};
+			showBox();
+			window.addEventListener("resize", function() {
+				console.log("resize");
+				showBox();
+			}, true);
 
 			// A trivial popup widget
 			var SimpleTooltipDialog = register("simple-tooltip-dialog", [HTMLElement, Widget], {
@@ -168,7 +183,8 @@
 					this.textContent = val;
 					this._set("label", val);
 				},
-				orient: ["below"],
+				orient: ["center"],
+				dropDownPosition: ["center"],
 
 				dropDownConstructor: FocusMenu,
 
@@ -186,12 +202,14 @@
 					this.textContent = val;
 					this._set("label", val);
 				},
-				orient: ["below"]
+				orient: ["center"],
+				dropDownPosition: ["center"],
 			});
 
 			// A button that shows a popup
 			var ComboBox = register("combo-box", [HTMLInputElement, HasDropDown], {
-				orient: ["below"],
+				orient: ["center"],
+				dropDownPosition: ["center"],
 
 				dropDownConstructor: NonFocusMenu,
 
@@ -225,7 +243,8 @@
 					this._set("label", val);
 				},
 
-				orient: ["below"],
+				orient: ["center"],
+				dropDownPosition: ["center"],
 
 				loadDropDown: function () {
 					return this._dropDown || (this._dropDown = new FocusMenu({
