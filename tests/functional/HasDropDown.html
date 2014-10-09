@@ -53,7 +53,12 @@
 			window.addEventListener("resize", function() {
 				console.log("resize");
 				showBox();
-			}, true);
+			}, true/*useCapture*/);
+			window.addEventListener("scroll", function() {
+				console.log("scroll");
+				showBox();
+			}, true/*useCapture*/);
+			
 
 			// A trivial popup widget
 			var SimpleTooltipDialog = register("simple-tooltip-dialog", [HTMLElement, Widget], {
