@@ -25,6 +25,30 @@
 			background-color: blue;
 			color: white;
 		}
+		
+		.scrollContainer {
+			display: block;
+			overflow: auto;
+			/* enable momentum: */
+			-webkit-overflow-scrolling: touch;
+			/* enable hardware acceleration: */
+			-webkit-transform: translate3d(0, 0, 0);
+			
+			/* height: 90%; */
+			/* height: 200px; */
+			width: inherit;
+			height: inherit;
+			/* height: 100%;
+			width: 100%; */
+		}
+	
+		.outerScrollContainer {
+			display: block;
+			position: relative;
+			width: 100%;
+			height: 90%;
+		}
+
 	</style>
 	<script type="text/javascript" src="../boilerplate.js"></script>
 	<script language="JavaScript" type="text/javascript">
@@ -66,9 +90,19 @@
 			var SimpleTooltipDialog = register("simple-tooltip-dialog", [HTMLElement, Widget], {
 				render: function () {
 					// enable fast click, so testing code doesn't to wait 300ms for submit/cancel buttons to take effect
-					this.setAttribute("touch-action", "none");
-					this.innerHTML = "<input><br>" +
-						"<button type=submit>submit</button><br><button type=button>cancel</button>";
+					/* this.setAttribute("touch-action", "none"); */ // Adrian: removed to allow native scroll
+					this.innerHTML +=
+						"<div>" + this.title + "</div>" +
+						"<div class=\"scrollContainer\">" +
+						"blah1<br/>blah2<br/>blah3<br/>blah4<br/>blah5<br/>blah6<br/>blah7<br/>blah8<br/>" +
+						"blah9<br/>blah10<br/>blah11<br/>blah12<br/>blah13<br/>blah14<br/>blah15<br/>blah16<br/>" +
+						"blah17<br/>blah18<br/>blah18<br/>blah19<br/>blah20<br/>blah21<br/>blah22<br/>blah23<br/>" +
+						"</div>" +
+						"<input>" +
+						"<br/>" +
+						"<button type=submit>submit</button><br><button type=button>cancel</button><br/>";
+
+						domClass.add(this, "outerScrollContainer");
 				},
 				postRender: function () {
 					this.on("click", function () {
