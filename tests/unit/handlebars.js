@@ -73,10 +73,20 @@ define([
 					role: "originalRole",			// must be set as attribute
 					template: handlebars.compile(
 							"<template><input class='{{inputClass}}' value='{{inputValue}}' " +
+							"autocorrect='off' " +
 							"role='{{role}}'/></template>"
 					)
 				});
-				var mySpecialPropsWidget = new SpecialPropsWidget();
+				var mySpecialPropsWidget;
+				try {
+					mySpecialPropsWidget = new SpecialPropsWidget();
+				} catch (err) {
+					console.log("got unexpected error:");
+					console.log(err);
+					assert(false, "new SpecialPropsWidget() threw an error " +
+						"(maybe because of template parsing): " + err.message);
+				}
+				
 				mySpecialPropsWidget.deliver();
 				var input = mySpecialPropsWidget.children[0];
 
@@ -95,6 +105,7 @@ define([
 				assert.strictEqual(input.value, "new value", "value changed");
 				assert.strictEqual(input.className, "newClass", "class changed");
 				assert.strictEqual(input.getAttribute("role"), "newRole", "role changed");
+				assert.strictEqual(input.getAttribute("autocorrect"), "off", "autocorrect changed");
 			},
 
 			two: function () {
