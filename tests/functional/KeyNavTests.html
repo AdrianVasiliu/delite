@@ -197,6 +197,11 @@
 			color: white;
 			background-color: blue;
 		}
+		
+		.scrollContainer {
+			overflow-y: auto;
+			-webkit-overflow-scrolling: touch;
+		}
 
 	</style>
 </head>
@@ -206,6 +211,7 @@
 	<h3 id="testGridLabel">Declarative KeyNav with no tabindex setting:</h3>
 	<input id="focus" type="text" value="input before grid">
 	<my-grid id="grid" aria-labelledby="testGridLabel">
+		<div class="scrollContainer" style="height: 100px">
 		<my-row>
 			<my-cell tabindex="-1">apple</my-cell>
 			<my-cell tabindex="-1">banana</my-cell>
@@ -220,6 +226,27 @@
 			<my-cell tabindex="-1">blueberry</my-cell>
 			<my-cell tabindex="-1">raspberry</my-cell>
 		</my-row>
+		<my-row>
+			<my-cell tabindex="-1">fruit 1</my-cell>
+			<my-cell tabindex="-1">fruit 2</my-cell>
+		</my-row>
+		<my-row>
+			<my-cell tabindex="-1">fruit 3</my-cell>
+			<my-cell tabindex="-1">fruit 4</my-cell>
+		</my-row>
+		<my-row>
+			<my-cell tabindex="-1">fruit 5</my-cell>
+			<my-cell tabindex="-1">fruit 6</my-cell>
+		</my-row>
+		<my-row>
+			<my-cell tabindex="-1">fruit 7</my-cell>
+			<my-cell tabindex="-1">fruit 8</my-cell>
+		</my-row>
+		<my-row>
+			<my-cell tabindex="-1">fruit 9</my-cell>
+			<my-cell tabindex="-1">fruit 10</my-cell>
+		</my-row>
+		</div>
 	</my-grid>
 	<h3 id="testContainer3Label">Programmatic KeyNav with no tabindex setting:</h3>
 
